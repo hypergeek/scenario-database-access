@@ -34,14 +34,18 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import edu.berkeley.path.model_elements.*;
+
+import core.*;
+
 /**
  * Implements methods for writing Scenarios to a database.
  * @author vjoel
  */
-public class ScenarioWriter extends core.DatabaseWriter {
+public class ScenarioWriter extends DatabaseWriter {
   public ScenarioWriter(
           ScenarioDatabaseParams dbParams
-          ) throws core.DatabaseException {
+          ) throws DatabaseException {
     super(
       dbParams.usingOracle,
       dbParams.host,

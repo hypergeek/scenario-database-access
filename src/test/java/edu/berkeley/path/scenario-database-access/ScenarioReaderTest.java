@@ -34,8 +34,6 @@ import static org.junit.Assert.*;
 
 import edu.berkeley.path.model_elements.*;
 
-import core.*;
-
 /**
  * Tests methods for reading Scenarios from a database.
  * @author vjoel
@@ -43,7 +41,7 @@ import core.*;
 public class ScenarioReaderTest {
   static ScenarioReader scReader;
   
-  @BeforeClass public static void dbsetup() throws DatabaseException {
+  @BeforeClass public static void dbsetup() throws core.DatabaseException {
     scReader = new ScenarioReader(new ScenarioDatabaseParams());
   }
 
@@ -53,8 +51,9 @@ public class ScenarioReaderTest {
   }
   
   @Test
-  public void testReadOneScenario() { // throws IOException {
+  public void testReadOneScenario() throws core.DatabaseException {
     Scenario sc;
     
+    sc = scReader.read(99999);
   }
 }

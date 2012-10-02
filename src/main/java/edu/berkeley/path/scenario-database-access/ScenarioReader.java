@@ -34,14 +34,18 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import edu.berkeley.path.model_elements.*;
+
+import core.*;
+
 /**
  * Implements methods for reading Scenarios from a database.
  * @author vjoel
  */
-public class ScenarioReader extends core.DatabaseReader {
+public class ScenarioReader extends DatabaseReader {
   public ScenarioReader(
           ScenarioDatabaseParams dbParams
-          ) throws core.DatabaseException {
+          ) throws DatabaseException {
     super(
       dbParams.usingOracle,
       dbParams.host,
@@ -49,5 +53,45 @@ public class ScenarioReader extends core.DatabaseReader {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+  }
+  
+  public Scenario read(long scenarioID) throws DatabaseException {
+    String query = "scenario_" + scenarioID;
+    try {
+      psCreate(query,
+        "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
+        );
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+
+    try {
+      transactionBegin();
+      Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+    
+    psClearParams(query);
+    psSetBigInt(query, 1, scenarioID);
+    psQuery(query);
+    
+    while (psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+      //System.out.println("columns: [" + columns + "]");
+      
+      Integer id = psRSGetInteger(query, "ID");
+      String name = psRSGetVarChar(query, "NAME");
+      System.out.println("ID: " + id);
+      System.out.println("Name: " + name);
+    }
+    
+    transactionCommit();
+    
+    return null;
   }
 }

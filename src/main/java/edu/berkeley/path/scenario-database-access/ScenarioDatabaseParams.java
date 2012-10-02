@@ -31,6 +31,12 @@ package edu.berkeley.path.scenario_database_access;
 
 /**
  * Captures parameters for accessing Scenarios from a database.
+ * 
+ * Roughly equivalent to a connection string, but with accessibe fields.
+ * The fields correspond exactly to the constructor of a core.Database.
+ * The param object is used in the constructor of a ScenarioReader or
+ * ScenarioWriter.
+ * 
  * @author vjoel
  */
 public class ScenarioDatabaseParams {
