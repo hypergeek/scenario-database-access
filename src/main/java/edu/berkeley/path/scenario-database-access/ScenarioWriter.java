@@ -27,7 +27,7 @@
  * SUCH DAMAGE.
  */
 
-package edu.berkeley.path.scenario-database-access;
+package edu.berkeley.path.scenario_database_access;
 
 import java.util.ArrayList;
 import java.util.HashMap;

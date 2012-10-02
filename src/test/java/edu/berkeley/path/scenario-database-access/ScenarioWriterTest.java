@@ -27,7 +27,7 @@
  * SUCH DAMAGE.
  */
 
-package edu.berkeley.path.scenario-database-access;
+package edu.berkeley.path.scenario_database_access;
 
 import org.junit.*;
 import static org.junit.Assert.*;

@@ -27,15 +27,70 @@
  * SUCH DAMAGE.
  */
 
-package edu.berkeley.path.scenario-database-access;
+package edu.berkeley.path.scenario_database_access;
 
 import org.junit.*;
 import static org.junit.Assert.*;
+
+import edu.berkeley.path.model_elements.*;
+
+import core.*;
 
 /**
  * Tests methods for reading Scenarios from a database.
  * @author vjoel
  */
 public class ScenarioReaderTest {
+  static DatabaseReader dbr;
   
+  @BeforeClass public static void dbsetup() throws DatabaseException {
+    boolean usingOracle = true;
+    
+    String host = System.getenv("VIA_DATABASE_HOST");
+    if (host == null) {
+      host = "localhost";
+    }
+    
+    String portstr = System.getenv("VIA_DATABASE_PORT");
+    int port;
+    if (portstr != null) {
+      port = Integer.parseInt(portstr);
+    }
+    else {
+      port = 21521;
+    }
+    
+    String name = System.getenv("VIA_DATABASE_NAME");
+    if (name == null) {
+      name = "via";
+    }
+    
+    String user = System.getenv("VIA_DATABASE_USER");
+    if (user == null) {
+      user = System.getProperty("user.name");
+    }
+
+    String pass = System.getenv("VIA_DATABASE_PASS");
+    if (pass == null) {
+      pass = "";
+    }
+
+    dbr = new DatabaseReader(
+            usingOracle,
+            host,
+            port,
+            name,
+            user,
+            pass);
+  }
+
+  @Before
+  public void setup() {
+    
+  }
+  
+  @Test
+  public void testReadOneScenario() { // throws IOException {
+    System.out.println(dbr);
+  }
 }
