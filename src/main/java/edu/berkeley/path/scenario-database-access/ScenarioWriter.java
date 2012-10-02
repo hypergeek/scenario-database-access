@@ -34,12 +34,20 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import core.*;
-
 /**
  * Implements methods for writing Scenarios to a database.
  * @author vjoel
  */
-public class ScenarioWriter {
-  
+public class ScenarioWriter extends core.DatabaseWriter {
+  public ScenarioWriter(
+          ScenarioDatabaseParams dbParams
+          ) throws core.DatabaseException {
+    super(
+      dbParams.usingOracle,
+      dbParams.host,
+      dbParams.port,
+      dbParams.name,
+      dbParams.user,
+      dbParams.pass);
+  }
 }

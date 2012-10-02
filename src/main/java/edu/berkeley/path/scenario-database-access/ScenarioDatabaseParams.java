@@ -29,25 +29,45 @@
 
 package edu.berkeley.path.scenario_database_access;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.HashSet;
-
 /**
- * Implements methods for reading Scenarios from a database.
+ * Captures parameters for accessing Scenarios from a database.
  * @author vjoel
  */
-public class ScenarioReader extends core.DatabaseReader {
-  public ScenarioReader(
-          ScenarioDatabaseParams dbParams
-          ) throws core.DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
+public class ScenarioDatabaseParams {
+  public boolean usingOracle = true;
+  public String host;
+  public int port;
+  public String name;
+  public String user;
+  public String pass;
+
+  public ScenarioDatabaseParams() {
+    this.host = System.getenv("VIA_DATABASE_HOST");
+    if (this.host == null) {
+      this.host = "localhost";
+    }
+    
+    String portstr = System.getenv("VIA_DATABASE_PORT");
+    if (portstr != null) {
+      this.port = Integer.parseInt(portstr);
+    }
+    else {
+      this.port = 1521;
+    }
+    
+    this.name = System.getenv("VIA_DATABASE_NAME");
+    if (this.name == null) {
+      this.name = "via";
+    }
+    
+    this.user = System.getenv("VIA_DATABASE_USER");
+    if (this.user == null) {
+      this.user = System.getProperty("user.name");
+    }
+
+    this.pass = System.getenv("VIA_DATABASE_PASS");
+    if (this.pass == null) {
+      this.pass = "";
+    }
   }
 }
