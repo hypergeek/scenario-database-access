@@ -55,21 +55,29 @@ public class ScenarioReader extends DatabaseReader {
       dbParams.pass);
   }
   
+  /**
+   * Read one scenario with the given ID from the database
+   * 
+   * @param scenarioID  numerical ID of the scenario in the database
+   * @return Scenario
+   */
   public Scenario read(long scenarioID) throws DatabaseException {
-    String query = "scenario_" + scenarioID;
+    Scenario scenario = null;
+
     try {
-      psCreate(query,
-        "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
-        );
+      transactionBegin();
+      Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
       throw dbExc;
     }
-
+    
+    String query = "scenario_" + scenarioID;
     try {
-      transactionBegin();
-      Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
+      psCreate(query,
+        "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
+        );
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -81,17 +89,45 @@ public class ScenarioReader extends DatabaseReader {
     psQuery(query);
     
     while (psRSNext(query)) {
+      if (scenario != null) {
+        throw new DatabaseException(null, "Scenario not unique: id=" + scenarioID, this, query);
+      }
+      
       //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
-      Integer id = psRSGetInteger(query, "ID");
-      String name = psRSGetVarChar(query, "NAME");
-      System.out.println("ID: " + id);
-      System.out.println("Name: " + name);
+      scenario = populateFromQueryRS(query);
+      
+      //System.out.println("Scenario: " + scenario);
+    }
+
+    if (scenario != null) {
+//      NetworkReader nwr = new NetworkReader();
+//      scenario.network = 
+      // resolve references
     }
     
-    transactionCommit();
+    return scenario;
+  }
+
+  /**
+   * Instantiate and populate a scenario object from the result set
+   * of a scenario query.
+   * 
+   * Should be called after calling psRSNext(query).
+   * 
+   * @param query string
+   * @return Scenario
+   */
+  public Scenario populateFromQueryRS(String query) throws DatabaseException {
+    Scenario scenario = new Scenario();
     
-    return null;
+    Integer id = psRSGetInteger(query, "ID");
+    String name = psRSGetVarChar(query, "NAME");
+    
+    scenario.id = id.toString();
+    scenario.name = name;
+
+    return scenario;
   }
 }

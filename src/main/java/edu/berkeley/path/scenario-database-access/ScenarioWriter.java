@@ -54,4 +54,20 @@ public class ScenarioWriter extends DatabaseWriter {
       dbParams.user,
       dbParams.pass);
   }
+  
+  /**
+   * Read one scenario with the given ID from the database
+   */
+  public void write(Scenario scenario) throws DatabaseException {
+    try {
+      transactionBegin();
+      Monitor.debug("Scenario writer transaction beginning on scenario.id=" + scenario.getId());
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+
+    transactionCommit();
+  }
 }
