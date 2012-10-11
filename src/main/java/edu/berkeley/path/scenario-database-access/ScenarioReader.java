@@ -111,7 +111,7 @@ public class ScenarioReader extends DatabaseReader {
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario, with null for all dependent objects.
    */
-  protected Scenario readRow(long scenarioID) throws DatabaseException {
+  public Scenario readRow(long scenarioID) throws DatabaseException {
     String query = null;
     Scenario scenario = null;
     

@@ -99,7 +99,7 @@ public class ScenarioWriter extends DatabaseWriter {
    * 
    * @param scenario  the scenario
    */
-  protected void insertRow(Scenario scenario) throws DatabaseException {
+  public void insertRow(Scenario scenario) throws DatabaseException {
     String query = "insert_scenario_" + scenario.getId();
     psCreate(query,
       "INSERT INTO \"VIA\".\"SCENARIOS\" (ID, NAME, PROJECT_ID) VALUES(?, ?, ?)"
@@ -165,7 +165,7 @@ public class ScenarioWriter extends DatabaseWriter {
    * 
    * @param scenario  the scenario
    */
-  protected void updateRow(Scenario scenario) throws DatabaseException {
+  public void updateRow(Scenario scenario) throws DatabaseException {
     String query = "update_scenario_" + scenario.getId();
     psCreate(query,
       "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
@@ -232,7 +232,7 @@ public class ScenarioWriter extends DatabaseWriter {
    * 
    * @param scenario  the scenario
    */
-  protected void deleteRow(long scenarioID) throws DatabaseException {
+  public void deleteRow(long scenarioID) throws DatabaseException {
     String query = "delete_scenario_" + scenarioID;
     psCreate(query,
       "DELETE FROM \"VIA\".\"SCENARIOS\" WHERE \"ID\" = ?"
