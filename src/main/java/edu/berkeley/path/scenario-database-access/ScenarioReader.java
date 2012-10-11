@@ -112,7 +112,6 @@ public class ScenarioReader extends DatabaseReader {
 //      if (scenario has networks...)
 //        NetworkReader nwr = new NetworkReader();
 //        scenario.network = 
-//        network.resolveReferences();
     }
     return scenario;
   }
