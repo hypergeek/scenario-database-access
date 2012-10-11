@@ -40,9 +40,13 @@ import edu.berkeley.path.model_elements.*;
  */
 public class ScenarioWriterTest {
   static ScenarioWriter scWriter;
+  static ScenarioReader scReader;
   
   @BeforeClass public static void dbsetup() throws core.DatabaseException {
-    scWriter = new ScenarioWriter(new ScenarioDatabaseParams());
+    ScenarioDatabaseParams dpParams = new ScenarioDatabaseParams();
+    
+    scWriter = new ScenarioWriter(dpParams);
+    scReader = new ScenarioReader(dpParams);
   }
 
   @Before
@@ -64,9 +68,9 @@ public class ScenarioWriterTest {
     
     scWriter.update(sc);
     
-    // try reading individual rows of various tables and see if writing
-    // the whole scenario worked
-    //assertEquals(scenarioID, sc.getIntegerId());
+    Scenario sc2 = scReader.read(sc.getIntegerId());
+    
+    assertEquals(scenarioID, sc2.getIntegerId());
   }
 
   @Test
