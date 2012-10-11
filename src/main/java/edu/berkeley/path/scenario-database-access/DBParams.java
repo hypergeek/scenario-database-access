@@ -39,7 +39,7 @@ package edu.berkeley.path.scenario_database_access;
  * 
  * @author vjoel
  */
-public class ScenarioDatabaseParams {
+public class DBParams {
   public boolean usingOracle = true;
   public String host;
   public int port;
@@ -47,7 +47,7 @@ public class ScenarioDatabaseParams {
   public String user;
   public String pass;
 
-  public ScenarioDatabaseParams() {
+  public DBParams() {
     this.host = System.getenv("VIA_DATABASE_HOST");
     if (this.host == null) {
       this.host = "localhost";

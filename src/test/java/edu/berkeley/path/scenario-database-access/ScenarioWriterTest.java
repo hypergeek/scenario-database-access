@@ -43,7 +43,7 @@ public class ScenarioWriterTest {
   static ScenarioReader scReader;
   
   @BeforeClass public static void dbsetup() throws core.DatabaseException {
-    ScenarioDatabaseParams dpParams = new ScenarioDatabaseParams();
+    DBParams dpParams = new DBParams();
     
     scWriter = new ScenarioWriter(dpParams);
     scReader = new ScenarioReader(dpParams);

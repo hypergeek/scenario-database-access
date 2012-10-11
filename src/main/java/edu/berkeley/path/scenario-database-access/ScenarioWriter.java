@@ -40,12 +40,12 @@ import core.*;
 
 /**
  * Implements methods for writing Scenarios to a database.
- * @see ScenarioDatabaseParams
+ * @see DBParams
  * @author vjoel
  */
 public class ScenarioWriter extends DatabaseWriter {
   public ScenarioWriter(
-          ScenarioDatabaseParams dbParams
+          DBParams dbParams
           ) throws DatabaseException {
     super(
       dbParams.usingOracle,

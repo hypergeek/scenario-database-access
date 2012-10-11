@@ -40,12 +40,12 @@ import core.*;
 
 /**
  * Implements methods for reading Scenarios from a database.
- * @see ScenarioDatabaseParams
+ * @see DBParams
  * @author vjoel
  */
 public class ScenarioReader extends DatabaseReader {
   public ScenarioReader(
-          ScenarioDatabaseParams dbParams
+          DBParams dbParams
           ) throws DatabaseException {
     super(
       dbParams.usingOracle,
