@@ -107,7 +107,7 @@ public class ScenarioWriter extends DatabaseWriter {
   
     try {
       psClearParams(query);
-      psSetInteger(query, 1, scenario.getIntegerId());
+      psSetBigInt(query, 1, scenario.getLongId());
       psSetVarChar(query, 2, scenario.getName().toString());
       psSetInteger(query, 3, 1); // project id
       long rows = psUpdate(query);
@@ -148,7 +148,7 @@ public class ScenarioWriter extends DatabaseWriter {
     finally {
       try {
         transactionRollback();
-        Monitor.debug("Scenario insert transaction rollback on scenario.id=" + scenario.getId());
+        Monitor.debug("Scenario update transaction rollback on scenario.id=" + scenario.getId());
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -175,11 +175,76 @@ public class ScenarioWriter extends DatabaseWriter {
       psClearParams(query);
       psSetVarChar(query, 1, scenario.getName().toString());
       psSetInteger(query, 2, 1); // project id
-      psSetInteger(query, 3, scenario.getIntegerId());
+      psSetBigInt(query, 3, scenario.getLongId());
       long rows = psUpdate(query);
       
       if (rows != 1) {
         throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), this, query);
+      }
+    }
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
+    }
+  }
+
+  /**
+   * Delete the given scenario ID from the database.
+   * 
+   * @param scenarioID  the scenario ID
+   */
+  public void delete(long scenarioID) throws DatabaseException {
+    long timeBegin = System.nanoTime();
+    
+    try {
+      transactionBegin();
+      Monitor.debug("Scenario delete transaction beginning on scenario.id=" + scenarioID);
+      
+      deleteRow(scenarioID);
+      
+      ////delete network etc
+
+      transactionCommit();
+      Monitor.debug("Scenario delete transaction committing on scenario.id=" + scenarioID);
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+    finally {
+      try {
+        transactionRollback();
+        Monitor.debug("Scenario delete transaction rollback on scenario.id=" + scenarioID);
+      }
+      catch(Exception Exc) {
+        // Do nothing.
+      }
+    }
+
+    long timeCommit = System.nanoTime();
+    Monitor.duration("Delete scenario.id=" + scenarioID, timeCommit - timeBegin);
+  }
+
+  /**
+   * Insert just the scenario row into the database. Ignores dependent objects, such
+   * as networks and profile sets.
+   * 
+   * @param scenario  the scenario
+   */
+  protected void deleteRow(long scenarioID) throws DatabaseException {
+    String query = "delete_scenario_" + scenarioID;
+    psCreate(query,
+      "DELETE FROM \"VIA\".\"SCENARIOS\" WHERE \"ID\" = ?"
+    );
+    
+    try {
+      psClearParams(query);
+      psSetBigInt(query, 1, scenarioID);
+      long rows = psUpdate(query);
+      
+      if (rows != 1) {
+        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenarioID, this, query);
       }
     }
     finally {

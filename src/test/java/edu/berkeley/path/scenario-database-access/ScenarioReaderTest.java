@@ -52,13 +52,13 @@ public class ScenarioReaderTest {
   
   @Test
   public void testReadOneScenario() throws core.DatabaseException {
-    Integer scenarioID = 99999;
+    Long scenarioID = 99999L;
     Scenario sc;
         
     sc = scReader.read(scenarioID);
 
-    System.out.println("Test Scenario: " + sc);
+    //System.out.println("Test Scenario: " + sc);
     
-    assertEquals(scenarioID, sc.getIntegerId());
+    assertEquals(scenarioID, sc.getLongId());
   }
 }

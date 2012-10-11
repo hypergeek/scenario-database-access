@@ -51,12 +51,13 @@ public class ScenarioWriterTest {
 
   @Before
   public void setup() {
-    
+    // we assume scenario 99998 exists, but we could insert it here
+    // we assume scenario 99997 does not exist, but we could delete it here
   }
   
   @Test
   public void testUpdateOneScenario() throws core.DatabaseException {
-    Integer scenarioID = 99998;
+    Long scenarioID = 99998L;
     Scenario sc;
     
     sc = new Scenario();
@@ -64,17 +65,35 @@ public class ScenarioWriterTest {
     sc.setId(scenarioID);
     sc.setName("ScenarioWriterTest testUpdateOneScenario");
     
-    System.out.println("Test Scenario: " + sc);
+    //System.out.println("Test Scenario: " + sc);
     
     scWriter.update(sc);
     
-    Scenario sc2 = scReader.read(sc.getIntegerId());
+    Scenario sc2 = scReader.read(sc.getLongId());
     
-    assertEquals(scenarioID, sc2.getIntegerId());
+    assertEquals(scenarioID, sc2.getLongId());
   }
 
   @Test
-  public void testInsertOneScenario() throws core.DatabaseException {
-    // need to delete first
+  public void testInsertDeleteOneScenario() throws core.DatabaseException {
+    Long scenarioID = 99997L;
+    Scenario sc;
+    
+    sc = new Scenario();
+    
+    sc.setId(scenarioID);
+    sc.setName("ScenarioWriterTest testInsertDeleteOneScenario");
+    
+    //System.out.println("Test Scenario: " + sc);
+    
+    scWriter.insert(sc);
+    
+    Scenario sc2 = scReader.read(sc.getLongId());
+    
+    assertEquals(scenarioID, sc2.getLongId());
+    
+    scWriter.delete(scenarioID);
+    
+    // assert not exist?
   }
 }

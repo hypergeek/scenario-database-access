@@ -169,7 +169,7 @@ public class ScenarioReader extends DatabaseReader {
       
       scenario = new Scenario();
       
-      Integer id = psRSGetInteger(query, "ID");
+      Long id = psRSGetBigInt(query, "ID");
       String name = psRSGetVarChar(query, "NAME");
       
       scenario.id = id.toString();
