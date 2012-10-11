@@ -105,7 +105,8 @@ public class ScenarioReader extends DatabaseReader {
   }
 
   /**
-   * Read just the scenario row with the given ID from the database.
+   * Read just the scenario row with the given ID from the database. Ignores dependent objects, such
+   * as networks and profile sets.
    * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario, with null for all dependent objects.

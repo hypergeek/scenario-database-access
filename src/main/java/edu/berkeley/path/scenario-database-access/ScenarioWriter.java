@@ -59,10 +59,6 @@ public class ScenarioWriter extends DatabaseWriter {
   /**
    * Insert the given scenario into the database.
    * 
-   * Currently, this insert includes all dependent rows: networks etc.
-   * 
-   * TODO flag to select whether to insert dependent rows.
-   * 
    * @param scenario  the scenario
    */
   public void insert(Scenario scenario) throws DatabaseException {
@@ -114,8 +110,10 @@ public class ScenarioWriter extends DatabaseWriter {
       psSetInteger(query, 1, scenario.getIntegerId());
       psSetVarChar(query, 2, scenario.getName().toString());
       psSetInteger(query, 3, 1); // project id
-      psUpdate(query);
-      // should check unique?
+      long rows = psUpdate(query);
+      if (rows != 1) {
+        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), this, query);
+      }
     }
     finally {
       if (query != null) {
@@ -126,10 +124,6 @@ public class ScenarioWriter extends DatabaseWriter {
   
   /**
    * Update the given scenario in the database.
-   * 
-   * Currently, this update includes all dependent rows: networks etc.
-   * 
-   * TODO flag to select whether to update dependent rows.
    * 
    * @param scenario  the scenario
    */
