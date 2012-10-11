@@ -40,6 +40,7 @@ import core.*;
 
 /**
  * Implements methods for reading Scenarios from a database.
+ * @see ScenarioDatabaseParams
  * @author vjoel
  */
 public class ScenarioReader extends DatabaseReader {
@@ -56,7 +57,11 @@ public class ScenarioReader extends DatabaseReader {
   }
   
   /**
-   * Read one scenario with the given ID from the database
+   * Read one scenario with the given ID from the database.
+   * 
+   * Currently, this read includes all dependent rows: networks etc.
+   * 
+   * TODO flag to select whether to read dependent rows.
    * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario
@@ -64,6 +69,8 @@ public class ScenarioReader extends DatabaseReader {
   public Scenario read(long scenarioID) throws DatabaseException {
     Scenario scenario = null;
 
+    long timeBegin = System.nanoTime();
+    
     try {
       transactionBegin();
       Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
@@ -73,7 +80,7 @@ public class ScenarioReader extends DatabaseReader {
       throw dbExc;
     }
     
-    String query = "scenario_" + scenarioID;
+    String query = "read_scenario_" + scenarioID;
     try {
       psCreate(query,
         "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
@@ -107,12 +114,27 @@ public class ScenarioReader extends DatabaseReader {
       // resolve references
     }
     
+    // should the following be in finally block?
+    psDestroy(query);
+    try {
+      transactionCommit();
+      Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenario.getId());
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+    
+    long timeCommit = System.nanoTime();
+    Monitor.duration("Read scenario.id=" + scenario.getId(), timeCommit - timeBegin);
+
     return scenario;
   }
 
   /**
    * Instantiate and populate a scenario object from the result set
-   * of a scenario query.
+   * of a scenario query. Do not attempt to read related rows, such
+   * as networks, profile sets, etc.
    * 
    * Should be called after calling psRSNext(query).
    * 

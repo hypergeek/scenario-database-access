@@ -47,7 +47,7 @@ public class ScenarioReaderTest {
 
   @Before
   public void setup() {
-    
+    // we assume scenario 99999 exists, but we could insert it here
   }
   
   @Test

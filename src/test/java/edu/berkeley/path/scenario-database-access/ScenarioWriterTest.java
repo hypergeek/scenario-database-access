@@ -32,10 +32,45 @@ package edu.berkeley.path.scenario_database_access;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import edu.berkeley.path.model_elements.*;
+
 /**
  * Tests methods for writing Scenarios to a database.
  * @author vjoel
  */
 public class ScenarioWriterTest {
+  static ScenarioWriter scWriter;
   
+  @BeforeClass public static void dbsetup() throws core.DatabaseException {
+    scWriter = new ScenarioWriter(new ScenarioDatabaseParams());
+  }
+
+  @Before
+  public void setup() {
+    
+  }
+  
+  @Test
+  public void testUpdateOneScenario() throws core.DatabaseException {
+    Integer scenarioID = 99998;
+    Scenario sc;
+    
+    sc = new Scenario();
+    
+    sc.setId(scenarioID);
+    sc.setName("ScenarioWriterTest testUpdateOneScenario");
+    
+    System.out.println("Test Scenario: " + sc);
+    
+    scWriter.update(sc);
+    
+    // try reading individual rows of various tables and see if writing
+    // the whole scenario worked
+    //assertEquals(scenarioID, sc.getIntegerId());
+  }
+
+  @Test
+  public void testInsertOneScenario() throws core.DatabaseException {
+    // need to delete first
+  }
 }
