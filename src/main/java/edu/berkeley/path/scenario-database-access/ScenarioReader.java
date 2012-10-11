@@ -71,13 +71,7 @@ public class ScenarioReader extends DatabaseReader {
       transactionBegin();
       Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
 
-      scenario = readRow(scenarioID);
-
-      if (scenario != null) {
-//      NetworkReader nwr = new NetworkReader();
-//      scenario.network = 
-        // resolve references
-      }
+      scenario = readWithDependents(scenarioID);
 
       transactionCommit();
       Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenarioID);
@@ -101,6 +95,25 @@ public class ScenarioReader extends DatabaseReader {
       Monitor.duration("Read scenario.id=" + scenario.getId(), timeCommit - timeBegin);
     }
 
+    return scenario;
+  }
+
+  /**
+   * Read the scenario row with the given ID from the database, including dependent objects, such
+   * as networks and profile sets.
+   * 
+   * @param scenarioID  numerical ID of the scenario in the database
+   * @return Scenario.
+   */
+  public Scenario readWithDependents(long scenarioID) throws DatabaseException {
+    Scenario scenario = readRow(scenarioID);
+
+    if (scenario != null) {
+//      if (scenario has networks...)
+//        NetworkReader nwr = new NetworkReader();
+//        scenario.network = 
+//        network.resolveReferences();
+    }
     return scenario;
   }
 

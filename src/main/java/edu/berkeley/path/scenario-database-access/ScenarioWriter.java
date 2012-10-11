@@ -68,9 +68,7 @@ public class ScenarioWriter extends DatabaseWriter {
       transactionBegin();
       Monitor.debug("Scenario insert transaction beginning on scenario.id=" + scenario.getId());
       
-      insertRow(scenario);
-      
-      ////insert network etc
+      insertWithDependents(scenario);
 
       transactionCommit();
       Monitor.debug("Scenario insert transaction committing on scenario.id=" + scenario.getId());
@@ -91,6 +89,18 @@ public class ScenarioWriter extends DatabaseWriter {
 
     long timeCommit = System.nanoTime();
     Monitor.duration("Insert scenario.id=" + scenario.getId(), timeCommit - timeBegin);
+  }
+
+  /**
+   * Insert the given scenario into the database, including dependent objects, such
+   * as networks and profile sets.
+   * 
+   * @param scenario  the scenario
+   */
+  public void insertWithDependents(Scenario scenario) throws DatabaseException {
+    insertRow(scenario);
+      
+    //insert network etc
   }
 
   /**
@@ -142,9 +152,7 @@ public class ScenarioWriter extends DatabaseWriter {
       transactionBegin();
       Monitor.debug("Scenario update transaction beginning on scenario.id=" + scenario.getId());
       
-      updateRow(scenario);
-      
-      ////update network etc
+      updateWithDependents(scenario);
 
       transactionCommit();
       Monitor.debug("Scenario update transaction committing on scenario.id=" + scenario.getId());
@@ -168,7 +176,19 @@ public class ScenarioWriter extends DatabaseWriter {
   }
 
   /**
-   * Insert just the scenario row into the database. Ignores dependent objects, such
+   * Update the given scenario in the database, including dependent objects, such
+   * as networks and profile sets.
+   * 
+   * @param scenario  the scenario
+   */
+  public void updateWithDependents(Scenario scenario) throws DatabaseException {
+    updateRow(scenario);
+      
+    //update network etc
+  }
+
+  /**
+   * Update just the scenario row into the database. Ignores dependent objects, such
    * as networks and profile sets.
    * 
    * @param scenario  the scenario
