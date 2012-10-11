@@ -59,76 +59,92 @@ public class ScenarioReader extends DatabaseReader {
   /**
    * Read one scenario with the given ID from the database.
    * 
-   * Currently, this read includes all dependent rows: networks etc.
-   * 
-   * TODO flag to select whether to read dependent rows.
-   * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario
    */
   public Scenario read(long scenarioID) throws DatabaseException {
-    Scenario scenario = null;
-
+    Scenario scenario;
+    
     long timeBegin = System.nanoTime();
     
     try {
       transactionBegin();
       Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
+
+      scenario = readRow(scenarioID);
+
+      if (scenario != null) {
+//      NetworkReader nwr = new NetworkReader();
+//      scenario.network = 
+        // resolve references
+      }
+
+      transactionCommit();
+      Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenarioID);
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
       throw dbExc;
+    }
+    finally {
+      try {
+        transactionRollback();
+        Monitor.debug("Scenario reader transaction rollback on scenario.id=" + scenarioID);
+      }
+      catch(Exception Exc) {
+        // Do nothing.
+      }
     }
     
-    String query = "read_scenario_" + scenarioID;
+    long timeCommit = System.nanoTime();
+    if (scenario != null) {
+      Monitor.duration("Read scenario.id=" + scenario.getId(), timeCommit - timeBegin);
+    }
+
+    return scenario;
+  }
+
+  /**
+   * Read just the scenario row with the given ID from the database.
+   * 
+   * @param scenarioID  numerical ID of the scenario in the database
+   * @return Scenario, with null for all dependent objects.
+   */
+  protected Scenario readRow(long scenarioID) throws DatabaseException {
+    String query = null;
+    Scenario scenario = null;
+    
     try {
-      psCreate(query,
-        "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
-        );
+      query = runQuery(scenarioID);
+      scenario = scenarioFromQueryRS(query);
     }
-    catch (DatabaseException dbExc) {
-      Monitor.err(dbExc);
-      throw dbExc;
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
     }
+    
+    return scenario;
+  }
+
+  /**
+   * Execute a query for the specified scenario.
+   * 
+   * @param scenarioID  numerical ID of the scenario in the database
+   * @return String     query string, may be passed to psRSNext or scenarioFromQueryRS
+   */
+  protected String runQuery(long scenarioID) throws DatabaseException {
+    String query = "read_scenario_" + scenarioID;
+    
+    psCreate(query,
+      "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
+    );
     
     psClearParams(query);
     psSetBigInt(query, 1, scenarioID);
     psQuery(query);
-    
-    while (psRSNext(query)) {
-      if (scenario != null) {
-        throw new DatabaseException(null, "Scenario not unique: id=" + scenarioID, this, query);
-      }
-      
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
-      //System.out.println("columns: [" + columns + "]");
-      
-      scenario = populateFromQueryRS(query);
-      
-      //System.out.println("Scenario: " + scenario);
-    }
 
-    if (scenario != null) {
-//      NetworkReader nwr = new NetworkReader();
-//      scenario.network = 
-      // resolve references
-    }
-    
-    // should the following be in finally block?
-    psDestroy(query);
-    try {
-      transactionCommit();
-      Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenario.getId());
-    }
-    catch (DatabaseException dbExc) {
-      Monitor.err(dbExc);
-      throw dbExc;
-    }
-    
-    long timeCommit = System.nanoTime();
-    Monitor.duration("Read scenario.id=" + scenario.getId(), timeCommit - timeBegin);
-
-    return scenario;
+    return query;
   }
 
   /**
@@ -136,19 +152,30 @@ public class ScenarioReader extends DatabaseReader {
    * of a scenario query. Do not attempt to read related rows, such
    * as networks, profile sets, etc.
    * 
-   * Should be called after calling psRSNext(query).
-   * 
    * @param query string
    * @return Scenario
    */
-  public Scenario populateFromQueryRS(String query) throws DatabaseException {
-    Scenario scenario = new Scenario();
+  protected Scenario scenarioFromQueryRS(String query) throws DatabaseException {
+    Scenario scenario = null;
     
-    Integer id = psRSGetInteger(query, "ID");
-    String name = psRSGetVarChar(query, "NAME");
-    
-    scenario.id = id.toString();
-    scenario.name = name;
+    while (psRSNext(query)) {
+      if (scenario != null) {
+        throw new DatabaseException(null, "Scenario not unique: " + query, this, query);
+      }
+      
+      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+      //System.out.println("columns: [" + columns + "]");
+      
+      scenario = new Scenario();
+      
+      Integer id = psRSGetInteger(query, "ID");
+      String name = psRSGetVarChar(query, "NAME");
+      
+      scenario.id = id.toString();
+      scenario.name = name;
+
+      //System.out.println("Scenario: " + scenario);
+    }
 
     return scenario;
   }
