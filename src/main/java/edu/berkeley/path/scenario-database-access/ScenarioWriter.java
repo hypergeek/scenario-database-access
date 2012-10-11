@@ -102,14 +102,22 @@ public class ScenarioWriter extends DatabaseWriter {
   public void insertRow(Scenario scenario) throws DatabaseException {
     String query = "insert_scenario_" + scenario.getId();
     psCreate(query,
-      "INSERT INTO \"VIA\".\"SCENARIOS\" (ID, NAME, PROJECT_ID) VALUES(?, ?, ?)"
+      "INSERT INTO \"VIA\".\"SCENARIOS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
       psClearParams(query);
+
       psSetBigInt(query, 1, scenario.getLongId());
-      psSetVarChar(query, 2, scenario.getName().toString());
-      psSetInteger(query, 3, 1); // project id
+      
+      psSetVarChar(query, 2,
+        scenario.getName() == null ? null : scenario.getName().toString());
+      
+      psSetVarChar(query, 3,
+        scenario.getDescription() == null ? null : scenario.getDescription().toString());
+      
+      psSetInteger(query, 4, 1); // project id
+
       long rows = psUpdate(query);
       if (rows != 1) {
         throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), this, query);
@@ -168,14 +176,21 @@ public class ScenarioWriter extends DatabaseWriter {
   public void updateRow(Scenario scenario) throws DatabaseException {
     String query = "update_scenario_" + scenario.getId();
     psCreate(query,
-      "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
+      "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
     );
     
     try {
       psClearParams(query);
-      psSetVarChar(query, 1, scenario.getName().toString());
-      psSetInteger(query, 2, 1); // project id
-      psSetBigInt(query, 3, scenario.getLongId());
+
+      psSetVarChar(query, 1,
+        scenario.getName() == null ? null : scenario.getName().toString());
+      
+      psSetVarChar(query, 2,
+        scenario.getDescription() == null ? null : scenario.getDescription().toString());
+
+      psSetInteger(query, 3, 1); // project id
+      
+      psSetBigInt(query, 4, scenario.getLongId());
       long rows = psUpdate(query);
       
       if (rows != 1) {
