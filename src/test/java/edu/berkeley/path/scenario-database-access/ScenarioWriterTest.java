@@ -94,6 +94,7 @@ public class ScenarioWriterTest {
     
     scWriter.delete(scenarioID);
     
-    // assert not exist?
+    Scenario sc3 = scReader.read(scenarioID);
+    assertEquals(null, sc3);
   }
 }
