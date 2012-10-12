@@ -58,13 +58,14 @@ public class NetworkWriterTest {
   @Test
   public void testUpdateOneNetwork() throws core.DatabaseException {
     Long networkID = 99998L;
-    Network nw;
+    String name = "NetworkWriterTest testUpdateOneNetwork";
+    String desc = "for test";
     
-    nw = new Network();
+    Network nw = new Network();
     
     nw.setId(networkID);
-    nw.setName("NetworkWriterTest testUpdateOneNetwork");
-    nw.setDescription("for test");
+    nw.setName(name);
+    nw.setDescription(desc);
     
     //System.out.println("Test Network: " + nw);
     
@@ -73,18 +74,21 @@ public class NetworkWriterTest {
     Network nw2 = nwReader.read(nw.getLongId());
     
     assertEquals(networkID, nw2.getLongId());
-    assertEquals("for test", nw2.getDescription());
+    assertEquals(name, nw2.getName());
+    assertEquals(desc, nw2.getDescription());
   }
 
   @Test
   public void testInsertDeleteOneNetwork() throws core.DatabaseException {
     Long networkID = 99997L;
-    Network nw;
-    
-    nw = new Network();
+    String name = "NetworkWriterTest testInsertDeleteOneNetwork";
+    String desc = "for test";
+
+    Network nw = new Network();
     
     nw.setId(networkID);
-    nw.setName("NetworkWriterTest testInsertDeleteOneNetwork");
+    nw.setName(name);
+    nw.setDescription(desc);
     
     //System.out.println("Test Network: " + nw);
     
