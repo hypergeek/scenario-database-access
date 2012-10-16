@@ -30,6 +30,7 @@
 package edu.berkeley.path.scenario_database_access;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -101,9 +102,16 @@ public class NetworkWriter extends DatabaseWriter {
    * @param network  the network
    */
   public void insertWithDependents(Network network) throws DatabaseException {
+    NodeWriter ndWriter = new NodeWriter(this.dbParams);
+
     insertRow(network);
-      
-    //insert nodes and links etc.
+    
+    List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
+    if (nodes != null && nodes.size() != 0) {
+      ndWriter.insertNodes(nodes, network.getLongId());
+    }
+    
+    // insert links
   }
 
   /**

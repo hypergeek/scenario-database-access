@@ -46,15 +46,15 @@ public class NodeWriterTest {
   static NodeReader ndReader;
   
   @BeforeClass public static void dbsetup() throws core.DatabaseException {
-    DBParams dpParams = new DBParams();
+    DBParams dbParams = new DBParams();
 
-    ndWriter = new NodeWriter(dpParams);
-    ndReader = new NodeReader(dpParams);
+    ndWriter = new NodeWriter(dbParams);
+    ndReader = new NodeReader(dbParams);
   }
 
   @Before
   public void setup() throws core.DatabaseException {
-    // we assume node (1, 99998) exists, but we could insert it here
+    // we assume node (1, 99995) exists, but we could insert it here
     // we assume network 99996 exists, but we could insert it here
     
     ndWriter.deleteAllNodes(99996L);
@@ -62,7 +62,7 @@ public class NodeWriterTest {
   
   @Test
   public void testUpdateOneNode() throws core.DatabaseException {
-    Long networkID = 99998L;
+    Long networkID = 99995L;
     
     Node nd = new Node();
     nd.setId(1L);
@@ -77,10 +77,10 @@ public class NodeWriterTest {
   
   @Test
   public void testInsertDeleteOneNode() throws core.DatabaseException {
-    Long networkID = 99997L;
+    Long networkID = 99995L;
 
     Node nd = new Node();
-    nd.setId(1L);
+    nd.setId(2L);
     
     ndWriter.insert(nd, networkID);
         

@@ -34,6 +34,8 @@ import static org.junit.Assert.*;
 
 import edu.berkeley.path.model_elements.*;
 
+import java.util.ArrayList;
+
 /**
  * Tests methods for writing Networks to a database.
  * @author vjoel
@@ -43,10 +45,10 @@ public class NetworkWriterTest {
   static NetworkReader nwReader;
   
   @BeforeClass public static void dbsetup() throws core.DatabaseException {
-    DBParams dpParams = new DBParams();
+    DBParams dbParams = new DBParams();
     
-    nwWriter = new NetworkWriter(dpParams);
-    nwReader = new NetworkReader(dpParams);
+    nwWriter = new NetworkWriter(dbParams);
+    nwReader = new NetworkReader(dbParams);
   }
 
   @Before
@@ -100,6 +102,42 @@ public class NetworkWriterTest {
     assertEquals(networkID, nw2.getLongId());
     
     nwWriter.delete(networkID);
+    
+    Network nw3 = nwReader.read(networkID);
+    assertEquals(null, nw3);
+  }
+
+  @Test
+  public void testInsertDeleteOneNetworkWithNodes() throws core.DatabaseException {
+    Long networkID = 99997L;
+    String name = "NetworkWriterTest testInsertDeleteOneNetworkWithNodes";
+    String desc = "for test";
+
+    Network nw = new Network();
+    
+    nw.setId(networkID);
+    nw.setName(name);
+    nw.setDescription(desc);
+    
+    nw.setNodes(new ArrayList<edu.berkeley.path.model_elements_base.Node>());
+    
+    Node nd = new Node();
+    nd.setId(42L);
+    
+    nw.getNodes().add(nd);
+
+    System.out.println("***************** Test Network: " + nw);
+    
+    nwWriter.insert(nw);
+    
+    Network nw2 = nwReader.read(nw.getLongId());
+
+    assertTrue(null != nw2);
+    assertEquals(1, nw2.getNodes().size());
+    assertEquals(nd.getLongId(), ((Node)nw2.getNodes().get(0)).getLongId());
+    
+    nwWriter.delete(networkID); // CASCADING?
+    (new NodeWriter(new DBParams())).delete(nd.getLongId(), networkID);
     
     Network nw3 = nwReader.read(networkID);
     assertEquals(null, nw3);
