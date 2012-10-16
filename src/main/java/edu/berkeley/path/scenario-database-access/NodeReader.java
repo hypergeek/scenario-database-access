@@ -54,7 +54,10 @@ public class NodeReader extends DatabaseReader {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+    this.dbParams = dbParams;
   }
+  
+  DBParams dbParams;
   
   /**
    * Read one node with the given ID from the database.

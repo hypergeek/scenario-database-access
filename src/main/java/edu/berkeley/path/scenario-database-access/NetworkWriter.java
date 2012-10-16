@@ -54,7 +54,10 @@ public class NetworkWriter extends DatabaseWriter {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+    this.dbParams = dbParams;
   }
+  
+  DBParams dbParams;
   
   /**
    * Insert the given network into the database.

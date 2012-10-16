@@ -54,7 +54,10 @@ public class NetworkReader extends DatabaseReader {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+    this.dbParams = dbParams;
   }
+  
+  DBParams dbParams;
   
   /**
    * Read one network with the given ID from the database.
@@ -111,7 +114,11 @@ public class NetworkReader extends DatabaseReader {
     Network network = readRow(networkID);
 
     if (network != null) {
-      // NodeReader .. readNodes()
+      NodeReader ndReader = new NodeReader(dbParams);
+      network.setNodes(
+        (java.util.List<edu.berkeley.path.model_elements_base.Node>)
+        (java.util.List<?>)
+        ndReader.readNodes(networkID));
 //        network.resolveReferences();
     }
     return network;

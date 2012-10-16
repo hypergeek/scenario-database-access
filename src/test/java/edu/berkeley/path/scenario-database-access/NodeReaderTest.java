@@ -76,6 +76,7 @@ public class NodeReaderTest {
     Long nd1Id = 1L;
     Long nd2Id = 2L;
     
+    // NOTE: no transaction in the following
     ArrayList<Node> nodes = ndReader.readNodes(networkID);
 
     //System.out.println("testReadAllNodesInNetwork: get(0): " + nodes.get(0));

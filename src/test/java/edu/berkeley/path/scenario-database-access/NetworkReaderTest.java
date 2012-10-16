@@ -60,5 +60,7 @@ public class NetworkReaderTest {
     //System.out.println("Test Network: " + nw);
     
     assertEquals(networkID, nw.getLongId());
+
+    assertEquals(2, nw.getNodes().size());
   }
 }

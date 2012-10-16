@@ -54,7 +54,10 @@ public class ScenarioWriter extends DatabaseWriter {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+    this.dbParams = dbParams;
   }
+  
+  DBParams dbParams;
   
   /**
    * Insert the given scenario into the database.

@@ -54,7 +54,10 @@ public class ScenarioReader extends DatabaseReader {
       dbParams.name,
       dbParams.user,
       dbParams.pass);
+    this.dbParams = dbParams;
   }
+  
+  DBParams dbParams;
   
   /**
    * Read one scenario with the given ID from the database.
