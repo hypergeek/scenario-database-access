@@ -93,7 +93,7 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Insert the given network into the database, including dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
    * 
    * @param network  the network
    */
@@ -105,7 +105,7 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Insert just the network row into the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
    * 
    * @param network  the network
    */
@@ -175,7 +175,9 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Update the given network in the database, including dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
+   * 
+   * @see #write() if you want a transaction and logging around the operation.
    * 
    * @param network  the network
    */
@@ -187,7 +189,7 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Update just the network row into the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
    * 
    * @param network  the network
    */
@@ -258,8 +260,8 @@ public class NetworkWriter extends DatabaseWriter {
   }
 
   /**
-   * Insert just the network row into the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * Delete just the network row from the database. Ignores dependent objects, such
+   * as nodes and links.
    * 
    * @param network  the network
    */

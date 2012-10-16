@@ -262,7 +262,7 @@ public class ScenarioWriter extends DatabaseWriter {
   }
 
   /**
-   * Insert just the scenario row into the database. Ignores dependent objects, such
+   * Delete just the scenario row from the database. Ignores dependent objects, such
    * as networks and profile sets.
    * 
    * @param scenario  the scenario

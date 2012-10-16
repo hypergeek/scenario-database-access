@@ -100,7 +100,9 @@ public class NetworkReader extends DatabaseReader {
 
   /**
    * Read the network row with the given ID from the database, including dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
+   * 
+   * @see #read() if you want a transaction and logging around the operation.
    * 
    * @param networkID  numerical ID of the network in the database
    * @return Network.
@@ -109,6 +111,7 @@ public class NetworkReader extends DatabaseReader {
     Network network = readRow(networkID);
 
     if (network != null) {
+      // NodeReader .. readNodes()
 //        network.resolveReferences();
     }
     return network;
@@ -116,7 +119,7 @@ public class NetworkReader extends DatabaseReader {
 
   /**
    * Read just the network row with the given ID from the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * as nodes and links.
    * 
    * @param networkID  numerical ID of the network in the database
    * @return Network, with null for all dependent objects.
@@ -183,7 +186,7 @@ public class NetworkReader extends DatabaseReader {
       String name = psRSGetVarChar(query, "NAME");
       String desc = psRSGetVarChar(query, "DESCRIPTION");
       
-      network.id = id.toString();
+      network.setId(id);
       network.name = name;
       network.description = desc;
 

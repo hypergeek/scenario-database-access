@@ -185,7 +185,7 @@ public class ScenarioReader extends DatabaseReader {
       String name = psRSGetVarChar(query, "NAME");
       String desc = psRSGetVarChar(query, "DESCRIPTION");
       
-      scenario.id = id.toString();
+      scenario.setId(id);
       scenario.name = name;
       scenario.description = desc;
 
