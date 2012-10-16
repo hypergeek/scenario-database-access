@@ -33,6 +33,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import edu.berkeley.path.model_elements.*;
 
@@ -83,7 +84,16 @@ public class NodeReaderTest {
     //System.out.println("testReadAllNodesInNetwork: get(1): " + nodes.get(1));
     
     assertEquals(2, nodes.size());
-    assertEquals(nd1Id, nodes.get(0).getLongId());
-    assertEquals(nd2Id, nodes.get(1).getLongId());
+    
+    HashSet<Long> expectedIds = new HashSet<Long>();
+    HashSet<Long> actualIds = new HashSet<Long>();
+    
+    expectedIds.add(nd1Id);
+    expectedIds.add(nd2Id);
+    
+    actualIds.add(nodes.get(0).getLongId());
+    actualIds.add(nodes.get(1).getLongId());
+    
+    assertEquals(expectedIds, actualIds);
   }
 }

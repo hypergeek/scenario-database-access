@@ -30,6 +30,7 @@
 package edu.berkeley.path.scenario_database_access;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -63,6 +64,7 @@ public class NodeWriter extends DatabaseWriter {
    * Insert the given node into the database.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void insert(Node node, long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
@@ -99,15 +101,57 @@ public class NodeWriter extends DatabaseWriter {
    * Insert the given node into the database, including dependent objects.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void insertWithDependents(Node node, long networkID) throws DatabaseException {
     insertRow(node, networkID);
+  }
+  
+  /**
+   * Insert the given list of nodes into the specified network in the database.
+   * This is intended to be called from @see NetworkWriter, so it does
+   * not set up a transaction of its own. Does not check for existing nodes,
+   * except to fail if duplicate nodes are inserted. If you want to *replace*
+   * the entire node list of a network, call @see deleteAllNodes() first.
+   * 
+   * @param nodes list of nodes
+   * @param networkID numerical ID of the network
+   */
+  public void insertNodes(List<Node> nodes, long networkID) throws DatabaseException {
+    String query = "insert_nodes_in_network_" + networkID;
+    
+    psCreate(query,
+      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID) VALUES(?, ?)"
+    );
+
+    try {
+      psClearParams(query);
+
+      for (Node node : nodes) {
+        psSetBigInt(query, 1, node.getLongId());
+        psSetBigInt(query, 2, networkID);
+        
+        long rows = psUpdate(query);
+        
+        if (rows != 1) {
+           throw new DatabaseException(null, "Node not unique: network id=" +
+            networkID + " has " +
+            rows + "rows with id=" + node.getId(), this, query);
+        }
+      }
+    }
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
+    }
   }
 
   /**
    * Insert just the node row into the database.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void insertRow(Node node, long networkID) throws DatabaseException {
     String query = "insert_node_" + node.getId();
@@ -121,7 +165,7 @@ public class NodeWriter extends DatabaseWriter {
 
       psSetBigInt(query, 1, node.getLongId());
       psSetBigInt(query, 2, networkID);
-            
+      
       long rows = psUpdate(query);
       if (rows != 1) {
          throw new DatabaseException(null, "Node not unique: network id=" +
@@ -140,6 +184,7 @@ public class NodeWriter extends DatabaseWriter {
    * Update the given node in the database.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void update(Node node, long networkID) throws DatabaseException {
     String nodeIdStr = "node.{id=" + node.getId() + ", network_id=" + networkID + "}";
@@ -178,6 +223,7 @@ public class NodeWriter extends DatabaseWriter {
    * @see #write() if you want a transaction and logging around the operation.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void updateWithDependents(Node node, long networkID) throws DatabaseException {
     updateRow(node, networkID);
@@ -187,6 +233,7 @@ public class NodeWriter extends DatabaseWriter {
    * Update just the node row into the database.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void updateRow(Node node, long networkID) throws DatabaseException {
     String query = "update_node_" + node.getId();
@@ -220,6 +267,7 @@ public class NodeWriter extends DatabaseWriter {
    * Delete the given node ID from the database.
    * 
    * @param nodeID  the node ID
+   * @param networkID numerical ID of the network
    */
   public void delete(long nodeID, long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
@@ -258,6 +306,7 @@ public class NodeWriter extends DatabaseWriter {
    * Delete just the node row from the database.
    * 
    * @param node  the node
+   * @param networkID numerical ID of the network
    */
   public void deleteRow(long nodeID, long networkID) throws DatabaseException {
     String query = "delete_node_" + nodeID;
@@ -276,6 +325,32 @@ public class NodeWriter extends DatabaseWriter {
           networkID + " has " +
           rows + "rows with id=" + nodeID, this, query);
       }
+    }
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
+    }
+  }
+  
+  /**
+   * Delete all nodes of the specified network from the database.
+   * 
+   * @param networkID numerical ID of the network
+   * @return number of nodes deleted
+   */
+  public long deleteAllNodes(long networkID) throws DatabaseException {
+    String query = "delete_nodes_in_network_" + networkID;
+    
+    psCreate(query,
+      "DELETE FROM \"VIA\".\"NODES\" WHERE (\"NETWORK_ID\" = ?)"
+    );
+
+    try {
+      psClearParams(query);
+      psSetBigInt(query, 1, networkID);
+      long rows = psUpdate(query);
+      return rows;
     }
     finally {
       if (query != null) {

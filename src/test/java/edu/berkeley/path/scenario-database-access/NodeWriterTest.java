@@ -33,6 +33,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import edu.berkeley.path.model_elements.*;
 
@@ -52,13 +53,15 @@ public class NodeWriterTest {
   }
 
   @Before
-  public void setup() {
+  public void setup() throws core.DatabaseException {
     // we assume node (1, 99998) exists, but we could insert it here
-    // we assume node (1, 99997) does not exist, but we could delete it here
+    // we assume network 99996 exists, but we could insert it here
+    
+    ndWriter.deleteAllNodes(99996L);
   }
   
   @Test
-  public void testWriteOneNode() throws core.DatabaseException {
+  public void testUpdateOneNode() throws core.DatabaseException {
     Long networkID = 99998L;
     
     Node nd = new Node();
@@ -73,7 +76,7 @@ public class NodeWriterTest {
   }
   
   @Test
-  public void testInsertDeleteOneNetwork() throws core.DatabaseException {
+  public void testInsertDeleteOneNode() throws core.DatabaseException {
     Long networkID = 99997L;
 
     Node nd = new Node();
@@ -90,5 +93,44 @@ public class NodeWriterTest {
     
     Node nd3 = ndReader.read(nd.getLongId(), networkID);
     assertEquals(null, nd3);
+  }
+
+  @Test
+  public void testInsertDeleteAllNodesInNetwork() throws core.DatabaseException {
+    Long networkID = 99996L;
+
+    Long nd1Id = 1L;
+    Long nd2Id = 2L;
+    
+    Node nd1 = new Node();
+    nd1.setId(nd1Id);
+    Node nd2 = new Node();
+    nd2.setId(nd2Id);
+
+    ArrayList<Node> nodes = new ArrayList<Node>();
+    
+    nodes.add(nd1);
+    nodes.add(nd2);
+    
+    // NOTE: no transaction in the following
+    ndWriter.insertNodes(nodes, networkID);
+
+    //System.out.println("testWriteAllNodesInNetwork: get(0): " + nodes.get(0));
+    //System.out.println("testWriteAllNodesInNetwork: get(1): " + nodes.get(1));
+    
+    ArrayList<Node> nodes2 = ndReader.readNodes(networkID);
+    
+    assertEquals(2, nodes2.size());
+    
+    HashSet<Long> expectedIds = new HashSet<Long>();
+    HashSet<Long> actualIds = new HashSet<Long>();
+
+    expectedIds.add(nd1Id);
+    expectedIds.add(nd2Id);
+    
+    actualIds.add(nodes2.get(0).getLongId());
+    actualIds.add(nodes2.get(1).getLongId());
+    
+    assertEquals(expectedIds, actualIds);
   }
 }
