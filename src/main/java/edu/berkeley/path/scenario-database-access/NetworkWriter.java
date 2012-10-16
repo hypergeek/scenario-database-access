@@ -106,12 +106,13 @@ public class NetworkWriter extends DatabaseWriter {
 
     insertRow(network);
     
+    long networkID = network.getLongId();
     List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
     if (nodes != null && nodes.size() != 0) {
-      ndWriter.insertNodes(nodes, network.getLongId());
+      ndWriter.insertNodes(nodes, networkID);
     }
     
-    // insert links
+    // TODO insert links
   }
 
   /**
@@ -186,16 +187,26 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Update the given network in the database, including dependent objects, such
-   * as nodes and links.
+   * as nodes and links. Note the pre-existing nodes (etc) in the database
+   * are deleted first.
    * 
    * @see #write() if you want a transaction and logging around the operation.
    * 
    * @param network  the network
    */
   public void updateWithDependents(Network network) throws DatabaseException {
+    NodeWriter ndWriter = new NodeWriter(this.dbParams);
+
     updateRow(network);
-      
-    //update nodes and links etc
+    
+    long networkID = network.getLongId();
+    ndWriter.deleteAllNodes(networkID);
+    List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
+    if (nodes != null && nodes.size() != 0) {
+      ndWriter.insertNodes(nodes, networkID);
+    }
+    
+    // TODO update links
   }
 
   /**
@@ -234,20 +245,23 @@ public class NetworkWriter extends DatabaseWriter {
   }
 
   /**
-   * Delete the given network ID from the database.
+   * Delete the given network ID from the database, and all dependent rows
+   * including nodes and links.
    * 
    * @param networkID  the network ID
    */
   public void delete(long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
+    NodeWriter ndWriter = new NodeWriter(this.dbParams);
     
     try {
       transactionBegin();
       Monitor.debug("Network delete transaction beginning on network.id=" + networkID);
       
       deleteRow(networkID);
+      ndWriter.deleteAllNodes(networkID);
       
-      ////delete network etc
+      // TODO delete links
 
       transactionCommit();
       Monitor.debug("Network delete transaction committing on network.id=" + networkID);

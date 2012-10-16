@@ -108,6 +108,11 @@ public class NetworkWriterTest {
   }
 
   @Test
+  public void testUpdateOneNetworkWithNodes() throws core.DatabaseException {
+    // TODO
+  }
+
+  @Test
   public void testInsertDeleteOneNetworkWithNodes() throws core.DatabaseException {
     Long networkID = 99997L;
     String name = "NetworkWriterTest testInsertDeleteOneNetworkWithNodes";
@@ -136,10 +141,11 @@ public class NetworkWriterTest {
     assertEquals(1, nw2.getNodes().size());
     assertEquals(nd.getLongId(), ((Node)nw2.getNodes().get(0)).getLongId());
     
-    nwWriter.delete(networkID); // CASCADING?
-    (new NodeWriter(new DBParams())).delete(nd.getLongId(), networkID);
+    nwWriter.delete(networkID);
+//    (new NodeWriter(new DBParams())).delete(nd.getLongId(), networkID);
     
     Network nw3 = nwReader.read(networkID);
     assertEquals(null, nw3);
+    assertEquals(0, (new NodeReader(new DBParams())).readNodes(networkID).size());
   }
 }
