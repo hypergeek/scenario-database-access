@@ -131,7 +131,7 @@ public class NetworkWriterTest {
     
     nw.getNodes().add(nd);
 
-    System.out.println("***************** Test Network: " + nw);
+    //System.out.println("Test Network: " + nw);
     
     nwWriter.insert(nw);
     

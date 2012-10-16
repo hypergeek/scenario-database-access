@@ -103,6 +103,7 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void insertWithDependents(Network network) throws DatabaseException {
     NodeWriter ndWriter = new NodeWriter(this.dbParams);
+    LinkWriter lnWriter = new LinkWriter(this.dbParams);
 
     insertRow(network);
     
@@ -112,7 +113,10 @@ public class NetworkWriter extends DatabaseWriter {
       ndWriter.insertNodes(nodes, networkID);
     }
     
-    // TODO insert links
+    List<Link> links = (List<Link>)(List<?>)network.getLinks();
+    if (links != null && links.size() != 0) {
+      lnWriter.insertLinks(links, networkID);
+    }
   }
 
   /**
@@ -196,17 +200,23 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void updateWithDependents(Network network) throws DatabaseException {
     NodeWriter ndWriter = new NodeWriter(this.dbParams);
+    LinkWriter lnWriter = new LinkWriter(this.dbParams);
 
     updateRow(network);
     
     long networkID = network.getLongId();
+
     ndWriter.deleteAllNodes(networkID);
     List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
     if (nodes != null && nodes.size() != 0) {
       ndWriter.insertNodes(nodes, networkID);
     }
     
-    // TODO update links
+    lnWriter.deleteAllLinks(networkID);
+    List<Link> links = (List<Link>)(List<?>)network.getLinks();
+    if (links != null && links.size() != 0) {
+      lnWriter.insertLinks(links, networkID);
+    }
   }
 
   /**
@@ -253,6 +263,7 @@ public class NetworkWriter extends DatabaseWriter {
   public void delete(long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
     NodeWriter ndWriter = new NodeWriter(this.dbParams);
+    LinkWriter lnWriter = new LinkWriter(this.dbParams);
     
     try {
       transactionBegin();
@@ -260,8 +271,7 @@ public class NetworkWriter extends DatabaseWriter {
       
       deleteRow(networkID);
       ndWriter.deleteAllNodes(networkID);
-      
-      // TODO delete links
+      lnWriter.deleteAllLinks(networkID);
 
       transactionCommit();
       Monitor.debug("Network delete transaction committing on network.id=" + networkID);
