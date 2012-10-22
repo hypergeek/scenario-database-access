@@ -124,7 +124,7 @@ public class NetworkWriterTest {
     nw.setName(name);
     nw.setDescription(desc);
     
-    nw.setNodes(new ArrayList<edu.berkeley.path.model_elements_base.Node>());
+    nw.setNodeList(new ArrayList<Node>());
     
     Node nd = new Node();
     nd.setId(42L);
@@ -142,7 +142,43 @@ public class NetworkWriterTest {
     assertEquals(nd.getLongId(), ((Node)nw2.getNodes().get(0)).getLongId());
     
     nwWriter.delete(networkID);
-//    (new NodeWriter(new DBParams())).delete(nd.getLongId(), networkID);
+    
+    Network nw3 = nwReader.read(networkID);
+    assertEquals(null, nw3);
+    assertEquals(0, (new NodeReader(new DBParams())).readNodes(networkID).size());
+  }
+
+  @Test
+  public void testInsertDeleteOneNetworkWithNodesAndLinks() throws core.DatabaseException {
+    Long networkID = 99997L;
+    String name = "NetworkWriterTest testInsertDeleteOneNetworkWithNodesAndLinks";
+    String desc = "for test";
+
+    Network nw = new Network();
+    
+    nw.setId(networkID);
+    nw.setName(name);
+    nw.setDescription(desc);
+    
+    nw.setNodeList(new ArrayList<Node>());
+    nw.setLinkList(new ArrayList<Link>());
+    
+    Node nd = new Node();
+    nd.setId(42L);
+    
+    nw.getNodes().add(nd);
+
+    //System.out.println("Test Network: " + nw);
+    
+    nwWriter.insert(nw);
+    
+    Network nw2 = nwReader.read(nw.getLongId());
+
+    assertTrue(null != nw2);
+    assertEquals(1, nw2.getNodes().size());
+    assertEquals(nd.getLongId(), ((Node)nw2.getNodes().get(0)).getLongId());
+    
+    nwWriter.delete(networkID);
     
     Network nw3 = nwReader.read(networkID);
     assertEquals(null, nw3);

@@ -115,16 +115,10 @@ public class NetworkReader extends DatabaseReader {
 
     if (network != null) {
       NodeReader ndReader = new NodeReader(dbParams);
-      network.setNodes(
-        (java.util.List<edu.berkeley.path.model_elements_base.Node>)
-        (java.util.List<?>)
-        ndReader.readNodes(networkID));
+      network.setNodeList(ndReader.readNodes(networkID));
 
       LinkReader lnReader = new LinkReader(dbParams);
-      network.setLinks(
-        (java.util.List<edu.berkeley.path.model_elements_base.Link>)
-        (java.util.List<?>)
-        lnReader.readLinks(networkID));
+      network.setLinkList(lnReader.readLinks(networkID));
 
         network.resolveReferences();
     }
