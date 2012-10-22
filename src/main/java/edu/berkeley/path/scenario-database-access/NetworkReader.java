@@ -126,7 +126,7 @@ public class NetworkReader extends DatabaseReader {
         (java.util.List<?>)
         lnReader.readLinks(networkID));
 
-//        network.resolveReferences();
+        network.resolveReferences();
     }
     return network;
   }

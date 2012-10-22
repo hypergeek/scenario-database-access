@@ -48,6 +48,7 @@ public class NetworkReaderTest {
   @Before
   public void setup() {
     // we assume network 99999 exists, but we could insert it here
+    // we assume network 99990 exists
   }
   
   @Test
@@ -62,5 +63,35 @@ public class NetworkReaderTest {
     assertEquals(networkID, nw.getLongId());
 
     assertEquals(2, nw.getNodes().size());
+  }
+  
+  @Test
+  public void test_resolveReferences() throws core.DatabaseException {
+    Long networkID = 99990L;
+    Network nw;
+        
+    nw = nwReader.read(networkID);
+
+    //System.out.println("Test Network: " + nw);
+    
+    assertEquals(networkID, nw.getLongId());
+
+    assertEquals(3, nw.getNodes().size());
+    assertEquals(2, nw.getLinks().size());
+    
+    Link ln1 = nw.getLinkById(1L);
+    assert(null != ln1);
+    
+    Node ln1Begin = ln1.getBegin();
+    assert(null != ln1Begin);
+    
+    Node ln1End = ln1.getEnd();
+    assert(null != ln1End);
+    
+    Node nd1 = nw.getNodeById(1L);
+    assertEquals(ln1Begin, nd1);
+    
+    Node nd2 = nw.getNodeById(2L);
+    assertEquals(ln1End, nd2);
   }
 }
