@@ -102,12 +102,15 @@ public class NetworkWriter extends DatabaseWriter {
    * @param network  the network
    */
   public void insertWithDependents(Network network) throws DatabaseException {
+    insertRow(network);
+    insertDependents(network);
+  }
+  
+  private void insertDependents(Network network) throws DatabaseException {
     NodeWriter ndWriter = new NodeWriter(this.dbParams);
     LinkWriter lnWriter = new LinkWriter(this.dbParams);
-
-    insertRow(network);
-    
     long networkID = network.getLongId();
+
     List<Node> nodes = network.getNodeList();
     if (nodes != null && nodes.size() != 0) {
       ndWriter.insertNodes(nodes, networkID);
@@ -191,7 +194,7 @@ public class NetworkWriter extends DatabaseWriter {
 
   /**
    * Update the given network in the database, including dependent objects, such
-   * as nodes and links. Note the pre-existing nodes (etc) in the database
+   * as nodes and links. Note the pre-existing nodes, links, (etc) in the database
    * are deleted first.
    * 
    * @see #write() if you want a transaction and logging around the operation.
@@ -199,24 +202,11 @@ public class NetworkWriter extends DatabaseWriter {
    * @param network  the network
    */
   public void updateWithDependents(Network network) throws DatabaseException {
-    NodeWriter ndWriter = new NodeWriter(this.dbParams);
-    LinkWriter lnWriter = new LinkWriter(this.dbParams);
-
-    updateRow(network);
-    
     long networkID = network.getLongId();
 
-    ndWriter.deleteAllNodes(networkID);
-    List<Node> nodes = network.getNodeList();
-    if (nodes != null && nodes.size() != 0) {
-      ndWriter.insertNodes(nodes, networkID);
-    }
-    
-    lnWriter.deleteAllLinks(networkID);
-    List<Link> links = network.getLinkList();
-    if (links != null && links.size() != 0) {
-      lnWriter.insertLinks(links, networkID);
-    }
+    deleteDependents(networkID);
+    updateRow(network);
+    insertDependents(network);
   }
 
   /**
@@ -262,16 +252,13 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void delete(long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
-    NodeWriter ndWriter = new NodeWriter(this.dbParams);
-    LinkWriter lnWriter = new LinkWriter(this.dbParams);
     
     try {
       transactionBegin();
       Monitor.debug("Network delete transaction beginning on network.id=" + networkID);
       
+      deleteDependents(networkID);
       deleteRow(networkID);
-      ndWriter.deleteAllNodes(networkID);
-      lnWriter.deleteAllLinks(networkID);
 
       transactionCommit();
       Monitor.debug("Network delete transaction committing on network.id=" + networkID);
@@ -320,5 +307,18 @@ public class NetworkWriter extends DatabaseWriter {
         psDestroy(query);
       }
     }
+  }
+
+  /**
+   * Delete just the dependent objects, such as nodes and links.
+   * 
+   * @param network  the network
+   */
+  private void deleteDependents(long networkID) throws DatabaseException {
+    NodeWriter ndWriter = new NodeWriter(this.dbParams);
+    LinkWriter lnWriter = new LinkWriter(this.dbParams);
+
+    ndWriter.deleteAllNodes(networkID);
+    lnWriter.deleteAllLinks(networkID);
   }
 }
