@@ -57,7 +57,8 @@ public class ScenarioReader extends DatabaseReader {
   DBParams dbParams;
   
   /**
-   * Read one scenario with the given ID from the database.
+   * Read the scenario with the given ID from the database, including dependent objects, such
+   * as networks and profile sets.
    * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario
@@ -99,7 +100,7 @@ public class ScenarioReader extends DatabaseReader {
   }
 
   /**
-   * Read the scenario row with the given ID from the database, including dependent objects, such
+   * Read the scenario with the given ID from the database, including dependent objects, such
    * as networks and profile sets.
    * 
    * @see #read() if you want a transaction and logging around the operation.

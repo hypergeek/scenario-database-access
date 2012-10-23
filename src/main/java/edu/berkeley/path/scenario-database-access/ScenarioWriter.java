@@ -61,6 +61,8 @@ public class ScenarioWriter extends DatabaseWriter {
   
   /**
    * Insert the given scenario into the database.
+   * Does not insert networks, profiles, or other independently existing
+   * data structures associated with the scenario.
    * 
    * @param scenario  the scenario
    */
@@ -95,20 +97,20 @@ public class ScenarioWriter extends DatabaseWriter {
   }
 
   /**
-   * Insert the given scenario into the database, including dependent objects, such
-   * as networks and profile sets.
+   * Insert the given scenario into the database.
+   * Does not insert networks, profiles, or other independently existing
+   * data structures associated with the scenario.
    * 
    * @param scenario  the scenario
    */
   public void insertWithDependents(Scenario scenario) throws DatabaseException {
     insertRow(scenario);
-      
-    //insert network etc
   }
 
   /**
-   * Insert just the scenario row into the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * Insert just the scenario row into the database.
+   * Does not insert networks, profiles, or other independently existing
+   * data structures associated with the scenario.
    * 
    * @param scenario  the scenario
    */
@@ -145,6 +147,8 @@ public class ScenarioWriter extends DatabaseWriter {
   
   /**
    * Update the given scenario in the database.
+   * Does not update networks, profiles, or other independently existing
+   * data structures associated with the scenario.
    * 
    * @param scenario  the scenario
    */
@@ -179,20 +183,16 @@ public class ScenarioWriter extends DatabaseWriter {
   }
 
   /**
-   * Update the given scenario in the database, including dependent objects, such
-   * as networks and profile sets.
+   * Update the given scenario in the database.
    * 
    * @param scenario  the scenario
    */
   public void updateWithDependents(Scenario scenario) throws DatabaseException {
     updateRow(scenario);
-      
-    //update network etc
   }
 
   /**
-   * Update just the scenario row into the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * Update just the scenario row into the database.
    * 
    * @param scenario  the scenario
    */
@@ -229,6 +229,8 @@ public class ScenarioWriter extends DatabaseWriter {
 
   /**
    * Delete the given scenario ID from the database.
+   * Does not delete networks, profiles, or other independently existing
+   * data structures associated with the scenario.
    * 
    * @param scenarioID  the scenario ID
    */
@@ -241,8 +243,6 @@ public class ScenarioWriter extends DatabaseWriter {
       
       deleteRow(scenarioID);
       
-      ////delete network etc
-
       transactionCommit();
       Monitor.debug("Scenario delete transaction committing on scenario.id=" + scenarioID);
     }
@@ -265,8 +265,7 @@ public class ScenarioWriter extends DatabaseWriter {
   }
 
   /**
-   * Delete just the scenario row from the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * Delete just the scenario row from the database.
    * 
    * @param scenario  the scenario
    */
