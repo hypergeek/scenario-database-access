@@ -120,7 +120,7 @@ public class NetworkReader extends DatabaseReader {
       LinkReader lnReader = new LinkReader(dbParams);
       network.setLinkList(lnReader.readLinks(networkID));
 
-        network.resolveReferences();
+      network.resolveReferences();
     }
     return network;
   }

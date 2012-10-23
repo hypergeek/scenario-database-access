@@ -29,10 +29,7 @@
 
 package edu.berkeley.path.scenario_database_access;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 
 import edu.berkeley.path.model_elements.*;
 
@@ -105,6 +102,8 @@ public class ScenarioReader extends DatabaseReader {
    * Read the scenario row with the given ID from the database, including dependent objects, such
    * as networks and profile sets.
    * 
+   * @see #read() if you want a transaction and logging around the operation.
+   * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario.
    */
@@ -112,11 +111,48 @@ public class ScenarioReader extends DatabaseReader {
     Scenario scenario = readRow(scenarioID);
 
     if (scenario != null) {
-//      if (scenario has networks...)
-//        NetworkReader nwr = new NetworkReader();
-//        scenario.network = 
+      NetworkReader nwr = new NetworkReader(dbParams);
+      List<Network> networks = scenario.getNetworkList();
+      for (long networkID: readNetworkIDs(scenarioID)) {
+        Network nw = nwr.readWithDependents(networkID);
+        networks.add(nw);
+      }
     }
+    
     return scenario;
+  }
+  
+  /**
+   * Read the list of network IDs associated with the given scenario.
+   * 
+   * @param scenarioID  numerical ID of the scenario in the database
+   * @return List of network IDs.
+   */
+  public List<Long> readNetworkIDs(long scenarioID) throws DatabaseException {
+    ArrayList<Long> networkIDs = new ArrayList();
+    
+    String query = "read_networks_scenario_" + scenarioID;
+    
+    try {
+      psCreate(query,
+        "SELECT * FROM \"VIA\".\"NETWORK_SETS\" WHERE (\"SCENARIO_ID\" = ?)"
+      );
+    
+      psClearParams(query);
+      psSetBigInt(query, 1, scenarioID);
+      psQuery(query);
+
+      while (psRSNext(query)) {
+        networkIDs.add(psRSGetBigInt(query, "NETWORK_ID"));
+      }
+    }
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
+    }
+    
+    return networkIDs;
   }
 
   /**

@@ -34,6 +34,8 @@ import static org.junit.Assert.*;
 
 import edu.berkeley.path.model_elements.*;
 
+import java.util.*;
+
 /**
  * Tests methods for reading Scenarios from a database.
  * @author vjoel
@@ -48,17 +50,24 @@ public class ScenarioReaderTest {
   @Before
   public void setup() {
     // we assume scenario 99999 exists, but we could insert it here
+    // we assume network 99989 exists, but we could insert it here
   }
   
   @Test
   public void testReadOneScenario() throws core.DatabaseException {
     Long scenarioID = 99999L;
     Scenario sc;
-        
+    
     sc = scReader.read(scenarioID);
 
-    //System.out.println("Test Scenario: " + sc);
+//    System.out.println("Test Scenario: " + sc);
     
     assertEquals(scenarioID, sc.getLongId());
+    
+    List<Network> networks = sc.getNetworkList();
+    assertEquals(1, networks.size());
+    
+    assertEquals(2, networks.get(0).getNodeList().size());
+    assertEquals(1, networks.get(0).getLinkList().size());
   }
 }
