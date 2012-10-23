@@ -62,7 +62,7 @@ public class NetworkReaderTest {
     
     assertEquals(networkID, nw.getLongId());
 
-    assertEquals(2, nw.getNodes().size());
+    assertEquals(2, nw.getNodeList().size());
   }
   
   @Test
@@ -76,8 +76,8 @@ public class NetworkReaderTest {
     
     assertEquals(networkID, nw.getLongId());
 
-    assertEquals(3, nw.getNodes().size());
-    assertEquals(2, nw.getLinks().size());
+    assertEquals(3, nw.getNodeList().size());
+    assertEquals(2, nw.getLinkList().size());
     
     Link ln1 = nw.getLinkById(1L);
     assert(null != ln1);

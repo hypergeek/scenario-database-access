@@ -108,12 +108,12 @@ public class NetworkWriter extends DatabaseWriter {
     insertRow(network);
     
     long networkID = network.getLongId();
-    List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
+    List<Node> nodes = network.getNodeList();
     if (nodes != null && nodes.size() != 0) {
       ndWriter.insertNodes(nodes, networkID);
     }
     
-    List<Link> links = (List<Link>)(List<?>)network.getLinks();
+    List<Link> links = network.getLinkList();
     if (links != null && links.size() != 0) {
       lnWriter.insertLinks(links, networkID);
     }
@@ -207,13 +207,13 @@ public class NetworkWriter extends DatabaseWriter {
     long networkID = network.getLongId();
 
     ndWriter.deleteAllNodes(networkID);
-    List<Node> nodes = (List<Node>)(List<?>)network.getNodes();
+    List<Node> nodes = network.getNodeList();
     if (nodes != null && nodes.size() != 0) {
       ndWriter.insertNodes(nodes, networkID);
     }
     
     lnWriter.deleteAllLinks(networkID);
-    List<Link> links = (List<Link>)(List<?>)network.getLinks();
+    List<Link> links = network.getLinkList();
     if (links != null && links.size() != 0) {
       lnWriter.insertLinks(links, networkID);
     }

@@ -129,7 +129,7 @@ public class NetworkWriterTest {
     Node nd = new Node();
     nd.setId(42L);
     
-    nw.getNodes().add(nd);
+    nw.getNodeList().add(nd);
 
     //System.out.println("Test Network: " + nw);
     
@@ -138,8 +138,8 @@ public class NetworkWriterTest {
     Network nw2 = nwReader.read(nw.getLongId());
 
     assertTrue(null != nw2);
-    assertEquals(1, nw2.getNodes().size());
-    assertEquals(nd.getLongId(), ((Node)nw2.getNodes().get(0)).getLongId());
+    assertEquals(1, nw2.getNodeList().size());
+    assertEquals(nd.getLongId(), (nw2.getNodeList().get(0)).getLongId());
     
     nwWriter.delete(networkID);
     
@@ -165,17 +165,17 @@ public class NetworkWriterTest {
     
     Node nd1 = new Node();
     nd1.setId(42L);
-    nw.getNodes().add(nd1);
+    nw.getNodeList().add(nd1);
 
     Node nd2 = new Node();
     nd2.setId(43L);
-    nw.getNodes().add(nd2);
+    nw.getNodeList().add(nd2);
     
     Link ln1 = new Link();
     ln1.setId(44L);
     ln1.setBegin(nd1);
     ln1.setEnd(nd2);
-    nw.getLinks().add(ln1);
+    nw.getLinkList().add(ln1);
 
     //System.out.println("Test Network: " + nw);
     
@@ -185,9 +185,9 @@ public class NetworkWriterTest {
 
     assertTrue(null != nw2);
 
-    assertEquals(2, nw2.getNodes().size());
-    assertEquals(1, nw2.getLinks().size());
-    Link ln2 = (Link)nw2.getLinks().get(0);
+    assertEquals(2, nw2.getNodeList().size());
+    assertEquals(1, nw2.getLinkList().size());
+    Link ln2 = nw2.getLinkList().get(0);
     assertEquals(ln1.getLongId(), ln2.getLongId());
     
     nwWriter.delete(networkID);
