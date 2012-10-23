@@ -76,7 +76,7 @@ public class NodeReader extends DatabaseReader {
       transactionBegin();
       Monitor.debug("Node reader transaction beginning on " + nodeIdStr);
 
-      node = readWithDependents(nodeID, networkID);
+      node = readWithAssociates(nodeID, networkID);
 
       transactionCommit();
       Monitor.debug("Node reader transaction committing on " + nodeIdStr);
@@ -112,7 +112,7 @@ public class NodeReader extends DatabaseReader {
    * @param networkID numerical ID of the network
    * @return Node.
    */
-  public Node readWithDependents(long nodeID, long networkID) throws DatabaseException {
+  public Node readWithAssociates(long nodeID, long networkID) throws DatabaseException {
     Node node = readRow(nodeID, networkID);
 
     return node;

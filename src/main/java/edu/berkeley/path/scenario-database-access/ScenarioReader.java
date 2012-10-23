@@ -72,7 +72,7 @@ public class ScenarioReader extends DatabaseReader {
       transactionBegin();
       Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
 
-      scenario = readWithDependents(scenarioID);
+      scenario = readWithAssociates(scenarioID);
 
       transactionCommit();
       Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenarioID);
@@ -100,7 +100,7 @@ public class ScenarioReader extends DatabaseReader {
   }
 
   /**
-   * Read the scenario with the given ID from the database, including dependent objects, such
+   * Read the scenario with the given ID from the database, including associated objects, such
    * as networks and profile sets.
    * 
    * @see #read() if you want a transaction and logging around the operation.
@@ -108,14 +108,14 @@ public class ScenarioReader extends DatabaseReader {
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario.
    */
-  public Scenario readWithDependents(long scenarioID) throws DatabaseException {
+  public Scenario readWithAssociates(long scenarioID) throws DatabaseException {
     Scenario scenario = readRow(scenarioID);
 
     if (scenario != null) {
       NetworkReader nwr = new NetworkReader(dbParams);
       List<Network> networks = scenario.getNetworkList();
       for (long networkID: readNetworkIDs(scenarioID)) {
-        Network nw = nwr.readWithDependents(networkID);
+        Network nw = nwr.readWithAssociates(networkID);
         networks.add(nw);
       }
     }

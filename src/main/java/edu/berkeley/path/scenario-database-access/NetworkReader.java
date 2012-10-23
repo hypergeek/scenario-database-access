@@ -74,7 +74,7 @@ public class NetworkReader extends DatabaseReader {
       transactionBegin();
       Monitor.debug("Network reader transaction beginning on network.id=" + networkID);
 
-      network = readWithDependents(networkID);
+      network = readWithAssociates(networkID);
 
       transactionCommit();
       Monitor.debug("Network reader transaction committing on network.id=" + networkID);
@@ -102,7 +102,7 @@ public class NetworkReader extends DatabaseReader {
   }
 
   /**
-   * Read the network row with the given ID from the database, including dependent objects, such
+   * Read the network row with the given ID from the database, including associated objects, such
    * as nodes and links.
    * 
    * @see #read() if you want a transaction and logging around the operation.
@@ -110,7 +110,7 @@ public class NetworkReader extends DatabaseReader {
    * @param networkID  numerical ID of the network in the database
    * @return Network.
    */
-  public Network readWithDependents(long networkID) throws DatabaseException {
+  public Network readWithAssociates(long networkID) throws DatabaseException {
     Network network = readRow(networkID);
 
     if (network != null) {

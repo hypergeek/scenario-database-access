@@ -76,7 +76,7 @@ public class LinkReader extends DatabaseReader {
       transactionBegin();
       Monitor.debug("Link reader transaction beginning on " + linkIdStr);
 
-      link = readWithDependents(linkID, networkID);
+      link = readWithAssociates(linkID, networkID);
 
       transactionCommit();
       Monitor.debug("Link reader transaction committing on " + linkIdStr);
@@ -112,7 +112,7 @@ public class LinkReader extends DatabaseReader {
    * @param networkID numerical ID of the network
    * @return Link.
    */
-  public Link readWithDependents(long linkID, long networkID) throws DatabaseException {
+  public Link readWithAssociates(long linkID, long networkID) throws DatabaseException {
     Link link = readRow(linkID, networkID);
 
     return link;
