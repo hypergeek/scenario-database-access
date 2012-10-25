@@ -136,7 +136,7 @@ public class NodeWriter extends DatabaseWriter {
         if (rows != 1) {
            throw new DatabaseException(null, "Node not unique: network id=" +
             networkID + " has " +
-            rows + "rows with id=" + node.getId(), this, query);
+            rows + " rows with id=" + node.getId(), this, query);
         }
       }
     }
@@ -170,7 +170,7 @@ public class NodeWriter extends DatabaseWriter {
       if (rows != 1) {
          throw new DatabaseException(null, "Node not unique: network id=" +
           networkID + " has " +
-          rows + "rows with id=" + node.getId(), this, query);
+          rows + " rows with id=" + node.getId(), this, query);
       }
     }
     finally {
@@ -323,7 +323,7 @@ public class NodeWriter extends DatabaseWriter {
       if (rows != 1) {
         throw new DatabaseException(null, "Node not unique: network id=" +
           networkID + " has " +
-          rows + "rows with id=" + nodeID, this, query);
+          rows + " rows with id=" + nodeID, this, query);
       }
     }
     finally {

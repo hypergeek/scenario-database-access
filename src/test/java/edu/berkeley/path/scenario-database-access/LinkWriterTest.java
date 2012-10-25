@@ -69,6 +69,8 @@ public class LinkWriterTest {
     ln.setLength(555.0);
     ln.setBeginId("1"); // TODO create nodes instead
     ln.setEndId("2");
+    ln.setSpeedLimit(45);
+    ln.setDetailLevel(2);
     
     // TODO set more fields
         
@@ -79,6 +81,8 @@ public class LinkWriterTest {
     assertTrue(null != ln2);
     assertEquals(ln.getLongId(), ln2.getLongId());
     assertEquals((Double)555.0, ln2.getLength());
+    assertEquals((Integer)45, ln2.getSpeedLimit());
+    assertEquals((Integer)2, ln2.getDetailLevel());
 
     // TODO check more fields
   }
@@ -92,6 +96,8 @@ public class LinkWriterTest {
     ln.setLength(555.0);
     ln.setBeginId("1"); // TODO create nodes instead
     ln.setEndId("2");
+    ln.setSpeedLimit(45);
+    ln.setDetailLevel(2);
     
     lnWriter.insert(ln, networkID);
         
@@ -99,6 +105,9 @@ public class LinkWriterTest {
 
     assertTrue(null != ln2);
     assertEquals(ln.getLongId(), ln2.getLongId());
+    assertEquals((Double)555.0, ln2.getLength());
+    assertEquals((Integer)45, ln2.getSpeedLimit());
+    assertEquals((Integer)2, ln2.getDetailLevel());
     
     lnWriter.delete(ln.getLongId(), networkID);
     

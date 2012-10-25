@@ -233,9 +233,9 @@ public class LinkReader extends DatabaseReader {
       Long id = psRSGetBigInt(query, "ID");
       Long bId = psRSGetBigInt(query, "BEG_NODE_ID");
       Long eId = psRSGetBigInt(query, "END_NODE_ID");
-//      Integer speed = psRSGetInteger(query, "SPEED_LIMIT");
+      Integer speed = psRSGetInteger(query, "SPEED_LIMIT");
       Double length = psRSGetDouble(query, "LENGTH");
-//      Integer detail = psRSGetInteger(query, "DETAIL_LEVEL");
+      Integer detail = psRSGetInteger(query, "DETAIL_LEVEL");
       
 // TODO go to the link_names table for this
 //      String name = psRSGetVarChar(query, "NAME");
@@ -247,7 +247,8 @@ public class LinkReader extends DatabaseReader {
 //      link.type = type;
       link.setBeginId(bId.toString());
       link.setEndId(eId.toString());
-//    link.setSpeed(speed);
+      link.setSpeedLimit(speed);
+      link.setDetailLevel(detail);
       link.setLength(length);
 //detail
 

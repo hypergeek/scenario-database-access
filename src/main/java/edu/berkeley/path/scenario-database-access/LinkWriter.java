@@ -121,29 +121,29 @@ public class LinkWriter extends DatabaseWriter {
     String query = "insert_links_in_network_" + networkID;
     
     psCreate(query,
-      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, LENGTH) VALUES(?, ?, ?, ?, ?)"
-//      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
     );
 
     try {
       psClearParams(query);
 
       for (Link link : links) {
-        psSetBigInt(query, 1, link.getLongId());
-        psSetBigInt(query, 2, networkID);
-        psSetBigInt(query, 3, link.getBeginLongId());
-        psSetBigInt(query, 4, link.getEndLongId());
-//        psSetInteger(query, 5, 123); // TODO Link needs the speed field
-//        psSetDouble(query, 6, link.getLength());
-        psSetDouble(query, 5, link.getLength());
-//        psSetInteger(query, 7, 1); // TODO Link needs the detail_level field
+        int i=0;
+        
+        psSetBigInt(query, ++i, link.getLongId());
+        psSetBigInt(query, ++i, networkID);
+        psSetBigInt(query, ++i, link.getBeginLongId());
+        psSetBigInt(query, ++i, link.getEndLongId());
+        psSetInteger(query, ++i, link.getSpeedLimit());
+        psSetDouble(query, ++i, link.getLength());
+        psSetInteger(query, ++i, link.getDetailLevel());
         
         long rows = psUpdate(query);
         
         if (rows != 1) {
            throw new DatabaseException(null, "Link not unique: network id=" +
             networkID + " has " +
-            rows + "rows with id=" + link.getId(), this, query);
+            rows + " rows with id=" + link.getId(), this, query);
         }
       }
     }
@@ -164,27 +164,27 @@ public class LinkWriter extends DatabaseWriter {
     String query = "insert_link_" + link.getId();
 
     psCreate(query,
-      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, LENGTH) VALUES(?, ?, ?, ?, ?)"
-//      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
     );
   
     try {
       psClearParams(query);
 
-      psSetBigInt(query, 1, link.getLongId());
-      psSetBigInt(query, 2, networkID);
-      psSetBigInt(query, 3, link.getBeginLongId());
-      psSetBigInt(query, 4, link.getEndLongId());
-//      psSetInteger(query, 5, 123); // TODO Link needs the speed field
-//      psSetDouble(query, 6, link.getLength());
-      psSetDouble(query, 5, link.getLength());
-//      psSetInteger(query, 7, 1); // TODO Link needs the detail_level field
+      int i=0;
+      
+      psSetBigInt(query, ++i, link.getLongId());
+      psSetBigInt(query, ++i, networkID);
+      psSetBigInt(query, ++i, link.getBeginLongId());
+      psSetBigInt(query, ++i, link.getEndLongId());
+      psSetInteger(query, ++i, link.getSpeedLimit());
+      psSetDouble(query, ++i, link.getLength());
+      psSetInteger(query, ++i, link.getDetailLevel());
       
       long rows = psUpdate(query);
       if (rows != 1) {
          throw new DatabaseException(null, "Link not unique: network id=" +
           networkID + " has " +
-          rows + "rows with id=" + link.getId(), this, query);
+          rows + " rows with id=" + link.getId(), this, query);
       }
     }
     finally {
@@ -252,22 +252,22 @@ public class LinkWriter extends DatabaseWriter {
   public void updateRow(Link link, long networkID) throws DatabaseException {
     String query = "update_link_" + link.getId();
     psCreate(query,
-//      "UPDATE \"VIA\".\"LINKS\" SET \"BEG_NODE_ID\" = ?, \"END_NODE_ID\" = ?, \"SPEED_LIMIT\" = ?, \"LENGTH\" = ?, \"DETAIL_LEVEL\" = ? WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
-      "UPDATE \"VIA\".\"LINKS\" SET \"BEG_NODE_ID\" = ?, \"END_NODE_ID\" = ?, \"LENGTH\" = ? WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
+      "UPDATE \"VIA\".\"LINKS\" SET \"BEG_NODE_ID\" = ?, \"END_NODE_ID\" = ?, \"SPEED_LIMIT\" = ?, \"LENGTH\" = ?, \"DETAIL_LEVEL\" = ? WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
     );
     
     try {
       psClearParams(query);
 
-      psSetBigInt(query, 1, link.getBeginLongId());
-      psSetBigInt(query, 2, link.getEndLongId());
-//      psSetInteger(query, 3, 123); // TODO Link needs the speed field
-//      psSetDouble(query, 4, link.getLength());
-      psSetDouble(query, 3, link.getLength());
-//      psSetInteger(query, 5, 1); // TODO Link needs the detail_level field
+      int i=0;
+      
+      psSetBigInt(query, ++i, link.getBeginLongId());
+      psSetBigInt(query, ++i, link.getEndLongId());
+      psSetInteger(query, ++i, link.getSpeedLimit());
+      psSetDouble(query, ++i, link.getLength());
+      psSetInteger(query, ++i, link.getDetailLevel());
 
-      psSetBigInt(query, 4, link.getLongId());
-      psSetBigInt(query, 5, networkID);
+      psSetBigInt(query, ++i, link.getLongId());
+      psSetBigInt(query, ++i, networkID);
       
       long rows = psUpdate(query);
       
@@ -343,7 +343,7 @@ public class LinkWriter extends DatabaseWriter {
       if (rows != 1) {
         throw new DatabaseException(null, "Link not unique: network id=" +
           networkID + " has " +
-          rows + "rows with id=" + linkID, this, query);
+          rows + " rows with id=" + linkID, this, query);
       }
     }
     finally {
