@@ -70,5 +70,7 @@ public class ScenarioReaderTest {
     
     assertEquals(2, networks.get(0).getNodeList().size());
     assertEquals(1, networks.get(0).getLinkList().size());
+    
+    assertTrue(null != sc.getSplitratioSet());
   }
 }
