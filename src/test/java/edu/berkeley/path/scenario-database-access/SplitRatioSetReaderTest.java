@@ -34,41 +34,41 @@ import static org.junit.Assert.*;
 
 import edu.berkeley.path.model_elements.*;
 
-import java.util.*;
-
 /**
- * Tests methods for reading Scenarios from a database.
+ * Tests methods for reading SplitRatioSets from a database.
  * @author vjoel
  */
-public class ScenarioReaderTest {
-  static ScenarioReader scReader;
+public class SplitRatioSetReaderTest {
+  static SplitRatioSetReader srsReader;
   
   @BeforeClass public static void dbsetup() throws core.DatabaseException {
-    scReader = new ScenarioReader(new DBParams());
+    srsReader = new SplitRatioSetReader(new DBParams());
   }
 
   @Before
   public void setup() {
-    // we assume scenario 99999 exists, but we could insert it here
-    // we assume network 99989 exists, but we could insert it here
-    // we assume split_ratio_set 99999 exists, but we could insert it here
+    // we assume splitratio 99999 exists, but we could insert it here
   }
   
   @Test
-  public void testReadOneScenario() throws core.DatabaseException {
-    Long scenarioID = 99999L;
-    Scenario sc;
-    
-    sc = scReader.read(scenarioID);
+  public void testReadSplitRatioSet() throws core.DatabaseException {
+    Long splitratioID = 99999L;
+    SplitRatioSet srs;
+        
+    srs = srsReader.read(splitratioID);
 
-//    System.out.println("Test Scenario: " + sc);
+    //System.out.println("Test SplitRatio: " + srs);
+    // {"id": "99999", "name": "scenario-database-access-test", "description": null, "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
     
-    assertEquals(scenarioID, sc.getLongId());
+    assertEquals(splitratioID.toString(), srs.getId());
     
-    List<Network> networks = sc.getNetworkList();
-    assertEquals(1, networks.size());
+    SplitRatioProfile srp = srs.getProfileMap().get("2");
     
-    assertEquals(2, networks.get(0).getNodeList().size());
-    assertEquals(1, networks.get(0).getLinkList().size());
+    assertTrue(null != srp);
+    
+    assertEquals((Double)25200.0, srp.getStartTime());
+    assertEquals((Double)600.0, srp.getSampleRate());
+    
+    assertEquals((Double)0.2, srp.getRatio().get("1").get("1").get("1").get(1));
   }
 }

@@ -80,13 +80,13 @@ public class NetworkReaderTest {
     assertEquals(2, nw.getLinkList().size());
     
     Link ln1 = nw.getLinkById(1L);
-    assert(null != ln1);
+    assertTrue(null != ln1);
     
     Node ln1Begin = ln1.getBegin();
-    assert(null != ln1Begin);
+    assertTrue(null != ln1Begin);
     
     Node ln1End = ln1.getEnd();
-    assert(null != ln1End);
+    assertTrue(null != ln1End);
     
     Node nd1 = nw.getNodeById(1L);
     assertEquals(ln1Begin, nd1);

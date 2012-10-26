@@ -57,8 +57,8 @@ public class ScenarioReader extends DatabaseReader {
   DBParams dbParams;
   
   /**
-   * Read the scenario with the given ID from the database, including dependent objects, such
-   * as networks and profile sets.
+   * Read the scenario with the given ID from the database, including associated
+   * objects, such as networks and profile sets.
    * 
    * @param scenarioID  numerical ID of the scenario in the database
    * @return Scenario
@@ -70,12 +70,16 @@ public class ScenarioReader extends DatabaseReader {
     
     try {
       transactionBegin();
-      Monitor.debug("Scenario reader transaction beginning on scenario.id=" + scenarioID);
+      Monitor.debug(
+        "Scenario reader transaction beginning on scenario.id=" +
+        scenarioID);
 
       scenario = readWithAssociates(scenarioID);
 
       transactionCommit();
-      Monitor.debug("Scenario reader transaction committing on scenario.id=" + scenarioID);
+      Monitor.debug(
+        "Scenario reader transaction committing on scenario.id=" +
+        scenarioID);
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -84,7 +88,9 @@ public class ScenarioReader extends DatabaseReader {
     finally {
       try {
         transactionRollback();
-        Monitor.debug("Scenario reader transaction rollback on scenario.id=" + scenarioID);
+        Monitor.debug(
+          "Scenario reader transaction rollback on scenario.id=" +
+          scenarioID);
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -100,8 +106,8 @@ public class ScenarioReader extends DatabaseReader {
   }
 
   /**
-   * Read the scenario with the given ID from the database, including associated objects, such
-   * as networks and profile sets.
+   * Read the scenario with the given ID from the database, including associated
+   * objects, such as networks and profile sets.
    * 
    * @see #read() if you want a transaction and logging around the operation.
    * 
@@ -109,14 +115,22 @@ public class ScenarioReader extends DatabaseReader {
    * @return Scenario.
    */
   public Scenario readWithAssociates(long scenarioID) throws DatabaseException {
-    Scenario scenario = readRow(scenarioID);
+    HashMap<String, Long> associateIDs = new HashMap<String, Long>();
+    
+    Scenario scenario = readRow(scenarioID, associateIDs);
 
     if (scenario != null) {
       NetworkReader nwr = new NetworkReader(dbParams);
       List<Network> networks = scenario.getNetworkList();
-      for (long networkID: readNetworkIDs(scenarioID)) {
+      for (Long networkID: readNetworkIDs(scenarioID)) {
         Network nw = nwr.readWithAssociates(networkID);
         networks.add(nw);
+      }
+      
+      Long srsetID = associateIDs.get("SPLIT_RATIO_SET");
+      if (null != srsetID) {
+        SplitRatioSetReader srsr = new SplitRatioSetReader(dbParams);
+        scenario.splitratioSet = srsr.readWithDependents(srsetID);
       }
     }
     
@@ -157,19 +171,23 @@ public class ScenarioReader extends DatabaseReader {
   }
 
   /**
-   * Read just the scenario row with the given ID from the database. Ignores dependent objects, such
-   * as networks and profile sets.
+   * Read just the scenario row with the given ID from the database. Ignores
+   * dependent objects, such as networks and profile sets.
    * 
    * @param scenarioID  numerical ID of the scenario in the database
+   * @param associateIDs map of column name to id value for 1-1 associated tables
+   *                      (which include profile sets, but not 1-n associated networks).
+   *                      This is an output parameter that is populated by readRow.
+   *                      If null, do not read associated IDs.
    * @return Scenario, with null for all dependent objects.
    */
-  public Scenario readRow(long scenarioID) throws DatabaseException {
+  public Scenario readRow(long scenarioID, HashMap<String, Long> associateIDs) throws DatabaseException {
     String query = null;
     Scenario scenario = null;
     
     try {
       query = runQuery(scenarioID);
-      scenario = scenarioFromQueryRS(query);
+      scenario = scenarioFromQueryRS(query, associateIDs);
     }
     finally {
       if (query != null) {
@@ -206,9 +224,10 @@ public class ScenarioReader extends DatabaseReader {
    * as networks, profile sets, etc.
    * 
    * @param query string
+   * @param associateIDs map of column name to id value for 1-1 associated tables
    * @return Scenario
    */
-  protected Scenario scenarioFromQueryRS(String query) throws DatabaseException {
+  protected Scenario scenarioFromQueryRS(String query, HashMap<String, Long> associateIDs) throws DatabaseException {
     Scenario scenario = null;
     
     while (psRSNext(query)) {
@@ -228,6 +247,11 @@ public class ScenarioReader extends DatabaseReader {
       scenario.setId(id);
       scenario.name = name;
       scenario.description = desc;
+      
+      if (null != associateIDs) {
+        associateIDs.put("SPLIT_RATIO_SET", psRSGetBigInt(query, "SPLIT_RATIO_SET"));
+        // TODO: more sets and things
+      }
 
       //System.out.println("Scenario: " + scenario);
     }
