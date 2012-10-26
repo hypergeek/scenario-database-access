@@ -47,20 +47,20 @@ public class SplitRatioSetReaderTest {
 
   @Before
   public void setup() {
-    // we assume splitratio 99999 exists, but we could insert it here
+    // we assume splitratio set 99999 exists, but we could insert it here
   }
   
   @Test
   public void testReadSplitRatioSet() throws core.DatabaseException {
-    Long splitratioID = 99999L;
+    Long splitratioSetID = 99999L;
     SplitRatioSet srs;
         
-    srs = srsReader.read(splitratioID);
+    srs = srsReader.read(splitratioSetID);
 
     //System.out.println("Test SplitRatio: " + srs);
     // {"id": "99999", "name": "scenario-database-access-test", "description": null, "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
     
-    assertEquals(splitratioID.toString(), srs.getId());
+    assertEquals(splitratioSetID.toString(), srs.getId());
     
     SplitRatioProfile srp = srs.getProfileMap().get("2");
     

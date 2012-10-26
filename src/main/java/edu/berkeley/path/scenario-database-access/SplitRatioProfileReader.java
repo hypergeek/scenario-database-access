@@ -209,36 +209,12 @@ public class SplitRatioProfileReader extends DatabaseReader {
       //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
-      String inLinkID   = psRSGetBigInt(query, "IN_LINK_ID").toString();
-      String outLinkID  = psRSGetBigInt(query, "OUT_LINK_ID").toString();
-      String vehTypeID  = psRSGetBigInt(query, "VEH_TYPE_ID").toString();
-      Double ratio      = psRSGetDouble(query, "RATIO");
-
-      Map<CharSequence,Map<CharSequence,List<Double>>> inLinkMap =
-        ratioMap.get(inLinkID);
+      Long inLinkID   = psRSGetBigInt(query, "IN_LINK_ID");
+      Long outLinkID  = psRSGetBigInt(query, "OUT_LINK_ID");
+      Long vehTypeID  = psRSGetBigInt(query, "VEH_TYPE_ID");
+      Double ratio    = psRSGetDouble(query, "RATIO");
       
-      if (inLinkMap == null) {
-        inLinkMap = new HashMap<CharSequence,Map<CharSequence,List<Double>>>();
-        ratioMap.put(inLinkID, inLinkMap);
-      }
-
-      Map<CharSequence,List<Double>> outLinkMap =
-        inLinkMap.get(outLinkID);
-      
-      if (outLinkMap == null) {
-        outLinkMap = new HashMap<CharSequence,List<Double>>();
-        inLinkMap.put(outLinkID, outLinkMap);
-      }
-
-      List<Double> vehTypeList =
-        outLinkMap.get(vehTypeID);
-      
-      if (vehTypeList == null) {
-        vehTypeList = new ArrayList<Double>();
-        outLinkMap.put(vehTypeID, vehTypeList);
-      }
-      
-      vehTypeList.add(ratio);
+      SplitRatioProfile.addRatioToMapAt(ratioMap, inLinkID, outLinkID, vehTypeID, ratio);
     }
     
     return ratioMap;
