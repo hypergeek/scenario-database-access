@@ -285,7 +285,7 @@ public class NetworkWriter extends DatabaseWriter {
    * Delete just the network row from the database. Ignores dependent objects, such
    * as nodes and links.
    * 
-   * @param network  the network
+   * @param networkID  the ID of the network
    */
   public void deleteRow(long networkID) throws DatabaseException {
     String query = "delete_network_" + networkID;
@@ -312,7 +312,7 @@ public class NetworkWriter extends DatabaseWriter {
   /**
    * Delete just the dependent objects, such as nodes and links.
    * 
-   * @param network  the network
+   * @param networkID  the ID of the network
    */
   private void deleteDependents(long networkID) throws DatabaseException {
     NodeWriter ndWriter = new NodeWriter(this.dbParams);

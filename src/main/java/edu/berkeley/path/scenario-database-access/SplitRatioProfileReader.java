@@ -42,7 +42,7 @@ import core.*;
 
 /**
  * Implements methods for reading SplitRatioProfiles from a database.
- * Only used to real all SplitRatioProfiles of a given SplitRatioSet.
+ * Only used to read all SplitRatioProfiles of a given SplitRatioSet.
  * 
  * @see DBParams
  * @author vjoel
@@ -62,7 +62,6 @@ public class SplitRatioProfileReader extends DatabaseReader {
   }
   
   DBParams dbParams;
-  
 
   /**
    * Read the map of all profiles belonging to a split ratio set from the database.
@@ -218,5 +217,28 @@ public class SplitRatioProfileReader extends DatabaseReader {
     }
     
     return ratioMap;
+  }
+
+  protected Long getNextProfileID() throws DatabaseException {
+    String query = "getNextProfileID";
+    Long id = null;
+    
+    try {
+      psCreate(query,
+        "SELECT VIA.SEQ_SPLIT_RATIO_PROFS_ID.nextVal AS ID FROM dual");
+      
+      psQuery(query);
+      
+      if (psRSNext(query)) {
+        id = psRSGetBigInt(query, "ID");
+      }
+    }
+    finally {
+      if (query != null) {
+        psDestroy(query);
+      }
+    }
+    
+    return id;
   }
 }

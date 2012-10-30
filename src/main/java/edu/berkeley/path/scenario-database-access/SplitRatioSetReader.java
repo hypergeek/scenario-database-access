@@ -125,7 +125,7 @@ public class SplitRatioSetReader extends DatabaseReader {
     SplitRatioSet splitratioSet = readRow(splitratioSetID);
 
     if (splitratioSet != null) {
-      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(dbParams);
+      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(this.dbParams);
       splitratioSet.setProfileMap(srpReader.readProfiles(splitratioSetID));
     }
     
