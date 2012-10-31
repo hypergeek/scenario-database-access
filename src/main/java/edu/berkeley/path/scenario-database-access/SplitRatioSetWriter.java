@@ -69,13 +69,13 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+//      transactionBegin();
       Monitor.debug("SplitRatioSet insert transaction beginning on splitratioSet.id=" + splitratioSet.getId());
       
       insertWithDependents(splitratioSet);
 
       Monitor.debug("SplitRatioSet insert transaction committing on splitratioSet.id=" + splitratioSet.getId());
-      transactionCommit();
+//      transactionCommit();
       Monitor.debug("SplitRatioSet insert transaction committed on splitratioSet.id=" + splitratioSet.getId());
     }
     catch (DatabaseException dbExc) {
@@ -84,7 +84,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+//        transactionRollback();
         Monitor.debug("SplitRatioSet insert transaction rollback on splitratioSet.id=" + splitratioSet.getId());
       }
       catch(Exception Exc) {

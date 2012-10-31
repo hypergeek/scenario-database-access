@@ -86,8 +86,6 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
       
       psClearParams(query);
       
-      Long j = 10L;
-
       for (Map.Entry<String,SplitRatioProfile> entry : profileMap.entrySet()) {
         Long nodeID = Long.parseLong(entry.getKey());
         SplitRatioProfile profile = entry.getValue();
