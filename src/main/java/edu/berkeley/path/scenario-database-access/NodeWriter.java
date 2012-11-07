@@ -121,7 +121,13 @@ public class NodeWriter extends DatabaseWriter {
     String query = "insert_nodes_in_network_" + networkID;
     
     psCreate(query,
-      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID) VALUES(?, ?)"
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "end;"
     );
 
     try {
@@ -157,7 +163,13 @@ public class NodeWriter extends DatabaseWriter {
     String query = "insert_node_" + node.getId();
 
     psCreate(query,
-      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID) VALUES(?, ?)"
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "end;"
     );
   
     try {
@@ -238,16 +250,20 @@ public class NodeWriter extends DatabaseWriter {
   public void updateRow(Node node, long networkID) throws DatabaseException {
     String query = "update_node_" + node.getId();
     psCreate(query,
-      "UPDATE \"VIA\".\"NODES\" SET \"ID\" = ? WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
-      // the ID is just a placeholder until we have some real column to update
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "UPDATE \"VIA\".\"NODES\" SET geom = mygeom WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?));\n" +
+      "end;"
     );
     
     try {
       psClearParams(query);
 
-      psSetBigInt(query, 1, node.getLongId()); // placeholder, as noted above
-      psSetBigInt(query, 2, node.getLongId());
-      psSetBigInt(query, 3, networkID);
+      psSetBigInt(query, 1, node.getLongId());
+      psSetBigInt(query, 2, networkID);
       
       long rows = psUpdate(query);
       

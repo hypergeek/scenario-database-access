@@ -121,8 +121,15 @@ public class LinkWriter extends DatabaseWriter {
     String query = "insert_links_in_network_" + networkID;
     
     psCreate(query,
-      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('LINESTRING (-75.97469 40.90164, -75.97393 40.90226, -75.97344 40.90274, -75.97314 40.90328)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL, geom) VALUES(?, ?, ?, ?, ?, ?, ?, mygeom);\n" +
+      "end;"
     );
+    // see comment at UPDATE
 
     try {
       psClearParams(query);
@@ -164,8 +171,15 @@ public class LinkWriter extends DatabaseWriter {
     String query = "insert_link_" + link.getId();
 
     psCreate(query,
-      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL) VALUES(?, ?, ?, ?, ?, ?, ?)"
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('LINESTRING (-75.97469 40.90164, -75.97393 40.90226, -75.97344 40.90274, -75.97314 40.90328)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "INSERT INTO \"VIA\".\"LINKS\" (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL, geom) VALUES(?, ?, ?, ?, ?, ?, ?, mygeom);\n" +
+      "end;"
     );
+    // see comment at UPDATE
   
     try {
       psClearParams(query);
@@ -252,8 +266,16 @@ public class LinkWriter extends DatabaseWriter {
   public void updateRow(Link link, long networkID) throws DatabaseException {
     String query = "update_link_" + link.getId();
     psCreate(query,
-      "UPDATE \"VIA\".\"LINKS\" SET \"BEG_NODE_ID\" = ?, \"END_NODE_ID\" = ?, \"SPEED_LIMIT\" = ?, \"LENGTH\" = ?, \"DETAIL_LEVEL\" = ? WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('LINESTRING (-75.97469 40.90164, -75.97393 40.90226, -75.97344 40.90274, -75.97314 40.90328)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "UPDATE \"VIA\".\"LINKS\" SET \"BEG_NODE_ID\" = ?, \"END_NODE_ID\" = ?, \"SPEED_LIMIT\" = ?, \"LENGTH\" = ?, \"DETAIL_LEVEL\" = ?, geom = mygeom WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?));\n" +
+      "end;"
     );
+    // The hard-coded geometry is because we don't have psSetGeom yet,
+    // and the link table's spatial index is broken if geom is null.
     
     try {
       psClearParams(query);
