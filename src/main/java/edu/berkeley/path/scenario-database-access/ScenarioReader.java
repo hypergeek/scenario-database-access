@@ -125,10 +125,16 @@ public class ScenarioReader extends ReaderBase {
         networks.add(nw);
       }
       
-      Long srsetID = associateIDs.get("SPLIT_RATIO_SET");
-      if (null != srsetID) {
+      Long srSetID = associateIDs.get("SPLIT_RATIO_SET");
+      if (null != srSetID) {
         SplitRatioSetReader srsr = new SplitRatioSetReader(dbParams, dbr);
-        scenario.splitratioSet = srsr.readWithDependents(srsetID);
+        scenario.splitratioSet = srsr.readWithDependents(srSetID);
+      }
+      
+      Long demSetID = associateIDs.get("SPLIT_RATIO_SET");
+      if (null != demSetID) {
+        DemandSetReader dsr = new DemandSetReader(dbParams, dbr);
+        scenario.demandSet = dsr.readWithDependents(demSetID);
       }
     }
     
@@ -233,8 +239,8 @@ public class ScenarioReader extends ReaderBase {
         throw new DatabaseException(null, "Scenario not unique: " + query, dbr, query);
       }
       
-      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
-      //System.out.println("columns: [" + columns + "]");
+      String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
+      System.out.println("columns: [" + columns + "]");
       
       scenario = new Scenario();
       
@@ -247,7 +253,10 @@ public class ScenarioReader extends ReaderBase {
       scenario.description = desc;
       
       if (null != associateIDs) {
-        associateIDs.put("SPLIT_RATIO_SET", dbr.psRSGetBigInt(query, "SPLIT_RATIO_SET"));
+        associateIDs.put("SPLIT_RATIO_SET",
+          dbr.psRSGetBigInt(query, "SPLIT_RATIO_SET"));
+        associateIDs.put("DEMAND_SET",
+          dbr.psRSGetBigInt(query, "DEMAND_PROF_SET")); // should be DEMAND_SET
         // TODO: more sets and things
       }
 
