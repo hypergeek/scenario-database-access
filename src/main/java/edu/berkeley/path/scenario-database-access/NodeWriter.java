@@ -44,21 +44,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class NodeWriter extends DatabaseWriter {
+public class NodeWriter extends WriterBase {
   public NodeWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+    public NodeWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given node into the database.
@@ -71,12 +69,12 @@ public class NodeWriter extends DatabaseWriter {
     String nodeIdStr = "node.{id=" + node.getId() + ", network_id=" + networkID + "}";
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Node insert transaction beginning on " + nodeIdStr);
       
       insertWithDependents(node, networkID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Node insert transaction committing on " + nodeIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -85,7 +83,7 @@ public class NodeWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Node insert transaction rollback on " + nodeIdStr);
       }
       catch(Exception Exc) {
@@ -120,7 +118,7 @@ public class NodeWriter extends DatabaseWriter {
   public void insertNodes(List<Node> nodes, long networkID) throws DatabaseException {
     String query = "insert_nodes_in_network_" + networkID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -131,24 +129,24 @@ public class NodeWriter extends DatabaseWriter {
     );
 
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
       for (Node node : nodes) {
-        psSetBigInt(query, 1, node.getLongId());
-        psSetBigInt(query, 2, networkID);
+        dbw.psSetBigInt(query, 1, node.getLongId());
+        dbw.psSetBigInt(query, 2, networkID);
         
-        long rows = psUpdate(query);
+        long rows = dbw.psUpdate(query);
         
         if (rows != 1) {
            throw new DatabaseException(null, "Node not unique: network id=" +
             networkID + " has " +
-            rows + " rows with id=" + node.getId(), this, query);
+            rows + " rows with id=" + node.getId(), dbw, query);
         }
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -162,7 +160,7 @@ public class NodeWriter extends DatabaseWriter {
   public void insertRow(Node node, long networkID) throws DatabaseException {
     String query = "insert_node_" + node.getId();
 
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -173,21 +171,21 @@ public class NodeWriter extends DatabaseWriter {
     );
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, node.getLongId());
-      psSetBigInt(query, 2, networkID);
+      dbw.psSetBigInt(query, 1, node.getLongId());
+      dbw.psSetBigInt(query, 2, networkID);
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       if (rows != 1) {
          throw new DatabaseException(null, "Node not unique: network id=" +
           networkID + " has " +
-          rows + " rows with id=" + node.getId(), this, query);
+          rows + " rows with id=" + node.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -203,12 +201,12 @@ public class NodeWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Node update transaction beginning on " + nodeIdStr);
       
       updateWithDependents(node, networkID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Node update transaction committing on " + nodeIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -217,7 +215,7 @@ public class NodeWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Node update transaction rollback on " + nodeIdStr);
       }
       catch(Exception Exc) {
@@ -249,7 +247,7 @@ public class NodeWriter extends DatabaseWriter {
    */
   public void updateRow(Node node, long networkID) throws DatabaseException {
     String query = "update_node_" + node.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -260,21 +258,21 @@ public class NodeWriter extends DatabaseWriter {
     );
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, node.getLongId());
-      psSetBigInt(query, 2, networkID);
+      dbw.psSetBigInt(query, 1, node.getLongId());
+      dbw.psSetBigInt(query, 2, networkID);
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
         throw new DatabaseException(null, "Node not unique: there exist " +
-          rows + " with id=" + node.getId(), this, query);
+          rows + " with id=" + node.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -290,14 +288,14 @@ public class NodeWriter extends DatabaseWriter {
     String nodeIdStr = "node.{id=" + nodeID + ", network_id=" + networkID + "}";
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Node delete transaction beginning on " + nodeIdStr);
       
       deleteRow(nodeID, networkID);
       
       //warn or fail if related links still exist?
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Node delete transaction committing on " + nodeIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -306,7 +304,7 @@ public class NodeWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Node delete transaction rollback on " + nodeIdStr);
       }
       catch(Exception Exc) {
@@ -326,25 +324,25 @@ public class NodeWriter extends DatabaseWriter {
    */
   public void deleteRow(long nodeID, long networkID) throws DatabaseException {
     String query = "delete_node_" + nodeID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"NODES\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, nodeID);
-      psSetBigInt(query, 2, networkID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, nodeID);
+      dbw.psSetBigInt(query, 2, networkID);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
         throw new DatabaseException(null, "Node not unique: network id=" +
           networkID + " has " +
-          rows + " rows with id=" + nodeID, this, query);
+          rows + " rows with id=" + nodeID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -358,19 +356,19 @@ public class NodeWriter extends DatabaseWriter {
   public long deleteAllNodes(long networkID) throws DatabaseException {
     String query = "delete_nodes_in_network_" + networkID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"NODES\" WHERE (\"NETWORK_ID\" = ?)"
     );
 
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, networkID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, networkID);
+      long rows = dbw.psUpdate(query);
       return rows;
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }

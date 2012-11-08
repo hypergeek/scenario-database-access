@@ -44,21 +44,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class DemandSetWriter extends DatabaseWriter {
+public class DemandSetWriter extends WriterBase {
   public DemandSetWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public DemandSetWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given demand set into the database.
@@ -69,13 +67,13 @@ public class DemandSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-//      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("DemandSet insert transaction beginning on demandSet.id=" + demandSet.getId());
       
       insertWithDependents(demandSet);
 
       Monitor.debug("DemandSet insert transaction committing on demandSet.id=" + demandSet.getId());
-//      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("DemandSet insert transaction committed on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
@@ -84,7 +82,7 @@ public class DemandSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-//        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("DemandSet insert transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
@@ -107,7 +105,7 @@ public class DemandSetWriter extends DatabaseWriter {
   }
   
   private void insertDependents(DemandSet demandSet) throws DatabaseException {
-    DemandProfileWriter dpWriter = new DemandProfileWriter(this.dbParams);
+    DemandProfileWriter dpWriter = new DemandProfileWriter(dbParams, dbw);
     long demandSetID = demandSet.getLongId();
     
     dpWriter.insertProfiles(demandSet.getProfileMap(), demandSetID);
@@ -120,26 +118,26 @@ public class DemandSetWriter extends DatabaseWriter {
    */
   public void insertRow(DemandSet demandSet) throws DatabaseException {
     String query = "insert_demandSet_" + demandSet.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"DEMAND_SETS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
     );
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, demandSet.getLongId());
+      dbw.psSetBigInt(query, 1, demandSet.getLongId());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         demandSet.getName() == null ? null : demandSet.getName().toString());
       
-      psSetVarChar(query, 3,
+      dbw.psSetVarChar(query, 3,
         demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
       
-      psUpdate(query);
+      dbw.psUpdate(query);
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -153,12 +151,12 @@ public class DemandSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("DemandSet update transaction beginning on demandSet.id=" + demandSet.getId());
       
       updateWithDependents(demandSet);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("DemandSet update transaction committing on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
@@ -167,7 +165,7 @@ public class DemandSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("DemandSet update transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
@@ -203,30 +201,30 @@ public class DemandSetWriter extends DatabaseWriter {
    */
   public void updateRow(DemandSet demandSet) throws DatabaseException {
     String query = "update_demandSet_" + demandSet.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "UPDATE \"VIA\".\"DEMAND_SETS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetVarChar(query, 1,
+      dbw.psSetVarChar(query, 1,
         demandSet.getName() == null ? null : demandSet.getName().toString());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
 
-      psSetBigInt(query, 3, demandSet.getLongId());
+      dbw.psSetBigInt(query, 3, demandSet.getLongId());
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSet.getId(), this, query);
+        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSet.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -240,13 +238,13 @@ public class DemandSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
       
       deleteDependents(demandSetID);
       deleteRow(demandSetID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
     }
     catch (DatabaseException dbExc) {
@@ -255,7 +253,7 @@ public class DemandSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("DemandSet delete transaction rollback on demandSet.id=" + demandSetID);
       }
       catch(Exception Exc) {
@@ -274,23 +272,23 @@ public class DemandSetWriter extends DatabaseWriter {
    */
   public void deleteRow(long demandSetID) throws DatabaseException {
     String query = "delete_demandSet_" + demandSetID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"DEMAND_SETS\" WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, demandSetID);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, demandSetID);
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSetID, this, query);
+        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSetID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -301,7 +299,7 @@ public class DemandSetWriter extends DatabaseWriter {
    * @param demandSetID  the demandSet ID
    */
   private void deleteDependents(long demandSetID) throws DatabaseException {
-    DemandProfileWriter dpWriter = new DemandProfileWriter(this.dbParams);
+    DemandProfileWriter dpWriter = new DemandProfileWriter(dbParams, dbw);
     
     dpWriter.deleteAllProfiles(demandSetID);
   }

@@ -43,22 +43,20 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class NetworkReader extends DatabaseReader {
+public class NetworkReader extends ReaderBase {
   public NetworkReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
-  
+  public NetworkReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
+
   /**
    * Read one network with the given ID from the database.
    * 
@@ -71,12 +69,12 @@ public class NetworkReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug("Network reader transaction beginning on network.id=" + networkID);
 
       network = readWithAssociates(networkID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug("Network reader transaction committing on network.id=" + networkID);
     }
     catch (DatabaseException dbExc) {
@@ -85,7 +83,7 @@ public class NetworkReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug("Network reader transaction rollback on network.id=" + networkID);
       }
       catch(Exception Exc) {
@@ -114,10 +112,10 @@ public class NetworkReader extends DatabaseReader {
     Network network = readRow(networkID);
 
     if (network != null) {
-      NodeReader ndReader = new NodeReader(dbParams);
+      NodeReader ndReader = new NodeReader(dbParams, dbr);
       network.setNodeList(ndReader.readNodes(networkID));
 
-      LinkReader lnReader = new LinkReader(dbParams);
+      LinkReader lnReader = new LinkReader(dbParams, dbr);
       network.setLinkList(lnReader.readLinks(networkID));
 
       network.resolveReferences();
@@ -142,7 +140,7 @@ public class NetworkReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -158,13 +156,13 @@ public class NetworkReader extends DatabaseReader {
   protected String runQuery(long networkID) throws DatabaseException {
     String query = "read_network_" + networkID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"NETWORKS\" WHERE (\"ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, networkID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, networkID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -180,9 +178,9 @@ public class NetworkReader extends DatabaseReader {
   protected Network networkFromQueryRS(String query) throws DatabaseException {
     Network network = null;
     
-    while (psRSNext(query)) {
+    while (dbr.psRSNext(query)) {
       if (network != null) {
-        throw new DatabaseException(null, "Network not unique: " + query, this, query);
+        throw new DatabaseException(null, "Network not unique: " + query, this.dbr, query);
       }
       
       //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
@@ -190,9 +188,9 @@ public class NetworkReader extends DatabaseReader {
       
       network = new Network();
       
-      Long id = psRSGetBigInt(query, "ID");
-      String name = psRSGetVarChar(query, "NAME");
-      String desc = psRSGetVarChar(query, "DESCRIPTION");
+      Long id = dbr.psRSGetBigInt(query, "ID");
+      String name = dbr.psRSGetVarChar(query, "NAME");
+      String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       
       network.setId(id);
       network.name = name;

@@ -43,21 +43,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class SplitRatioSetReader extends DatabaseReader {
+public class SplitRatioSetReader extends ReaderBase {
   public SplitRatioSetReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public SplitRatioSetReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
   
   /**
    * Read one split ratio set with the given ID from the database, plus
@@ -73,14 +71,14 @@ public class SplitRatioSetReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug(
         "SplitRatioSet reader transaction beginning on splitratioSet.id=" +
         splitratioSetID);
 
       splitratioSet = readWithDependents(splitratioSetID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug(
         "SplitRatioSet reader transaction committing on splitratioSet.id=" +
         splitratioSetID);
@@ -91,7 +89,7 @@ public class SplitRatioSetReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug(
           "SplitRatioSet reader transaction rollback on splitratioSet.id=" +
           splitratioSetID);
@@ -125,7 +123,7 @@ public class SplitRatioSetReader extends DatabaseReader {
     SplitRatioSet splitratioSet = readRow(splitratioSetID);
 
     if (splitratioSet != null) {
-      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(this.dbParams);
+      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(dbParams, dbr);
       splitratioSet.setProfileMap(srpReader.readProfiles(splitratioSetID));
     }
     
@@ -149,7 +147,7 @@ public class SplitRatioSetReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -165,13 +163,13 @@ public class SplitRatioSetReader extends DatabaseReader {
   protected String runQuery(long splitratioSetID) throws DatabaseException {
     String query = "read_splitratioSet_" + splitratioSetID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"SPLIT_RATIO_SETS\" WHERE (\"ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, splitratioSetID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, splitratioSetID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -186,20 +184,20 @@ public class SplitRatioSetReader extends DatabaseReader {
   protected SplitRatioSet splitratioSetFromQueryRS(String query) throws DatabaseException {
     SplitRatioSet splitratioSet = null;
     
-    while (psRSNext(query)) {
+    while (dbr.psRSNext(query)) {
       if (splitratioSet != null) {
         throw new DatabaseException(null,
-          "SplitRatioSet not unique: " + query, this, query);
+          "SplitRatioSet not unique: " + query, dbr, query);
       }
       
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       splitratioSet = new SplitRatioSet();
       
-      Long id = psRSGetBigInt(query, "ID");
-      String name = psRSGetVarChar(query, "NAME");
-      String desc = psRSGetVarChar(query, "DESCRIPTION");
+      Long id = dbr.psRSGetBigInt(query, "ID");
+      String name = dbr.psRSGetVarChar(query, "NAME");
+      String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       
       splitratioSet.setId(id.toString());
       splitratioSet.name = name;

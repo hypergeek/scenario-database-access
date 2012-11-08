@@ -44,21 +44,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class NetworkWriter extends DatabaseWriter {
+public class NetworkWriter extends WriterBase {
   public NetworkWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public NetworkWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given network into the database.
@@ -69,12 +67,12 @@ public class NetworkWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Network insert transaction beginning on network.id=" + network.getId());
       
       insertWithDependents(network);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Network insert transaction committing on network.id=" + network.getId());
     }
     catch (DatabaseException dbExc) {
@@ -83,7 +81,7 @@ public class NetworkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Network insert transaction rollback on network.id=" + network.getId());
       }
       catch(Exception Exc) {
@@ -107,8 +105,8 @@ public class NetworkWriter extends DatabaseWriter {
   }
   
   private void insertDependents(Network network) throws DatabaseException {
-    NodeWriter ndWriter = new NodeWriter(this.dbParams);
-    LinkWriter lnWriter = new LinkWriter(this.dbParams);
+    NodeWriter ndWriter = new NodeWriter(dbParams, dbw);
+    LinkWriter lnWriter = new LinkWriter(dbParams, dbw);
     long networkID = network.getLongId();
 
     List<Node> nodes = network.getNodeList();
@@ -130,29 +128,29 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void insertRow(Network network) throws DatabaseException {
     String query = "insert_network_" + network.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"NETWORKS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
     );
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, network.getLongId());
+      dbw.psSetBigInt(query, 1, network.getLongId());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         network.getName() == null ? null : network.getName().toString());
       
-      psSetVarChar(query, 3,
+      dbw.psSetVarChar(query, 3,
         network.getDescription() == null ? null : network.getDescription().toString());
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       if (rows != 1) {
-        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + network.getId(), this, query);
+        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + network.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -166,12 +164,12 @@ public class NetworkWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Network update transaction beginning on network.id=" + network.getId());
       
       updateWithDependents(network);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Network update transaction committing on network.id=" + network.getId());
     }
     catch (DatabaseException dbExc) {
@@ -180,7 +178,7 @@ public class NetworkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Network update transaction rollback on network.id=" + network.getId());
       }
       catch(Exception Exc) {
@@ -217,29 +215,29 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void updateRow(Network network) throws DatabaseException {
     String query = "update_network_" + network.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "UPDATE \"VIA\".\"NETWORKS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetVarChar(query, 1,
+      dbw.psSetVarChar(query, 1,
         network.getName() == null ? null : network.getName().toString());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         network.getDescription() == null ? null : network.getDescription().toString());
 
-      psSetBigInt(query, 3, network.getLongId());
-      long rows = psUpdate(query);
+      dbw.psSetBigInt(query, 3, network.getLongId());
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + network.getId(), this, query);
+        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + network.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -254,13 +252,13 @@ public class NetworkWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Network delete transaction beginning on network.id=" + networkID);
       
       deleteDependents(networkID);
       deleteRow(networkID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Network delete transaction committing on network.id=" + networkID);
     }
     catch (DatabaseException dbExc) {
@@ -269,7 +267,7 @@ public class NetworkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Network delete transaction rollback on network.id=" + networkID);
       }
       catch(Exception Exc) {
@@ -289,22 +287,22 @@ public class NetworkWriter extends DatabaseWriter {
    */
   public void deleteRow(long networkID) throws DatabaseException {
     String query = "delete_network_" + networkID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"NETWORKS\" WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, networkID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, networkID);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + networkID, this, query);
+        throw new DatabaseException(null, "Network not unique: there exist " + rows + " with id=" + networkID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -315,8 +313,8 @@ public class NetworkWriter extends DatabaseWriter {
    * @param networkID  the ID of the network
    */
   private void deleteDependents(long networkID) throws DatabaseException {
-    NodeWriter ndWriter = new NodeWriter(this.dbParams);
-    LinkWriter lnWriter = new LinkWriter(this.dbParams);
+    NodeWriter ndWriter = new NodeWriter(dbParams, dbw);
+    LinkWriter lnWriter = new LinkWriter(dbParams, dbw);
 
     ndWriter.deleteAllNodes(networkID);
     lnWriter.deleteAllLinks(networkID);

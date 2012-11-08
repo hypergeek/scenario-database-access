@@ -47,22 +47,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class SplitRatioProfileWriter extends DatabaseWriter {
+public class SplitRatioProfileWriter extends WriterBase {
   public SplitRatioProfileWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
-
+  public SplitRatioProfileWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
 
   /**
    * Insert a map as the map of all profiles belonging to a split ratio set.
@@ -75,16 +72,16 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
   public void insertProfiles(Map<String,SplitRatioProfile> profileMap, long splitratioSetID) throws DatabaseException {
     String query = "insert_profiles_in_splitratioSet_" + splitratioSetID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"SPLIT_RATIO_PROFS\" " +
         "(ID, NODE_ID, DEST_NETWORK_ID, SPLIT_RATIO_SET_ID, START_TIME, SAMPLE_RATE) " +
         "VALUES(?, ?, ?, ?, ?, ?)"
     );
 
     try {
-      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(this.dbParams);
+      SplitRatioProfileReader srpReader = new SplitRatioProfileReader(dbParams);
       
-      psClearParams(query);
+      dbw.psClearParams(query);
       
       for (Map.Entry<String,SplitRatioProfile> entry : profileMap.entrySet()) {
         Long nodeID = Long.parseLong(entry.getKey());
@@ -92,16 +89,16 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
         Long profileID = srpReader.getNextProfileID();
         int i = 0;
 
-        psSetBigInt(query, ++i, profileID);
-        psSetBigInt(query, ++i, nodeID);
-        psSetBigInt(query, ++i, profile.getDestinationNetworkLongId());
-        psSetBigInt(query, ++i, splitratioSetID);
-        psSetDouble(query, ++i, profile.getStartTime());
-        psSetDouble(query, ++i, profile.getSampleRate());
+        dbw.psSetBigInt(query, ++i, profileID);
+        dbw.psSetBigInt(query, ++i, nodeID);
+        dbw.psSetBigInt(query, ++i, profile.getDestinationNetworkLongId());
+        dbw.psSetBigInt(query, ++i, splitratioSetID);
+        dbw.psSetDouble(query, ++i, profile.getStartTime());
+        dbw.psSetDouble(query, ++i, profile.getSampleRate());
         
         Monitor.debug("inserting profile " + profileID + " into set " + splitratioSetID + " at node " + nodeID + " with data " + profile);
         
-        psUpdate(query);
+        dbw.psUpdate(query);
         
         Monitor.debug("inserted profile " + profileID + " with data " + profile);
 
@@ -110,7 +107,7 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -121,7 +118,7 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
     
     String query = "insert_splitratios_in_profile_" + profileID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"SPLIT_RATIOS\" " +
         "(SPLIT_RATIO_PROF_ID, IN_LINK_ID, OUT_LINK_ID, VEH_TYPE_ID, RATIO_ORDER, RATIO) " +
         "VALUES(?, ?, ?, ?, ?, ?)"
@@ -150,14 +147,14 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
               
               int i = 0;
               
-              psSetBigInt(query, ++i, profileID);
-              psSetBigInt(query, ++i, inLinkId);
-              psSetBigInt(query, ++i, outLinkId);
-              psSetBigInt(query, ++i, vehTypeId);
+              dbw.psSetBigInt(query, ++i, profileID);
+              dbw.psSetBigInt(query, ++i, inLinkId);
+              dbw.psSetBigInt(query, ++i, outLinkId);
+              dbw.psSetBigInt(query, ++i, vehTypeId);
               
-              psSetInteger(query, ++i, ord);
+              dbw.psSetInteger(query, ++i, ord);
               
-              psSetDouble(query, ++i, ratio);
+              dbw.psSetDouble(query, ++i, ratio);
               
               Monitor.debug("inserting ratio " + ratio +
                 " at (" +
@@ -166,7 +163,7 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
                   vehTypeId + ", " +
                   ord + ")");
 
-              psUpdate(query);
+              dbw.psUpdate(query);
             }
           }
         }
@@ -174,7 +171,7 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -188,38 +185,38 @@ public class SplitRatioProfileWriter extends DatabaseWriter {
   public long deleteAllProfiles(long splitratioSetID) throws DatabaseException {
     String srQuery = "delete_splitratios_in_profiles_of_splitratioSet_" + splitratioSetID;
 
-    psCreate(srQuery,
+    dbw.psCreate(srQuery,
       "DELETE FROM \"VIA\".\"SPLIT_RATIOS\" " +
         "WHERE \"SPLIT_RATIO_PROF_ID\" IN " +
           "(SELECT \"ID\" FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE \"SPLIT_RATIO_SET_ID\" = ?)"
     );
 
     try {
-      psClearParams(srQuery);
-      psSetBigInt(srQuery, 1, splitratioSetID);
-      psUpdate(srQuery);
+      dbw.psClearParams(srQuery);
+      dbw.psSetBigInt(srQuery, 1, splitratioSetID);
+      dbw.psUpdate(srQuery);
     }
     finally {
       if (srQuery != null) {
-        psDestroy(srQuery);
+        dbw.psDestroy(srQuery);
       }
     }
     
     String query = "delete_profiles_in_splitratioSet_" + splitratioSetID;
 
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE (\"SPLIT_RATIO_SET_ID\" = ?)"
     );
 
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, splitratioSetID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, splitratioSetID);
+      long rows = dbw.psUpdate(query);
       return rows;
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }

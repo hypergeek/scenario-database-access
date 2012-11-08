@@ -44,21 +44,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class LinkWriter extends DatabaseWriter {
+public class LinkWriter extends WriterBase {
   public LinkWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public LinkWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given link into the database.
@@ -71,12 +69,12 @@ public class LinkWriter extends DatabaseWriter {
     String linkIdStr = "link.{id=" + link.getId() + ", network_id=" + networkID + "}";
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Link insert transaction beginning on " + linkIdStr);
       
       insertWithDependents(link, networkID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Link insert transaction committing on " + linkIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -85,7 +83,7 @@ public class LinkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Link insert transaction rollback on " + linkIdStr);
       }
       catch(Exception Exc) {
@@ -120,7 +118,7 @@ public class LinkWriter extends DatabaseWriter {
   public void insertLinks(List<Link> links, long networkID) throws DatabaseException {
     String query = "insert_links_in_network_" + networkID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -132,31 +130,31 @@ public class LinkWriter extends DatabaseWriter {
     // see comment at UPDATE
 
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
       for (Link link : links) {
         int i=0;
         
-        psSetBigInt(query, ++i, link.getLongId());
-        psSetBigInt(query, ++i, networkID);
-        psSetBigInt(query, ++i, link.getBeginLongId());
-        psSetBigInt(query, ++i, link.getEndLongId());
-        psSetInteger(query, ++i, link.getSpeedLimit());
-        psSetDouble(query, ++i, link.getLength());
-        psSetInteger(query, ++i, link.getDetailLevel());
+        dbw.psSetBigInt(query, ++i, link.getLongId());
+        dbw.psSetBigInt(query, ++i, networkID);
+        dbw.psSetBigInt(query, ++i, link.getBeginLongId());
+        dbw.psSetBigInt(query, ++i, link.getEndLongId());
+        dbw.psSetInteger(query, ++i, link.getSpeedLimit());
+        dbw.psSetDouble(query, ++i, link.getLength());
+        dbw.psSetInteger(query, ++i, link.getDetailLevel());
         
-        long rows = psUpdate(query);
+        long rows = dbw.psUpdate(query);
         
         if (rows != 1) {
            throw new DatabaseException(null, "Link not unique: network id=" +
             networkID + " has " +
-            rows + " rows with id=" + link.getId(), this, query);
+            rows + " rows with id=" + link.getId(), dbw, query);
         }
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -170,7 +168,7 @@ public class LinkWriter extends DatabaseWriter {
   public void insertRow(Link link, long networkID) throws DatabaseException {
     String query = "insert_link_" + link.getId();
 
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -182,28 +180,28 @@ public class LinkWriter extends DatabaseWriter {
     // see comment at UPDATE
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
       int i=0;
       
-      psSetBigInt(query, ++i, link.getLongId());
-      psSetBigInt(query, ++i, networkID);
-      psSetBigInt(query, ++i, link.getBeginLongId());
-      psSetBigInt(query, ++i, link.getEndLongId());
-      psSetInteger(query, ++i, link.getSpeedLimit());
-      psSetDouble(query, ++i, link.getLength());
-      psSetInteger(query, ++i, link.getDetailLevel());
+      dbw.psSetBigInt(query, ++i, link.getLongId());
+      dbw.psSetBigInt(query, ++i, networkID);
+      dbw.psSetBigInt(query, ++i, link.getBeginLongId());
+      dbw.psSetBigInt(query, ++i, link.getEndLongId());
+      dbw.psSetInteger(query, ++i, link.getSpeedLimit());
+      dbw.psSetDouble(query, ++i, link.getLength());
+      dbw.psSetInteger(query, ++i, link.getDetailLevel());
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       if (rows != 1) {
          throw new DatabaseException(null, "Link not unique: network id=" +
           networkID + " has " +
-          rows + " rows with id=" + link.getId(), this, query);
+          rows + " rows with id=" + link.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -219,12 +217,12 @@ public class LinkWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Link update transaction beginning on " + linkIdStr);
       
       updateWithDependents(link, networkID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Link update transaction committing on " + linkIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -233,7 +231,7 @@ public class LinkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Link update transaction rollback on " + linkIdStr);
       }
       catch(Exception Exc) {
@@ -265,7 +263,7 @@ public class LinkWriter extends DatabaseWriter {
    */
   public void updateRow(Link link, long networkID) throws DatabaseException {
     String query = "update_link_" + link.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
       "begin\n" +
@@ -278,29 +276,29 @@ public class LinkWriter extends DatabaseWriter {
     // and the link table's spatial index is broken if geom is null.
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
       int i=0;
       
-      psSetBigInt(query, ++i, link.getBeginLongId());
-      psSetBigInt(query, ++i, link.getEndLongId());
-      psSetInteger(query, ++i, link.getSpeedLimit());
-      psSetDouble(query, ++i, link.getLength());
-      psSetInteger(query, ++i, link.getDetailLevel());
+      dbw.psSetBigInt(query, ++i, link.getBeginLongId());
+      dbw.psSetBigInt(query, ++i, link.getEndLongId());
+      dbw.psSetInteger(query, ++i, link.getSpeedLimit());
+      dbw.psSetDouble(query, ++i, link.getLength());
+      dbw.psSetInteger(query, ++i, link.getDetailLevel());
 
-      psSetBigInt(query, ++i, link.getLongId());
-      psSetBigInt(query, ++i, networkID);
+      dbw.psSetBigInt(query, ++i, link.getLongId());
+      dbw.psSetBigInt(query, ++i, networkID);
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
         throw new DatabaseException(null, "Link not unique: there exist " +
-          rows + " with id=" + link.getId(), this, query);
+          rows + " with id=" + link.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -316,14 +314,14 @@ public class LinkWriter extends DatabaseWriter {
     String linkIdStr = "link.{id=" + linkID + ", network_id=" + networkID + "}";
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Link delete transaction beginning on " + linkIdStr);
       
       deleteRow(linkID, networkID);
       
       //warn or fail if related links still exist?
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Link delete transaction committing on " + linkIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -332,7 +330,7 @@ public class LinkWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Link delete transaction rollback on " + linkIdStr);
       }
       catch(Exception Exc) {
@@ -352,25 +350,25 @@ public class LinkWriter extends DatabaseWriter {
    */
   public void deleteRow(long linkID, long networkID) throws DatabaseException {
     String query = "delete_link_" + linkID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"LINKS\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, linkID);
-      psSetBigInt(query, 2, networkID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, linkID);
+      dbw.psSetBigInt(query, 2, networkID);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
         throw new DatabaseException(null, "Link not unique: network id=" +
           networkID + " has " +
-          rows + " rows with id=" + linkID, this, query);
+          rows + " rows with id=" + linkID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -384,19 +382,19 @@ public class LinkWriter extends DatabaseWriter {
   public long deleteAllLinks(long networkID) throws DatabaseException {
     String query = "delete_links_in_network_" + networkID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"LINKS\" WHERE (\"NETWORK_ID\" = ?)"
     );
 
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, networkID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, networkID);
+      long rows = dbw.psUpdate(query);
       return rows;
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }

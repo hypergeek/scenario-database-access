@@ -47,21 +47,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class SplitRatioProfileReader extends DatabaseReader {
+public class SplitRatioProfileReader extends ReaderBase {
   public SplitRatioProfileReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public SplitRatioProfileReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
 
   /**
    * Read the map of all profiles belonging to a split ratio set from the database.
@@ -81,7 +79,7 @@ public class SplitRatioProfileReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -97,13 +95,13 @@ public class SplitRatioProfileReader extends DatabaseReader {
   protected String runQueryAllProfiles(long splitratioSetID) throws DatabaseException {
     String query = "read_profiles_splitratioSet" + splitratioSetID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE (\"SPLIT_RATIO_SET_ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, splitratioSetID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, splitratioSetID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -118,26 +116,26 @@ public class SplitRatioProfileReader extends DatabaseReader {
   protected Map<String,SplitRatioProfile> profileMapFromQueryRS(String query) throws DatabaseException {
     Map<String,SplitRatioProfile> profileMap = new HashMap<String,SplitRatioProfile>();
     
-    while (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    while (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       SplitRatioProfile profile = new SplitRatioProfile();
       
-      Long profileID = psRSGetBigInt(query, "ID");
-      Long nodeID = psRSGetBigInt(query, "NODE_ID");
+      Long profileID = dbr.psRSGetBigInt(query, "ID");
+      Long nodeID = dbr.psRSGetBigInt(query, "NODE_ID");
       
-      Long destNwID = psRSGetBigInt(query, "DEST_NETWORK_ID");
+      Long destNwID = dbr.psRSGetBigInt(query, "DEST_NETWORK_ID");
       if (destNwID != null) {
         profile.setDestinationNetworkId(destNwID.toString());
       }
       
-      Double startTime = psRSGetDouble(query, "START_TIME");
+      Double startTime = dbr.psRSGetDouble(query, "START_TIME");
       if (startTime != null) {
         profile.setStartTime(startTime);
       }
       
-      Double sampleRate = psRSGetDouble(query, "SAMPLE_RATE");
+      Double sampleRate = dbr.psRSGetDouble(query, "SAMPLE_RATE");
       if (sampleRate != null) {
         profile.setSampleRate(sampleRate);
       }
@@ -164,7 +162,7 @@ public class SplitRatioProfileReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -180,13 +178,13 @@ public class SplitRatioProfileReader extends DatabaseReader {
   protected String runQueryAllRatios(long profileID) throws DatabaseException {
     String query = "read_ratios_profile" + profileID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"SPLIT_RATIOS\" WHERE (\"SPLIT_RATIO_PROF_ID\" = ?) ORDER BY \"RATIO_ORDER\""
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, profileID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, profileID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -204,14 +202,14 @@ public class SplitRatioProfileReader extends DatabaseReader {
     Map<CharSequence,Map<CharSequence,Map<CharSequence,List<Double>>>> ratioMap =
       new HashMap<CharSequence,Map<CharSequence,Map<CharSequence,List<Double>>>>();
     
-    while (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    while (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
-      Long inLinkID   = psRSGetBigInt(query, "IN_LINK_ID");
-      Long outLinkID  = psRSGetBigInt(query, "OUT_LINK_ID");
-      Long vehTypeID  = psRSGetBigInt(query, "VEH_TYPE_ID");
-      Double ratio    = psRSGetDouble(query, "RATIO");
+      Long inLinkID   = dbr.psRSGetBigInt(query, "IN_LINK_ID");
+      Long outLinkID  = dbr.psRSGetBigInt(query, "OUT_LINK_ID");
+      Long vehTypeID  = dbr.psRSGetBigInt(query, "VEH_TYPE_ID");
+      Double ratio    = dbr.psRSGetDouble(query, "RATIO");
       
       SplitRatioProfile.addRatioToMapAt(ratioMap, inLinkID, outLinkID, vehTypeID, ratio);
     }
@@ -224,18 +222,18 @@ public class SplitRatioProfileReader extends DatabaseReader {
     Long id = null;
     
     try {
-      psCreate(query,
+      dbr.psCreate(query,
         "SELECT VIA.SEQ_SPLIT_RATIO_PROFS_ID.nextVal AS ID FROM dual");
       
-      psQuery(query);
+      dbr.psQuery(query);
       
-      if (psRSNext(query)) {
-        id = psRSGetBigInt(query, "ID");
+      if (dbr.psRSNext(query)) {
+        id = dbr.psRSGetBigInt(query, "ID");
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     

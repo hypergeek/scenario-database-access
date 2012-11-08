@@ -43,21 +43,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class NodeReader extends DatabaseReader {
+public class NodeReader extends ReaderBase {
   public NodeReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public NodeReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
   
   /**
    * Read one node with the given ID from the database.
@@ -73,12 +71,12 @@ public class NodeReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug("Node reader transaction beginning on " + nodeIdStr);
 
       node = readWithAssociates(nodeID, networkID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug("Node reader transaction committing on " + nodeIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -87,7 +85,7 @@ public class NodeReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug("Node reader transaction rollback on " + nodeIdStr);
       }
       catch(Exception Exc) {
@@ -140,7 +138,7 @@ public class NodeReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -164,7 +162,7 @@ public class NodeReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -181,14 +179,14 @@ public class NodeReader extends DatabaseReader {
   protected String runQueryOneNode(long nodeID, long networkID) throws DatabaseException {
     String query = "read_node_" + nodeID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"NODES\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
     ); // TODO reuse this
     
-    psClearParams(query);
-    psSetBigInt(query, 1, nodeID);
-    psSetBigInt(query, 2, networkID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, nodeID);
+    dbr.psSetBigInt(query, 2, networkID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -203,13 +201,13 @@ public class NodeReader extends DatabaseReader {
   protected String runQueryAllNodes(long networkID) throws DatabaseException {
     String query = "read_nodes_network" + networkID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"NODES\" WHERE (\"NETWORK_ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, networkID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, networkID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -224,17 +222,17 @@ public class NodeReader extends DatabaseReader {
   protected Node nodeFromQueryRS(String query) throws DatabaseException {
     Node node = null;
     
-    if (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    if (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       node = new Node();
       
-      Long id = psRSGetBigInt(query, "ID");
+      Long id = dbr.psRSGetBigInt(query, "ID");
 // TODO go to the node_names table for this
-//      String name = psRSGetVarChar(query, "NAME");
+//      String name = dbr.psRSGetVarChar(query, "NAME");
 // TODO where is this now?
-//      String type = psRSGetVarChar(query, "TYPE");
+//      String type = dbr.psRSGetVarChar(query, "TYPE");
 // TODO get lat/lng from Geom column
       
       node.setId(id);

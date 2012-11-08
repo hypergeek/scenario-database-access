@@ -43,21 +43,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class ScenarioWriter extends DatabaseWriter {
+public class ScenarioWriter extends WriterBase {
   public ScenarioWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public ScenarioWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given scenario into the database.
@@ -70,12 +68,12 @@ public class ScenarioWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Scenario insert transaction beginning on scenario.id=" + scenario.getId());
       
       insertWithDependents(scenario);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Scenario insert transaction committing on scenario.id=" + scenario.getId());
     }
     catch (DatabaseException dbExc) {
@@ -84,7 +82,7 @@ public class ScenarioWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Scenario insert transaction rollback on scenario.id=" + scenario.getId());
       }
       catch(Exception Exc) {
@@ -116,31 +114,31 @@ public class ScenarioWriter extends DatabaseWriter {
    */
   public void insertRow(Scenario scenario) throws DatabaseException {
     String query = "insert_scenario_" + scenario.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"SCENARIOS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, scenario.getLongId());
+      dbw.psSetBigInt(query, 1, scenario.getLongId());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         scenario.getName() == null ? null : scenario.getName().toString());
       
-      psSetVarChar(query, 3,
+      dbw.psSetVarChar(query, 3,
         scenario.getDescription() == null ? null : scenario.getDescription().toString());
       
-      psSetInteger(query, 4, 1); // project id
+      dbw.psSetInteger(query, 4, 1); // project id
 
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       if (rows != 1) {
-        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), this, query);
+        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -156,12 +154,12 @@ public class ScenarioWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Scenario update transaction beginning on scenario.id=" + scenario.getId());
       
       updateWithDependents(scenario);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Scenario update transaction committing on scenario.id=" + scenario.getId());
     }
     catch (DatabaseException dbExc) {
@@ -170,7 +168,7 @@ public class ScenarioWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Scenario update transaction rollback on scenario.id=" + scenario.getId());
       }
       catch(Exception Exc) {
@@ -198,31 +196,31 @@ public class ScenarioWriter extends DatabaseWriter {
    */
   public void updateRow(Scenario scenario) throws DatabaseException {
     String query = "update_scenario_" + scenario.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetVarChar(query, 1,
+      dbw.psSetVarChar(query, 1,
         scenario.getName() == null ? null : scenario.getName().toString());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         scenario.getDescription() == null ? null : scenario.getDescription().toString());
 
-      psSetInteger(query, 3, 1); // project id
+      dbw.psSetInteger(query, 3, 1); // project id
       
-      psSetBigInt(query, 4, scenario.getLongId());
-      long rows = psUpdate(query);
+      dbw.psSetBigInt(query, 4, scenario.getLongId());
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), this, query);
+        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenario.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -238,12 +236,12 @@ public class ScenarioWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("Scenario delete transaction beginning on scenario.id=" + scenarioID);
       
       deleteRow(scenarioID);
       
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("Scenario delete transaction committing on scenario.id=" + scenarioID);
     }
     catch (DatabaseException dbExc) {
@@ -252,7 +250,7 @@ public class ScenarioWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("Scenario delete transaction rollback on scenario.id=" + scenarioID);
       }
       catch(Exception Exc) {
@@ -271,22 +269,22 @@ public class ScenarioWriter extends DatabaseWriter {
    */
   public void deleteRow(long scenarioID) throws DatabaseException {
     String query = "delete_scenario_" + scenarioID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"SCENARIOS\" WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, scenarioID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, scenarioID);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenarioID, this, query);
+        throw new DatabaseException(null, "Scenario not unique: there exist " + rows + " with id=" + scenarioID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }

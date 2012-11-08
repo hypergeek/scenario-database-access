@@ -44,21 +44,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class SplitRatioSetWriter extends DatabaseWriter {
+public class SplitRatioSetWriter extends WriterBase {
   public SplitRatioSetWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public SplitRatioSetWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
   
   /**
    * Insert the given split ratio set into the database.
@@ -69,13 +67,13 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-//      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("SplitRatioSet insert transaction beginning on splitratioSet.id=" + splitratioSet.getId());
       
       insertWithDependents(splitratioSet);
 
       Monitor.debug("SplitRatioSet insert transaction committing on splitratioSet.id=" + splitratioSet.getId());
-//      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("SplitRatioSet insert transaction committed on splitratioSet.id=" + splitratioSet.getId());
     }
     catch (DatabaseException dbExc) {
@@ -84,7 +82,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-//        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("SplitRatioSet insert transaction rollback on splitratioSet.id=" + splitratioSet.getId());
       }
       catch(Exception Exc) {
@@ -107,7 +105,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
   }
   
   private void insertDependents(SplitRatioSet splitratioSet) throws DatabaseException {
-    SplitRatioProfileWriter srpWriter = new SplitRatioProfileWriter(this.dbParams);
+    SplitRatioProfileWriter srpWriter = new SplitRatioProfileWriter(dbParams, dbw);
     long splitratioSetID = splitratioSet.getLongId();
     
     srpWriter.insertProfiles(splitratioSet.getProfileMap(), splitratioSetID);
@@ -120,26 +118,26 @@ public class SplitRatioSetWriter extends DatabaseWriter {
    */
   public void insertRow(SplitRatioSet splitratioSet) throws DatabaseException {
     String query = "insert_splitratioSet_" + splitratioSet.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"SPLIT_RATIO_SETS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
     );
   
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetBigInt(query, 1, splitratioSet.getLongId());
+      dbw.psSetBigInt(query, 1, splitratioSet.getLongId());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         splitratioSet.getName() == null ? null : splitratioSet.getName().toString());
       
-      psSetVarChar(query, 3,
+      dbw.psSetVarChar(query, 3,
         splitratioSet.getDescription() == null ? null : splitratioSet.getDescription().toString());
       
-      psUpdate(query);
+      dbw.psUpdate(query);
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -153,12 +151,12 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("SplitRatioSet update transaction beginning on splitratioSet.id=" + splitratioSet.getId());
       
       updateWithDependents(splitratioSet);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("SplitRatioSet update transaction committing on splitratioSet.id=" + splitratioSet.getId());
     }
     catch (DatabaseException dbExc) {
@@ -167,7 +165,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("SplitRatioSet update transaction rollback on splitratioSet.id=" + splitratioSet.getId());
       }
       catch(Exception Exc) {
@@ -203,30 +201,30 @@ public class SplitRatioSetWriter extends DatabaseWriter {
    */
   public void updateRow(SplitRatioSet splitratioSet) throws DatabaseException {
     String query = "update_splitratioSet_" + splitratioSet.getId();
-    psCreate(query,
+    dbw.psCreate(query,
       "UPDATE \"VIA\".\"SPLIT_RATIO_SETS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
+      dbw.psClearParams(query);
 
-      psSetVarChar(query, 1,
+      dbw.psSetVarChar(query, 1,
         splitratioSet.getName() == null ? null : splitratioSet.getName().toString());
       
-      psSetVarChar(query, 2,
+      dbw.psSetVarChar(query, 2,
         splitratioSet.getDescription() == null ? null : splitratioSet.getDescription().toString());
 
-      psSetBigInt(query, 3, splitratioSet.getLongId());
+      dbw.psSetBigInt(query, 3, splitratioSet.getLongId());
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "SplitRatioSet not unique: there exist " + rows + " with id=" + splitratioSet.getId(), this, query);
+        throw new DatabaseException(null, "SplitRatioSet not unique: there exist " + rows + " with id=" + splitratioSet.getId(), dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -240,13 +238,13 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbw.transactionBegin();
       Monitor.debug("SplitRatioSet delete transaction beginning on splitratioSet.id=" + splitratioSetID);
       
       deleteDependents(splitratioSetID);
       deleteRow(splitratioSetID);
 
-      transactionCommit();
+      dbw.transactionCommit();
       Monitor.debug("SplitRatioSet delete transaction committing on splitratioSet.id=" + splitratioSetID);
     }
     catch (DatabaseException dbExc) {
@@ -255,7 +253,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
     }
     finally {
       try {
-        transactionRollback();
+        dbw.transactionRollback();
         Monitor.debug("SplitRatioSet delete transaction rollback on splitratioSet.id=" + splitratioSetID);
       }
       catch(Exception Exc) {
@@ -274,23 +272,23 @@ public class SplitRatioSetWriter extends DatabaseWriter {
    */
   public void deleteRow(long splitratioSetID) throws DatabaseException {
     String query = "delete_splitratioSet_" + splitratioSetID;
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"SPLIT_RATIO_SETS\" WHERE \"ID\" = ?"
     );
     
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, splitratioSetID);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, splitratioSetID);
       
-      long rows = psUpdate(query);
+      long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
-        throw new DatabaseException(null, "SplitRatioSet not unique: there exist " + rows + " with id=" + splitratioSetID, this, query);
+        throw new DatabaseException(null, "SplitRatioSet not unique: there exist " + rows + " with id=" + splitratioSetID, dbw, query);
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -301,7 +299,7 @@ public class SplitRatioSetWriter extends DatabaseWriter {
    * @param splitratioSetID  the splitratioSet ID
    */
   private void deleteDependents(long splitratioSetID) throws DatabaseException {
-    SplitRatioProfileWriter srpWriter = new SplitRatioProfileWriter(this.dbParams);
+    SplitRatioProfileWriter srpWriter = new SplitRatioProfileWriter(dbParams, dbw);
     
     srpWriter.deleteAllProfiles(splitratioSetID);
   }

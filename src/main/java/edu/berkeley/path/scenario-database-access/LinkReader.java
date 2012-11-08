@@ -43,21 +43,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class LinkReader extends DatabaseReader {
+public class LinkReader extends ReaderBase {
   public LinkReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public LinkReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
   
   /**
    * Read one link with the given ID from the database.
@@ -73,12 +71,12 @@ public class LinkReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug("Link reader transaction beginning on " + linkIdStr);
 
       link = readWithAssociates(linkID, networkID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug("Link reader transaction committing on " + linkIdStr);
     }
     catch (DatabaseException dbExc) {
@@ -87,7 +85,7 @@ public class LinkReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug("Link reader transaction rollback on " + linkIdStr);
       }
       catch(Exception Exc) {
@@ -140,7 +138,7 @@ public class LinkReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -164,7 +162,7 @@ public class LinkReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -181,14 +179,14 @@ public class LinkReader extends DatabaseReader {
   protected String runQueryOneLink(long linkID, long networkID) throws DatabaseException {
     String query = "read_link_" + linkID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"LINKS\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
-    ); // TODO reuse this
+    );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, linkID);
-    psSetBigInt(query, 2, networkID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, linkID);
+    dbr.psSetBigInt(query, 2, networkID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -203,13 +201,13 @@ public class LinkReader extends DatabaseReader {
   protected String runQueryAllLinks(long networkID) throws DatabaseException {
     String query = "read_links_network" + networkID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"LINKS\" WHERE (\"NETWORK_ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, networkID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, networkID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -224,23 +222,23 @@ public class LinkReader extends DatabaseReader {
   protected Link linkFromQueryRS(String query) throws DatabaseException {
     Link link = null;
     
-    if (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    if (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       link = new Link();
       
-      Long id = psRSGetBigInt(query, "ID");
-      Long bId = psRSGetBigInt(query, "BEG_NODE_ID");
-      Long eId = psRSGetBigInt(query, "END_NODE_ID");
-      Integer speed = psRSGetInteger(query, "SPEED_LIMIT");
-      Double length = psRSGetDouble(query, "LENGTH");
-      Integer detail = psRSGetInteger(query, "DETAIL_LEVEL");
+      Long id = dbr.psRSGetBigInt(query, "ID");
+      Long bId = dbr.psRSGetBigInt(query, "BEG_NODE_ID");
+      Long eId = dbr.psRSGetBigInt(query, "END_NODE_ID");
+      Integer speed = dbr.psRSGetInteger(query, "SPEED_LIMIT");
+      Double length = dbr.psRSGetDouble(query, "LENGTH");
+      Integer detail = dbr.psRSGetInteger(query, "DETAIL_LEVEL");
       
 // TODO go to the link_names table for this
-//      String name = psRSGetVarChar(query, "NAME");
+//      String name = dbr.psRSGetVarChar(query, "NAME");
 // TODO where is this now?
-//      String type = psRSGetVarChar(query, "TYPE");
+//      String type = dbr.psRSGetVarChar(query, "TYPE");
       
       link.setId(id);
 //      link.name = name;

@@ -47,21 +47,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class DemandProfileReader extends DatabaseReader {
+public class DemandProfileReader extends ReaderBase {
   public DemandProfileReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public DemandProfileReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
 
   /**
    * Read the map of all profiles belonging to a demand set from the database.
@@ -81,7 +79,7 @@ public class DemandProfileReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -97,13 +95,13 @@ public class DemandProfileReader extends DatabaseReader {
   protected String runQueryAllProfiles(long demandSetID) throws DatabaseException {
     String query = "read_profiles_demandSet" + demandSetID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"DEMAND_PROFS\" WHERE (\"DEMAND_SET_ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, demandSetID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, demandSetID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -118,41 +116,41 @@ public class DemandProfileReader extends DatabaseReader {
   protected Map<String,DemandProfile> profileMapFromQueryRS(String query) throws DatabaseException {
     Map<String,DemandProfile> profileMap = new HashMap<String,DemandProfile>();
     
-    while (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    while (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       DemandProfile profile = new DemandProfile();
       
-      Long profileID = psRSGetBigInt(query, "ID");
-      Long linkID = psRSGetBigInt(query, "ORG_LINK_ID");
+      Long profileID = dbr.psRSGetBigInt(query, "ID");
+      Long linkID = dbr.psRSGetBigInt(query, "ORG_LINK_ID");
       
-      Long destNwID = psRSGetBigInt(query, "DEST_NETWORK_ID");
+      Long destNwID = dbr.psRSGetBigInt(query, "DEST_NETWORK_ID");
       if (destNwID != null) {
         profile.setDestinationNetworkId(destNwID.toString());
       }
       
-      Double startTime = psRSGetDouble(query, "START_TIME");
+      Double startTime = dbr.psRSGetDouble(query, "START_TIME");
       if (startTime != null) {
         profile.setStartTime(startTime);
       }
       
-      Double sampleRate = psRSGetDouble(query, "SAMPLE_RATE");
+      Double sampleRate = dbr.psRSGetDouble(query, "SAMPLE_RATE");
       if (sampleRate != null) {
         profile.setSampleRate(sampleRate);
       }
 
-      Double knob = psRSGetDouble(query, "KNOB");
+      Double knob = dbr.psRSGetDouble(query, "KNOB");
       if (knob != null) {
         profile.setKnob(knob);
       }
       
-      Double stdDevAdd = psRSGetDouble(query, "STD_DEV_ADD");
+      Double stdDevAdd = dbr.psRSGetDouble(query, "STD_DEV_ADD");
       if (stdDevAdd != null) {
         profile.setStdDevAdd(stdDevAdd);
       }
       
-      Double stdDevMult = psRSGetDouble(query, "STD_DEV_MULT");
+      Double stdDevMult = dbr.psRSGetDouble(query, "STD_DEV_MULT");
       if (stdDevMult != null) {
         profile.setStdDevMult(stdDevMult);
       }
@@ -179,7 +177,7 @@ public class DemandProfileReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -195,13 +193,13 @@ public class DemandProfileReader extends DatabaseReader {
   protected String runQueryAllFlows(long profileID) throws DatabaseException {
     String query = "read_flows_profile" + profileID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"DEMANDS\" WHERE (\"DEMAND_PROF_ID\" = ?) ORDER BY \"DEMAND_ORDER\""
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, profileID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, profileID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -219,12 +217,12 @@ public class DemandProfileReader extends DatabaseReader {
     Map<CharSequence,List<Double>> flowMap =
       new HashMap<CharSequence,List<Double>>();
     
-    while (psRSNext(query)) {
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+    while (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
-      Long vehTypeID  = psRSGetBigInt(query, "VEH_TYPE_ID");
-      Double flow    = psRSGetDouble(query, "FLOW");
+      Long   vehTypeID  = dbr.psRSGetBigInt(query, "VEH_TYPE_ID");
+      Double flow       = dbr.psRSGetDouble(query, "FLOW");
       
       DemandProfile.addFlowToMapAt(flowMap, vehTypeID, flow);
     }
@@ -237,18 +235,18 @@ public class DemandProfileReader extends DatabaseReader {
     Long id = null;
     
     try {
-      psCreate(query,
+      dbr.psCreate(query,
         "SELECT VIA.SEQ_DEMAND_PROFS_ID.nextVal AS ID FROM dual");
       
-      psQuery(query);
+      dbr.psQuery(query);
       
-      if (psRSNext(query)) {
-        id = psRSGetBigInt(query, "ID");
+      if (dbr.psRSNext(query)) {
+        id = dbr.psRSGetBigInt(query, "ID");
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     

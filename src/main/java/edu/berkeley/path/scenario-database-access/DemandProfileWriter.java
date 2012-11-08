@@ -47,22 +47,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class DemandProfileWriter extends DatabaseWriter {
+public class DemandProfileWriter extends WriterBase {
   public DemandProfileWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
-
+  public DemandProfileWriter(
+          DBParams dbParams,
+          DatabaseWriter dbWriter
+          ) throws DatabaseException {
+    super(dbParams, dbWriter);
+  }
 
   /**
    * Insert a map as the map of all profiles belonging to a demand set.
@@ -75,16 +72,16 @@ public class DemandProfileWriter extends DatabaseWriter {
   public void insertProfiles(Map<String,DemandProfile> profileMap, long demandSetID) throws DatabaseException {
     String query = "insert_profiles_in_demandSet_" + demandSetID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"DEMAND_PROFS\" " +
         "(ID, ORG_LINK_ID, DEST_NETWORK_ID, DEMAND_SET_ID, START_TIME, SAMPLE_RATE, KNOB, STD_DEV_ADD, STD_DEV_MULT) " +
         "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
     try {
-      DemandProfileReader dpReader = new DemandProfileReader(this.dbParams);
+      DemandProfileReader dpReader = new DemandProfileReader(dbParams);
       
-      psClearParams(query);
+      dbw.psClearParams(query);
       
       for (Map.Entry<String,DemandProfile> entry : profileMap.entrySet()) {
         Long linkID = Long.parseLong(entry.getKey());
@@ -92,19 +89,19 @@ public class DemandProfileWriter extends DatabaseWriter {
         Long profileID = dpReader.getNextProfileID();
         int i = 0;
 
-        psSetBigInt(query, ++i, profileID);
-        psSetBigInt(query, ++i, linkID);
-        psSetBigInt(query, ++i, profile.getDestinationNetworkLongId());
-        psSetBigInt(query, ++i, demandSetID);
-        psSetDouble(query, ++i, profile.getStartTime());
-        psSetDouble(query, ++i, profile.getSampleRate());
-        psSetDouble(query, ++i, profile.getKnob());
-        psSetDouble(query, ++i, profile.getStdDevAdd());
-        psSetDouble(query, ++i, profile.getStdDevMult());
+        dbw.psSetBigInt(query, ++i, profileID);
+        dbw.psSetBigInt(query, ++i, linkID);
+        dbw.psSetBigInt(query, ++i, profile.getDestinationNetworkLongId());
+        dbw.psSetBigInt(query, ++i, demandSetID);
+        dbw.psSetDouble(query, ++i, profile.getStartTime());
+        dbw.psSetDouble(query, ++i, profile.getSampleRate());
+        dbw.psSetDouble(query, ++i, profile.getKnob());
+        dbw.psSetDouble(query, ++i, profile.getStdDevAdd());
+        dbw.psSetDouble(query, ++i, profile.getStdDevMult());
         
         Monitor.debug("inserting profile " + profileID + " into set " + demandSetID + " at link " + linkID + " with data " + profile);
         
-        psUpdate(query);
+        dbw.psUpdate(query);
         
         Monitor.debug("inserted profile " + profileID + " with data " + profile);
 
@@ -113,7 +110,7 @@ public class DemandProfileWriter extends DatabaseWriter {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -124,7 +121,7 @@ public class DemandProfileWriter extends DatabaseWriter {
     
     String query = "insert_demands_in_profile_" + profileID;
     
-    psCreate(query,
+    dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"DEMANDS\" " +
         "(ID, DEMAND_PROF_ID, VEH_TYPE_ID, DEMAND_ORDER, FLOW) " +
         "VALUES(VIA.SEQ_DEMAND_PROFS_ID.nextVal, ?, ?, ?, ?)"
@@ -143,25 +140,25 @@ public class DemandProfileWriter extends DatabaseWriter {
           
           int i = 0;
           
-          psSetBigInt(query, ++i, profileID);
-          psSetBigInt(query, ++i, vehTypeId);
+          dbw.psSetBigInt(query, ++i, profileID);
+          dbw.psSetBigInt(query, ++i, vehTypeId);
           
-          psSetInteger(query, ++i, ord);
+          dbw.psSetInteger(query, ++i, ord);
           
-          psSetDouble(query, ++i, flow);
+          dbw.psSetDouble(query, ++i, flow);
           
           Monitor.debug("inserting flow " + flow +
             " at (" +
               vehTypeId + ", " +
               ord + ")");
 
-          psUpdate(query);
+          dbw.psUpdate(query);
         }
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }
@@ -175,38 +172,38 @@ public class DemandProfileWriter extends DatabaseWriter {
   public long deleteAllProfiles(long demandSetID) throws DatabaseException {
     String dpQuery = "delete_demands_in_profiles_of_demandSet_" + demandSetID;
 
-    psCreate(dpQuery,
+    dbw.psCreate(dpQuery,
       "DELETE FROM \"VIA\".\"DEMANDS\" " +
         "WHERE \"DEMAND_PROF_ID\" IN " +
           "(SELECT \"ID\" FROM \"VIA\".\"DEMAND_PROFS\" WHERE \"DEMAND_SET_ID\" = ?)"
     );
 
     try {
-      psClearParams(dpQuery);
-      psSetBigInt(dpQuery, 1, demandSetID);
-      psUpdate(dpQuery);
+      dbw.psClearParams(dpQuery);
+      dbw.psSetBigInt(dpQuery, 1, demandSetID);
+      dbw.psUpdate(dpQuery);
     }
     finally {
       if (dpQuery != null) {
-        psDestroy(dpQuery);
+        dbw.psDestroy(dpQuery);
       }
     }
     
     String query = "delete_profiles_in_demandSet_" + demandSetID;
 
-    psCreate(query,
+    dbw.psCreate(query,
       "DELETE FROM \"VIA\".\"DEMAND_PROFS\" WHERE (\"DEMAND_SET_ID\" = ?)"
     );
 
     try {
-      psClearParams(query);
-      psSetBigInt(query, 1, demandSetID);
-      long rows = psUpdate(query);
+      dbw.psClearParams(query);
+      dbw.psSetBigInt(query, 1, demandSetID);
+      long rows = dbw.psUpdate(query);
       return rows;
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbw.psDestroy(query);
       }
     }
   }

@@ -40,21 +40,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class ScenarioReader extends DatabaseReader {
+public class ScenarioReader extends ReaderBase {
   public ScenarioReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public ScenarioReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
   
   /**
    * Read the scenario with the given ID from the database, including associated
@@ -69,14 +67,14 @@ public class ScenarioReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug(
         "Scenario reader transaction beginning on scenario.id=" +
         scenarioID);
 
       scenario = readWithAssociates(scenarioID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug(
         "Scenario reader transaction committing on scenario.id=" +
         scenarioID);
@@ -87,7 +85,7 @@ public class ScenarioReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug(
           "Scenario reader transaction rollback on scenario.id=" +
           scenarioID);
@@ -120,7 +118,7 @@ public class ScenarioReader extends DatabaseReader {
     Scenario scenario = readRow(scenarioID, associateIDs);
 
     if (scenario != null) {
-      NetworkReader nwr = new NetworkReader(dbParams);
+      NetworkReader nwr = new NetworkReader(dbParams, dbr);
       List<Network> networks = scenario.getNetworkList();
       for (Long networkID: readNetworkIDs(scenarioID)) {
         Network nw = nwr.readWithAssociates(networkID);
@@ -129,7 +127,7 @@ public class ScenarioReader extends DatabaseReader {
       
       Long srsetID = associateIDs.get("SPLIT_RATIO_SET");
       if (null != srsetID) {
-        SplitRatioSetReader srsr = new SplitRatioSetReader(dbParams);
+        SplitRatioSetReader srsr = new SplitRatioSetReader(dbParams, dbr);
         scenario.splitratioSet = srsr.readWithDependents(srsetID);
       }
     }
@@ -149,21 +147,21 @@ public class ScenarioReader extends DatabaseReader {
     String query = "read_networks_scenario_" + scenarioID;
     
     try {
-      psCreate(query,
+      dbr.psCreate(query,
         "SELECT * FROM \"VIA\".\"NETWORK_SETS\" WHERE (\"SCENARIO_ID\" = ?)"
       );
     
-      psClearParams(query);
-      psSetBigInt(query, 1, scenarioID);
-      psQuery(query);
+      dbr.psClearParams(query);
+      dbr.psSetBigInt(query, 1, scenarioID);
+      dbr.psQuery(query);
 
-      while (psRSNext(query)) {
-        networkIDs.add(psRSGetBigInt(query, "NETWORK_ID"));
+      while (dbr.psRSNext(query)) {
+        networkIDs.add(dbr.psRSGetBigInt(query, "NETWORK_ID"));
       }
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -191,7 +189,7 @@ public class ScenarioReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -207,13 +205,13 @@ public class ScenarioReader extends DatabaseReader {
   protected String runQuery(long scenarioID) throws DatabaseException {
     String query = "read_scenario_" + scenarioID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, scenarioID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, scenarioID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -230,26 +228,26 @@ public class ScenarioReader extends DatabaseReader {
   protected Scenario scenarioFromQueryRS(String query, HashMap<String, Long> associateIDs) throws DatabaseException {
     Scenario scenario = null;
     
-    while (psRSNext(query)) {
+    while (dbr.psRSNext(query)) {
       if (scenario != null) {
-        throw new DatabaseException(null, "Scenario not unique: " + query, this, query);
+        throw new DatabaseException(null, "Scenario not unique: " + query, dbr, query);
       }
       
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       scenario = new Scenario();
       
-      Long id = psRSGetBigInt(query, "ID");
-      String name = psRSGetVarChar(query, "NAME");
-      String desc = psRSGetVarChar(query, "DESCRIPTION");
+      Long id = dbr.psRSGetBigInt(query, "ID");
+      String name = dbr.psRSGetVarChar(query, "NAME");
+      String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       
       scenario.setId(id);
       scenario.name = name;
       scenario.description = desc;
       
       if (null != associateIDs) {
-        associateIDs.put("SPLIT_RATIO_SET", psRSGetBigInt(query, "SPLIT_RATIO_SET"));
+        associateIDs.put("SPLIT_RATIO_SET", dbr.psRSGetBigInt(query, "SPLIT_RATIO_SET"));
         // TODO: more sets and things
       }
 

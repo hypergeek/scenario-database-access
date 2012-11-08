@@ -43,21 +43,19 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class DemandSetReader extends DatabaseReader {
+public class DemandSetReader extends ReaderBase {
   public DemandSetReader(
           DBParams dbParams
           ) throws DatabaseException {
-    super(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
-    this.dbParams = dbParams;
+    super(dbParams);
   }
   
-  DBParams dbParams;
+  public DemandSetReader(
+          DBParams dbParams,
+          DatabaseReader dbReader
+          ) throws DatabaseException {
+    super(dbParams, dbReader);
+  }
   
   /**
    * Read one demand set with the given ID from the database, plus
@@ -73,14 +71,14 @@ public class DemandSetReader extends DatabaseReader {
     long timeBegin = System.nanoTime();
     
     try {
-      transactionBegin();
+      dbr.transactionBegin();
       Monitor.debug(
         "DemandSet reader transaction beginning on demandSet.id=" +
         demandSetID);
 
       demandSet = readWithDependents(demandSetID);
 
-      transactionCommit();
+      dbr.transactionCommit();
       Monitor.debug(
         "DemandSet reader transaction committing on demandSet.id=" +
         demandSetID);
@@ -91,7 +89,7 @@ public class DemandSetReader extends DatabaseReader {
     }
     finally {
       try {
-        transactionRollback();
+        dbr.transactionRollback();
         Monitor.debug(
           "DemandSet reader transaction rollback on demandSet.id=" +
           demandSetID);
@@ -125,7 +123,7 @@ public class DemandSetReader extends DatabaseReader {
     DemandSet demandSet = readRow(demandSetID);
 
     if (demandSet != null) {
-      DemandProfileReader dpReader = new DemandProfileReader(this.dbParams);
+      DemandProfileReader dpReader = new DemandProfileReader(dbParams, dbr);
       demandSet.setProfileMap(dpReader.readProfiles(demandSetID));
     }
     
@@ -149,7 +147,7 @@ public class DemandSetReader extends DatabaseReader {
     }
     finally {
       if (query != null) {
-        psDestroy(query);
+        dbr.psDestroy(query);
       }
     }
     
@@ -165,13 +163,13 @@ public class DemandSetReader extends DatabaseReader {
   protected String runQuery(long demandSetID) throws DatabaseException {
     String query = "read_demandSet_" + demandSetID;
     
-    psCreate(query,
+    dbr.psCreate(query,
       "SELECT * FROM \"VIA\".\"DEMAND_SETS\" WHERE (\"ID\" = ?)"
     );
     
-    psClearParams(query);
-    psSetBigInt(query, 1, demandSetID);
-    psQuery(query);
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, demandSetID);
+    dbr.psQuery(query);
 
     return query;
   }
@@ -186,20 +184,20 @@ public class DemandSetReader extends DatabaseReader {
   protected DemandSet demandSetFromQueryRS(String query) throws DatabaseException {
     DemandSet demandSet = null;
     
-    while (psRSNext(query)) {
+    while (dbr.psRSNext(query)) {
       if (demandSet != null) {
         throw new DatabaseException(null,
-          "DemandSet not unique: " + query, this, query);
+          "DemandSet not unique: " + query, dbr, query);
       }
       
-      //String columns = org.apache.commons.lang.StringUtils.join(psRSColumnNames(query), ", ");
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
       //System.out.println("columns: [" + columns + "]");
       
       demandSet = new DemandSet();
       
-      Long id = psRSGetBigInt(query, "ID");
-      String name = psRSGetVarChar(query, "NAME");
-      String desc = psRSGetVarChar(query, "DESCRIPTION");
+      Long id = dbr.psRSGetBigInt(query, "ID");
+      String name = dbr.psRSGetVarChar(query, "NAME");
+      String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       
       demandSet.setId(id.toString());
       demandSet.name = name;
