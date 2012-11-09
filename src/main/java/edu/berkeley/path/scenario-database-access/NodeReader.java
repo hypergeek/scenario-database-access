@@ -180,8 +180,11 @@ public class NodeReader extends ReaderBase {
     String query = "read_node_" + nodeID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"NODES\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
-    ); // TODO reuse this
+      "SELECT * FROM VIA.NODES LEFT OUTER JOIN VIA.NODE_NAMES " +
+        "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
+            "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+        "WHERE ((NODES.ID = ?) AND (NODES.NETWORK_ID = ?))"
+    );
     
     dbr.psClearParams(query);
     dbr.psSetBigInt(query, 1, nodeID);
@@ -199,10 +202,13 @@ public class NodeReader extends ReaderBase {
    * @return String     query string, may be passed to psRSNext or nodeFromQueryRS
    */
   protected String runQueryAllNodes(long networkID) throws DatabaseException {
-    String query = "read_nodes_network" + networkID;
+    String query = "read_nodes_network_" + networkID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"NODES\" WHERE (\"NETWORK_ID\" = ?)"
+      "SELECT * FROM VIA.NODES LEFT OUTER JOIN VIA.NODE_NAMES " +
+        "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
+            "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+        "WHERE (NODES.NETWORK_ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -229,17 +235,14 @@ public class NodeReader extends ReaderBase {
       node = new Node();
       
       Long id = dbr.psRSGetBigInt(query, "ID");
-// TODO go to the node_names table for this
-//      String name = dbr.psRSGetVarChar(query, "NAME");
+      String name = dbr.psRSGetVarChar(query, "NAME");
 // TODO where is this now?
 //      String type = dbr.psRSGetVarChar(query, "TYPE");
 // TODO get lat/lng from Geom column
       
       node.setId(id);
-//      node.name = name;
+      node.setName(name);
 //      node.type = type;
-
-      //System.out.println("Node: " + node);
     }
 
     return node;

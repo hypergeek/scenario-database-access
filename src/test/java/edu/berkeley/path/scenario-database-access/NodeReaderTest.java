@@ -51,6 +51,7 @@ public class NodeReaderTest {
   @Before
   public void setup() {
     // we assume nodes (1, 99999) and (2, 99999) exist, but we could insert them here
+    // assume node_names has rows for these two as well
   }
   
   @Test
@@ -69,6 +70,9 @@ public class NodeReaderTest {
     
     assertEquals(nd1Id, nd1.getLongId());
     assertEquals(nd2Id, nd2.getLongId());
+    
+    assertEquals("test node 1", nd1.getName());
+    assertEquals(null, nd2.getName());
   }
   
   @Test
