@@ -249,11 +249,18 @@ public class NodeWriter extends WriterBase {
     String query = "update_node_" + node.getId();
     dbw.psCreate(query,
       "declare\n" +
+      
       "mygeom sdo_geometry ;\n" +
+      
       "begin\n" +
+      
       "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
       "mygeom.sdo_srid := 8307 ;\n" +
-      "UPDATE \"VIA\".\"NODES\" SET geom = mygeom WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?));\n" +
+      
+      "UPDATE VIA.NODES SET geom = mygeom WHERE ((ID = ?) AND (NETWORK_ID = ?));\n" +
+      
+      "UPDATE VIA.NODE_NAMES SET name = ? WHERE ((NODE_ID = ?) AND (NETWORK_ID = ?));\n" +
+      
       "end;"
     );
     
@@ -262,6 +269,10 @@ public class NodeWriter extends WriterBase {
 
       dbw.psSetBigInt(query, 1, node.getLongId());
       dbw.psSetBigInt(query, 2, networkID);
+      
+      dbw.psSetVarChar(query, 3, node.getName().toString());
+      dbw.psSetBigInt(query, 4, node.getLongId());
+      dbw.psSetBigInt(query, 5, networkID);
       
       long rows = dbw.psUpdate(query);
       

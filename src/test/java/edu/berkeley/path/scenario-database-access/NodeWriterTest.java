@@ -55,6 +55,7 @@ public class NodeWriterTest {
   @Before
   public void setup() throws core.DatabaseException {
     // we assume node (1, 99995) exists, but we could insert it here
+    // assume node_names has rows for (1, 99995)
     // we assume network 99996 exists, but we could insert it here
     
     ndWriter.deleteAllNodes(99996L);
@@ -66,6 +67,7 @@ public class NodeWriterTest {
     
     Node nd = new Node();
     nd.setId(1L);
+    nd.setName("alice");
         
     ndWriter.update(nd, networkID);
     
@@ -73,6 +75,17 @@ public class NodeWriterTest {
     
     assertTrue(null != nd2);
     assertEquals(nd.getLongId(), nd2.getLongId());
+    assertEquals("alice", nd2.getName());
+
+    nd.setName("bob");
+
+    ndWriter.update(nd, networkID);
+    
+    Node nd3 = ndReader.read(nd2.getLongId(), networkID);
+    
+    assertTrue(null != nd3);
+    assertEquals(nd2.getLongId(), nd3.getLongId());
+    assertEquals("bob", nd3.getName());
   }
   
   @Test
