@@ -180,9 +180,16 @@ public class NodeReader extends ReaderBase {
     String query = "read_node_" + nodeID;
     
     dbr.psCreate(query,
-      "SELECT * FROM VIA.NODES LEFT OUTER JOIN VIA.NODE_NAMES " +
-        "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
-            "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+      "SELECT NODES.ID, NODE_NAMES.NAME, NODE_TYPES.NAME TYPE " +
+        "FROM VIA.NODES " +
+        "LEFT OUTER JOIN VIA.NODE_NAMES " +
+          "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
+              "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.NODE_TYPE_DET " +
+          "ON ((VIA.NODE_TYPE_DET.NODE_ID = NODES.ID) AND " +
+              "(VIA.NODE_TYPE_DET.NETWORK_ID = NODES.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.NODE_TYPES " +
+          "ON (VIA.NODE_TYPES.ID = NODE_TYPE_DET.NODE_TYPE_ID) " +
         "WHERE ((NODES.ID = ?) AND (NODES.NETWORK_ID = ?))"
     );
     
@@ -205,9 +212,16 @@ public class NodeReader extends ReaderBase {
     String query = "read_nodes_network_" + networkID;
     
     dbr.psCreate(query,
-      "SELECT * FROM VIA.NODES LEFT OUTER JOIN VIA.NODE_NAMES " +
-        "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
-            "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+      "SELECT NODES.ID, NODE_NAMES.NAME, NODE_TYPES.NAME TYPE " +
+        "FROM VIA.NODES " +
+        "LEFT OUTER JOIN VIA.NODE_NAMES " +
+          "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
+              "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.NODE_TYPE_DET " +
+          "ON ((VIA.NODE_TYPE_DET.NODE_ID = NODES.ID) AND " +
+              "(VIA.NODE_TYPE_DET.NETWORK_ID = NODES.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.NODE_TYPES " +
+          "ON (VIA.NODE_TYPES.ID = NODE_TYPE_DET.NODE_TYPE_ID) " +
         "WHERE (NODES.NETWORK_ID = ?)"
     );
     
@@ -236,13 +250,12 @@ public class NodeReader extends ReaderBase {
       
       Long id = dbr.psRSGetBigInt(query, "ID");
       String name = dbr.psRSGetVarChar(query, "NAME");
-// TODO where is this now?
-//      String type = dbr.psRSGetVarChar(query, "TYPE");
+      String type = dbr.psRSGetVarChar(query, "TYPE");
 // TODO get lat/lng from Geom column
       
       node.setId(id);
       node.setName(name);
-//      node.type = type;
+      node.setType(type);
     }
 
     return node;
