@@ -67,7 +67,7 @@ public class NodeWriterTest {
     
     Node nd = new Node();
     nd.setId(1L);
-    nd.setName("alice");
+    nd.setName("alice"); // TODO test for null
         
     ndWriter.update(nd, networkID);
     
@@ -145,5 +145,7 @@ public class NodeWriterTest {
     actualIds.add(nodes2.get(1).getLongId());
     
     assertEquals(expectedIds, actualIds);
+    
+    //todo delete
   }
 }

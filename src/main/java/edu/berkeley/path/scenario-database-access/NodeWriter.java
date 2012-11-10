@@ -121,10 +121,13 @@ public class NodeWriter extends WriterBase {
     dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
+      "node_name varchar2(256) ;\n" +
       "begin\n" +
+      "node_name := ?;\n" +
       "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
       "mygeom.sdo_srid := 8307 ;\n" +
-      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "if node_name is not null then INSERT INTO VIA.NODE_NAMES (NODE_ID, NETWORK_ID, NAME) VALUES(?, ?, node_name); end if;\n" +
       "end;"
     );
 
@@ -132,8 +135,14 @@ public class NodeWriter extends WriterBase {
       dbw.psClearParams(query);
 
       for (Node node : nodes) {
-        dbw.psSetBigInt(query, 1, node.getLongId());
-        dbw.psSetBigInt(query, 2, networkID);
+        int i = 0;
+        dbw.psSetVarChar(query, ++i, node.getNameString());
+
+        dbw.psSetBigInt(query, ++i, node.getLongId());
+        dbw.psSetBigInt(query, ++i, networkID);
+        
+        dbw.psSetBigInt(query, ++i, node.getLongId());
+        dbw.psSetBigInt(query, ++i, networkID);
         
         long rows = dbw.psUpdate(query);
         
@@ -163,18 +172,27 @@ public class NodeWriter extends WriterBase {
     dbw.psCreate(query,
       "declare\n" +
       "mygeom sdo_geometry ;\n" +
+      "node_name varchar2(256) ;\n" +
       "begin\n" +
+      "node_name := ?;\n" +
       "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
       "mygeom.sdo_srid := 8307 ;\n" +
-      "INSERT INTO \"VIA\".\"NODES\" (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
+      "if node_name is not null then INSERT INTO VIA.NODE_NAMES (NODE_ID, NETWORK_ID, NAME) VALUES(?, ?, node_name); end if;\n" +
       "end;"
     );
   
     try {
       dbw.psClearParams(query);
 
-      dbw.psSetBigInt(query, 1, node.getLongId());
-      dbw.psSetBigInt(query, 2, networkID);
+      int i = 0;
+      dbw.psSetVarChar(query, ++i, node.getNameString());
+
+      dbw.psSetBigInt(query, ++i, node.getLongId());
+      dbw.psSetBigInt(query, ++i, networkID);
+      
+      dbw.psSetBigInt(query, ++i, node.getLongId());
+      dbw.psSetBigInt(query, ++i, networkID);
       
       long rows = dbw.psUpdate(query);
       if (rows != 1) {
@@ -270,7 +288,7 @@ public class NodeWriter extends WriterBase {
       dbw.psSetBigInt(query, 1, node.getLongId());
       dbw.psSetBigInt(query, 2, networkID);
       
-      dbw.psSetVarChar(query, 3, node.getName().toString());
+      dbw.psSetVarChar(query, 3, node.getNameString());
       dbw.psSetBigInt(query, 4, node.getLongId());
       dbw.psSetBigInt(query, 5, networkID);
       
@@ -336,13 +354,18 @@ public class NodeWriter extends WriterBase {
   public void deleteRow(long nodeID, long networkID) throws DatabaseException {
     String query = "delete_node_" + nodeID;
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"NODES\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
+      "begin\n" +
+      "DELETE FROM VIA.NODE_NAMES WHERE (NODE_ID = ? AND NETWORK_ID = ?);\n" +
+      "DELETE FROM VIA.NODES WHERE (ID = ? AND NETWORK_ID = ?);\n" +
+      "end;"
     );
     
     try {
       dbw.psClearParams(query);
       dbw.psSetBigInt(query, 1, nodeID);
       dbw.psSetBigInt(query, 2, networkID);
+      dbw.psSetBigInt(query, 3, nodeID);
+      dbw.psSetBigInt(query, 4, networkID);
       long rows = dbw.psUpdate(query);
       
       if (rows != 1) {
@@ -368,12 +391,16 @@ public class NodeWriter extends WriterBase {
     String query = "delete_nodes_in_network_" + networkID;
     
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"NODES\" WHERE (\"NETWORK_ID\" = ?)"
+      "begin\n" +
+      "DELETE FROM VIA.NODE_NAMES WHERE (NETWORK_ID = ?);\n" +
+      "DELETE FROM VIA.NODES WHERE (NETWORK_ID = ?);\n" +
+      "end;"
     );
 
     try {
       dbw.psClearParams(query);
       dbw.psSetBigInt(query, 1, networkID);
+      dbw.psSetBigInt(query, 2, networkID);
       long rows = dbw.psUpdate(query);
       return rows;
     }
