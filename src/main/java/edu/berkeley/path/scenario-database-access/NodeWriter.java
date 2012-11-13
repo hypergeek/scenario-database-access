@@ -62,7 +62,7 @@ public class NodeWriter extends WriterBase {
    * Insert the given node into the database.
    * 
    * @param node  the node
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    */
   public void insert(Node node, long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
@@ -72,7 +72,9 @@ public class NodeWriter extends WriterBase {
       dbw.transactionBegin();
       Monitor.debug("Node insert transaction beginning on " + nodeIdStr);
       
-      insertWithDependents(node, networkID);
+      List<Node> nodes = new ArrayList();
+      nodes.add(node);
+      insertNodes(nodes, networkID);
 
       dbw.transactionCommit();
       Monitor.debug("Node insert transaction committing on " + nodeIdStr);
@@ -96,16 +98,6 @@ public class NodeWriter extends WriterBase {
   }
 
   /**
-   * Insert the given node into the database, including dependent objects.
-   * 
-   * @param node  the node
-   * @param networkID numerical ID of the network
-   */
-  public void insertWithDependents(Node node, long networkID) throws DatabaseException {
-    insertRow(node, networkID);
-  }
-  
-  /**
    * Insert the given list of nodes into the specified network in the database.
    * This is intended to be called from @see NetworkWriter, so it does
    * not set up a transaction of its own. Does not check for existing nodes,
@@ -113,106 +105,35 @@ public class NodeWriter extends WriterBase {
    * the entire node list of a network, call @see deleteAllNodes() first.
    * 
    * @param nodes list of nodes
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    */
-  public void insertNodes(List<Node> nodes, long networkID) throws DatabaseException {
-    String query = "insert_nodes_in_network_" + networkID;
-    
-    dbw.psCreate(query,
-      "declare\n" +
-      "mygeom sdo_geometry ;\n" +
-      "node_name varchar2(256) ;\n" +
-      "begin\n" +
-      "node_name := ?;\n" +
-      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
-      "mygeom.sdo_srid := 8307 ;\n" +
-      "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
-      "if node_name is not null then INSERT INTO VIA.NODE_NAMES (NODE_ID, NETWORK_ID, NAME) VALUES(?, ?, node_name); end if;\n" +
-      "end;"
-    );
+  protected void insertNodes(List<Node> nodes, long networkID) throws DatabaseException {
+    String insNodes = makeInsertNodesPS(networkID);
+    String insNodeNames = makeInsertNodeNamesPS(networkID);
 
     try {
-      dbw.psClearParams(query);
-
       for (Node node : nodes) {
-        int i = 0;
-        dbw.psSetVarChar(query, ++i, node.getNameString());
-
-        dbw.psSetBigInt(query, ++i, node.getLongId());
-        dbw.psSetBigInt(query, ++i, networkID);
-        
-        dbw.psSetBigInt(query, ++i, node.getLongId());
-        dbw.psSetBigInt(query, ++i, networkID);
-        
-        long rows = dbw.psUpdate(query);
-        
-        if (rows != 1) {
-           throw new DatabaseException(null, "Node not unique: network id=" +
-            networkID + " has " +
-            rows + " rows with id=" + node.getId(), dbw, query);
+        insertNodesRow(node, insNodes);
+        if (node.getName() != null) {
+          insertNodeNamesRow(node, insNodeNames);
         }
       }
     }
     finally {
-      if (query != null) {
-        dbw.psDestroy(query);
+      if (insNodes != null) {
+        dbw.psDestroy(insNodes);
+      }
+      if (insNodeNames != null) {
+        dbw.psDestroy(insNodeNames);
       }
     }
   }
 
-  /**
-   * Insert just the node row into the database.
-   * 
-   * @param node  the node
-   * @param networkID numerical ID of the network
-   */
-  public void insertRow(Node node, long networkID) throws DatabaseException {
-    String query = "insert_node_" + node.getId();
-
-    dbw.psCreate(query,
-      "declare\n" +
-      "mygeom sdo_geometry ;\n" +
-      "node_name varchar2(256) ;\n" +
-      "begin\n" +
-      "node_name := ?;\n" +
-      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
-      "mygeom.sdo_srid := 8307 ;\n" +
-      "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, ?, mygeom);\n" +
-      "if node_name is not null then INSERT INTO VIA.NODE_NAMES (NODE_ID, NETWORK_ID, NAME) VALUES(?, ?, node_name); end if;\n" +
-      "end;"
-    );
-  
-    try {
-      dbw.psClearParams(query);
-
-      int i = 0;
-      dbw.psSetVarChar(query, ++i, node.getNameString());
-
-      dbw.psSetBigInt(query, ++i, node.getLongId());
-      dbw.psSetBigInt(query, ++i, networkID);
-      
-      dbw.psSetBigInt(query, ++i, node.getLongId());
-      dbw.psSetBigInt(query, ++i, networkID);
-      
-      long rows = dbw.psUpdate(query);
-      if (rows != 1) {
-         throw new DatabaseException(null, "Node not unique: network id=" +
-          networkID + " has " +
-          rows + " rows with id=" + node.getId(), dbw, query);
-      }
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
-    }
-  }
-  
   /**
    * Update the given node in the database.
    * 
    * @param node  the node
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    */
   public void update(Node node, long networkID) throws DatabaseException {
     String nodeIdStr = "node.{id=" + node.getId() + ", network_id=" + networkID + "}";
@@ -222,7 +143,9 @@ public class NodeWriter extends WriterBase {
       dbw.transactionBegin();
       Monitor.debug("Node update transaction beginning on " + nodeIdStr);
       
-      updateWithDependents(node, networkID);
+      List<Node> nodes = new ArrayList();
+      nodes.add(node);
+      updateNodes(nodes, networkID);
 
       dbw.transactionCommit();
       Monitor.debug("Node update transaction committing on " + nodeIdStr);
@@ -245,63 +168,39 @@ public class NodeWriter extends WriterBase {
     Monitor.duration("Update " + nodeIdStr, timeCommit - timeBegin);
   }
 
-  /**
-   * Update the given node in the database.
-   * 
-   * @see #write() if you want a transaction and logging around the operation.
-   * 
-   * @param node  the node
-   * @param networkID numerical ID of the network
-   */
-  public void updateWithDependents(Node node, long networkID) throws DatabaseException {
-    updateRow(node, networkID);
-  }
-
-  /**
-   * Update just the node row into the database.
-   * 
-   * @param node  the node
-   * @param networkID numerical ID of the network
-   */
-  public void updateRow(Node node, long networkID) throws DatabaseException {
-    String query = "update_node_" + node.getId();
-    dbw.psCreate(query,
-      "declare\n" +
+  protected void updateNodes(List<Node> nodes, long networkID) throws DatabaseException {
+    String updNodes = makeUpdateNodesPS(networkID);
+    String updNodeNames = makeUpdateNodeNamesPS(networkID);
+    String insNodeNames = makeInsertNodeNamesPS(networkID);
+    String delNodeNames = makeDeleteNodeNamesPS(networkID);
       
-      "mygeom sdo_geometry ;\n" +
-      
-      "begin\n" +
-      
-      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
-      "mygeom.sdo_srid := 8307 ;\n" +
-      
-      "UPDATE VIA.NODES SET geom = mygeom WHERE ((ID = ?) AND (NETWORK_ID = ?));\n" +
-      
-      "UPDATE VIA.NODE_NAMES SET name = ? WHERE ((NODE_ID = ?) AND (NETWORK_ID = ?));\n" +
-      
-      "end;"
-    );
-    
     try {
-      dbw.psClearParams(query);
-
-      dbw.psSetBigInt(query, 1, node.getLongId());
-      dbw.psSetBigInt(query, 2, networkID);
-      
-      dbw.psSetVarChar(query, 3, node.getNameString());
-      dbw.psSetBigInt(query, 4, node.getLongId());
-      dbw.psSetBigInt(query, 5, networkID);
-      
-      long rows = dbw.psUpdate(query);
-      
-      if (rows != 1) {
-        throw new DatabaseException(null, "Node not unique: there exist " +
-          rows + " with id=" + node.getId(), dbw, query);
+      for (Node node : nodes) {
+        updateNodesRow(node, updNodes);
+        
+        if (node.getName() == null) {
+          deleteNodeNamesRow(node.getLongId(), delNodeNames);
+        }
+        else {
+          long rows = updateNodeNamesRow(node, updNodeNames);
+          if (rows == 0) {
+            insertNodeNamesRow(node, insNodeNames);
+          }
+        }
       }
     }
     finally {
-      if (query != null) {
-        dbw.psDestroy(query);
+      if (updNodes != null) {
+        dbw.psDestroy(updNodes);
+      }
+      if (updNodeNames != null) {
+        dbw.psDestroy(updNodeNames);
+      }
+      if (insNodeNames != null) {
+        dbw.psDestroy(insNodeNames);
+      }
+      if (delNodeNames != null) {
+        dbw.psDestroy(delNodeNames);
       }
     }
   }
@@ -310,7 +209,7 @@ public class NodeWriter extends WriterBase {
    * Delete the given node ID from the database.
    * 
    * @param nodeID  the node ID
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    */
   public void delete(long nodeID, long networkID) throws DatabaseException {
     long timeBegin = System.nanoTime();
@@ -320,9 +219,9 @@ public class NodeWriter extends WriterBase {
       dbw.transactionBegin();
       Monitor.debug("Node delete transaction beginning on " + nodeIdStr);
       
-      deleteRow(nodeID, networkID);
-      
-      //warn or fail if related links still exist?
+      List<Long> nodeIDs = new ArrayList();
+      nodeIDs.add(nodeID);
+      deleteNodes(nodeIDs, networkID);
 
       dbw.transactionCommit();
       Monitor.debug("Node delete transaction committing on " + nodeIdStr);
@@ -345,49 +244,33 @@ public class NodeWriter extends WriterBase {
     Monitor.duration("Delete " + nodeIdStr, timeCommit - timeBegin);
   }
 
-  /**
-   * Delete just the node row from the database.
-   * 
-   * @param node  the node
-   * @param networkID numerical ID of the network
-   */
-  public void deleteRow(long nodeID, long networkID) throws DatabaseException {
-    String query = "delete_node_" + nodeID;
-    dbw.psCreate(query,
-      "begin\n" +
-      "DELETE FROM VIA.NODE_NAMES WHERE (NODE_ID = ? AND NETWORK_ID = ?);\n" +
-      "DELETE FROM VIA.NODES WHERE (ID = ? AND NETWORK_ID = ?);\n" +
-      "end;"
-    );
-    
-    try {
-      dbw.psClearParams(query);
-      dbw.psSetBigInt(query, 1, nodeID);
-      dbw.psSetBigInt(query, 2, networkID);
-      dbw.psSetBigInt(query, 3, nodeID);
-      dbw.psSetBigInt(query, 4, networkID);
-      long rows = dbw.psUpdate(query);
+  protected void deleteNodes(List<Long> nodeIDs, long networkID) throws DatabaseException {
+    String delNodes = makeDeleteNodesPS(networkID);
+    String delNodeNames = makeDeleteNodeNamesPS(networkID);
       
-      if (rows != 1) {
-        throw new DatabaseException(null, "Node not unique: network id=" +
-          networkID + " has " +
-          rows + " rows with id=" + nodeID, dbw, query);
+    try {
+      for (long nodeID : nodeIDs) {
+        deleteNodeNamesRow(nodeID, delNodeNames);
+        deleteNodesRow(nodeID, delNodes);
       }
     }
     finally {
-      if (query != null) {
-        dbw.psDestroy(query);
+      if (delNodes != null) {
+        dbw.psDestroy(delNodes);
+      }
+      if (delNodeNames != null) {
+        dbw.psDestroy(delNodeNames);
       }
     }
   }
-  
+
   /**
    * Delete all nodes of the specified network from the database.
    * 
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    * @return number of nodes deleted
    */
-  public long deleteAllNodes(long networkID) throws DatabaseException {
+  protected long deleteAllNodes(long networkID) throws DatabaseException {
     String query = "delete_nodes_in_network_" + networkID;
     
     dbw.psCreate(query,
@@ -409,5 +292,135 @@ public class NodeWriter extends WriterBase {
         dbw.psDestroy(query);
       }
     }
+  }
+
+  protected String makeInsertNodesPS(long networkID) throws DatabaseException {
+    String insNodes = "insert_nodes_in_network_" + networkID;
+    dbw.psCreate(insNodes,
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, " + networkID + ", mygeom);\n" +
+      "end;"
+    );
+    return insNodes; 
+  }
+  
+  protected void insertNodesRow(Node node, String insNodes) throws DatabaseException {
+    dbw.psClearParams(insNodes);
+    dbw.psSetBigInt(insNodes, 1, node.getLongId());
+    dbw.psUpdate(insNodes);
+  }
+  
+  protected String makeInsertNodeNamesPS(long networkID) throws DatabaseException {
+    String insNodeNames = "insert_node_names_in_network_" + networkID;
+    dbw.psCreate(insNodeNames,
+      "INSERT INTO VIA.NODE_NAMES (NODE_ID, NETWORK_ID, NAME) VALUES(?, " + networkID + ", ?)"
+    );
+    return insNodeNames; 
+  }
+  
+  protected void insertNodeNamesRow(Node node, String insNodeNames) throws DatabaseException {
+    dbw.psClearParams(insNodeNames);
+    dbw.psSetBigInt(insNodeNames, 1, node.getLongId());
+    dbw.psSetVarChar(insNodeNames, 2, node.getNameString());
+    dbw.psUpdate(insNodeNames);
+  }
+
+  protected String makeUpdateNodesPS(long networkID) throws DatabaseException {
+    String updNodes = "update_nodes_in_network_" + networkID;
+    dbw.psCreate(updNodes,
+      "declare\n" +
+      "mygeom sdo_geometry ;\n" +
+      "begin\n" +
+      "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+      "mygeom.sdo_srid := 8307 ;\n" +
+      "UPDATE VIA.NODES SET geom = mygeom WHERE ((ID = ?) AND (NETWORK_ID = " + networkID + "));\n" +
+      "end;"
+    );
+    return updNodes; 
+  }
+  
+  protected long updateNodesRow(Node node, String updNodes) throws DatabaseException {
+    dbw.psClearParams(updNodes);
+    dbw.psSetBigInt(updNodes, 1, node.getLongId());
+
+    long rows = dbw.psUpdate(updNodes);
+    
+    if (rows > 1) {
+      throw new DatabaseException(null, "Node not unique: there exist " +
+        rows + " with id=" + node.getId(), dbw, updNodes);
+    }
+    
+    return rows;
+  }
+  
+  protected String makeUpdateNodeNamesPS(long networkID) throws DatabaseException {
+    String updNodeNames = "update_node_names_in_network_" + networkID;
+    dbw.psCreate(updNodeNames,
+      "UPDATE VIA.NODE_NAMES SET name = ? WHERE ((NODE_ID = ?) AND (NETWORK_ID = " + networkID + "))"
+    );
+    return updNodeNames; 
+  }
+  
+  protected long updateNodeNamesRow(Node node, String updNodeNames) throws DatabaseException {
+    dbw.psClearParams(updNodeNames);
+    dbw.psSetVarChar(updNodeNames, 1, node.getNameString());
+    dbw.psSetBigInt(updNodeNames, 2, node.getLongId());
+    
+    long rows = dbw.psUpdate(updNodeNames);
+    
+    if (rows > 1) {
+      throw new DatabaseException(null, "Node name not unique: there exist " +
+        rows + " with id=" + node.getId(), dbw, updNodeNames);
+    }
+    
+    return rows;
+  }
+  
+  protected String makeDeleteNodesPS(long networkID) throws DatabaseException {
+    String delNodes = "delete_nodes_in_network_" + networkID;
+    dbw.psCreate(delNodes,
+      "DELETE FROM VIA.NODES WHERE (ID = ? AND NETWORK_ID = " + networkID + ")"
+    );
+    return delNodes;
+  }
+
+  protected long deleteNodesRow(long nodeID, String delNodes) throws DatabaseException {
+    dbw.psClearParams(delNodes);
+    dbw.psSetBigInt(delNodes, 1, nodeID);
+    
+    long rows = dbw.psUpdate(delNodes);
+    
+    if (rows > 1) {
+      throw new DatabaseException(null, "Node not unique: network has " +
+        rows + " rows with id=" + nodeID, dbw, delNodes);
+    }
+    
+    return rows;
+  }
+  
+  protected String makeDeleteNodeNamesPS(long networkID) throws DatabaseException {
+    String delNodes = "delete_node_names_in_network_" + networkID;
+    dbw.psCreate(delNodes,
+      "DELETE FROM VIA.NODE_NAMES WHERE (NODE_ID = ? AND NETWORK_ID = " + networkID + ")"
+    );
+    return delNodes;
+  }
+
+  protected long deleteNodeNamesRow(long nodeID, String delNodeNames) throws DatabaseException {
+    dbw.psClearParams(delNodeNames);
+    dbw.psSetBigInt(delNodeNames, 1, nodeID);
+    
+    long rows = dbw.psUpdate(delNodeNames);
+    
+    if (rows > 1) {
+      throw new DatabaseException(null, "Node name not unique: network has " +
+        rows + " rows with id=" + nodeID, dbw, delNodeNames);
+    }
+    
+    return rows;
   }
 }

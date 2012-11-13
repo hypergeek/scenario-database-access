@@ -67,7 +67,7 @@ public class NodeWriterTest {
     
     Node nd = new Node();
     nd.setId(1L);
-    nd.setName("alice"); // TODO test for null
+    nd.setName(null);
         
     ndWriter.update(nd, networkID);
     
@@ -75,16 +75,16 @@ public class NodeWriterTest {
     
     assertTrue(null != nd2);
     assertEquals(nd.getLongId(), nd2.getLongId());
-    assertEquals("alice", nd2.getName());
+    assertEquals(null, nd2.getName());
 
     nd.setName("bob");
 
     ndWriter.update(nd, networkID);
     
-    Node nd3 = ndReader.read(nd2.getLongId(), networkID);
+    Node nd3 = ndReader.read(nd.getLongId(), networkID);
     
     assertTrue(null != nd3);
-    assertEquals(nd2.getLongId(), nd3.getLongId());
+    assertEquals(nd.getLongId(), nd3.getLongId());
     assertEquals("bob", nd3.getName());
   }
   
@@ -117,8 +117,11 @@ public class NodeWriterTest {
     
     Node nd1 = new Node();
     nd1.setId(nd1Id);
+    nd1.setName(null);
+    
     Node nd2 = new Node();
     nd2.setId(nd2Id);
+    nd2.setName("node 2");
 
     ArrayList<Node> nodes = new ArrayList<Node>();
     
@@ -146,6 +149,19 @@ public class NodeWriterTest {
     
     assertEquals(expectedIds, actualIds);
     
-    //todo delete
+    HashSet<String> expectedNames = new HashSet<String>();
+    HashSet<String> actualNames = new HashSet<String>();
+    
+    expectedNames.add(nd1.getNameString());
+    expectedNames.add(nd2.getNameString());
+    
+    actualNames.add(nodes2.get(0).getNameString());
+    actualNames.add(nodes2.get(1).getNameString());
+
+    assertEquals(expectedNames, actualNames);
+    
+    ndWriter.deleteAllNodes(networkID);
+    ArrayList<Node> nodes3 = ndReader.readNodes(networkID);
+    assertEquals(0, nodes3.size());
   }
 }
