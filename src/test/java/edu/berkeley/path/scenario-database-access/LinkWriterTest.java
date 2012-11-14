@@ -139,6 +139,10 @@ public class LinkWriterTest {
     ln.setEndId("2");
     ln.setSpeedLimit(45);
     ln.setDetailLevel(2);
+    ln.setName("alice");
+    ln.setType("Street");
+    ln.setLaneCount(2.0);
+    ln.setLaneOffset(5);
     
     lnWriter.insert(ln, networkID);
         
@@ -149,6 +153,10 @@ public class LinkWriterTest {
     assertEquals((Double)555.0, ln2.getLength());
     assertEquals((Integer)45, ln2.getSpeedLimit());
     assertEquals((Integer)2, ln2.getDetailLevel());
+    assertEquals("alice", ln2.getName());
+    assertEquals("Street", ln2.getType());
+    assertEquals((Double)2.0, ln2.getLaneCount());
+    assertEquals((Integer)5, ln2.getLaneOffset());
     
     lnWriter.delete(ln.getLongId(), networkID);
     
