@@ -84,6 +84,9 @@ public class LinkReaderTest {
 
     assertEquals((Integer)1, ln1.getDetailLevel());
     assertEquals((Integer)2, ln2.getDetailLevel());
+
+    assertEquals((Double)3.0, ln1.getLaneCount());
+    assertEquals((Double)4.0, ln2.getLaneCount());
   }
   
   @Test
