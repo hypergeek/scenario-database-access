@@ -168,18 +168,8 @@ public class LinkReader extends ReaderBase {
     
     return link;
   }
-
-  /**
-   * Execute a query for the specified link.
-   * 
-   * @param linkID  ID of the link in the database
-   * @param networkID ID of the network
-   * @return String     query string, may be passed to psRSNext or linkFromQueryRS
-   */
-  protected String runQueryOneLink(long linkID, long networkID) throws DatabaseException {
-    String query = "read_link_" + linkID;
-    
-    dbr.psCreate(query,
+  
+  private static String queryFragment =
       "SELECT " +
           "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
           "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
@@ -199,7 +189,19 @@ public class LinkReader extends ReaderBase {
           "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
               "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
         "LEFT OUTER JOIN VIA.LINK_TYPES " +
-          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) " +
+          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) ";
+
+  /**
+   * Execute a query for the specified link.
+   * 
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
+   * @return String     query string, may be passed to psRSNext or linkFromQueryRS
+   */
+  protected String runQueryOneLink(long linkID, long networkID) throws DatabaseException {
+    String query = "read_link_" + linkID;
+    
+    dbr.psCreate(query, queryFragment +
         "WHERE ((LINKS.ID = ?) AND (LINKS.NETWORK_ID = ?))"
     );
     
@@ -221,27 +223,7 @@ public class LinkReader extends ReaderBase {
   protected String runQueryAllLinks(long networkID) throws DatabaseException {
     String query = "read_links_network" + networkID;
     
-    dbr.psCreate(query,
-      "SELECT " +
-          "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
-          "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
-          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES, " +
-          "LINK_LANE_OFFSET.DISPLAY_LANE_OFFSET " +
-        "FROM VIA.LINKS " +
-        "LEFT OUTER JOIN VIA.LINK_NAMES " +
-          "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_NAMES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_LANES " +
-          "ON ((VIA.LINK_LANES.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_LANES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_LANE_OFFSET " +
-          "ON ((VIA.LINK_LANE_OFFSET.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_LANE_OFFSET.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
-          "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
-              "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_TYPES " +
-          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) " +
+    dbr.psCreate(query, queryFragment +
         "WHERE (LINKS.NETWORK_ID = ?)"
     );
     
