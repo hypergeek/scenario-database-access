@@ -60,8 +60,8 @@ public class NodeReader extends ReaderBase {
   /**
    * Read one node with the given ID from the database.
    * 
-   * @param nodeID    numerical ID of the node in the database
-   * @param networkID numerical ID of the network
+   * @param nodeID    ID of the node in the database
+   * @param networkID ID of the network
    * @return Node
    */
   public Node read(long nodeID, long networkID) throws DatabaseException {
@@ -106,8 +106,8 @@ public class NodeReader extends ReaderBase {
    * 
    * @see #read() if you want a transaction and logging around the operation.
    * 
-   * @param nodeID  numerical ID of the node in the database
-   * @param networkID numerical ID of the network
+   * @param nodeID  ID of the node in the database
+   * @param networkID ID of the network
    * @return Node.
    */
   public Node readWithAssociates(long nodeID, long networkID) throws DatabaseException {
@@ -121,7 +121,7 @@ public class NodeReader extends ReaderBase {
    * This is intended to be called from @see NetworkReader, so it does
    * not set up a transaction of its own.
    * 
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    * @return List of nodes.
    */
   public ArrayList<Node> readNodes(long networkID) throws DatabaseException {
@@ -148,8 +148,8 @@ public class NodeReader extends ReaderBase {
   /**
    * Read just the node row with the given ID from the database.
    * 
-   * @param nodeID  numerical ID of the node in the database
-   * @param networkID numerical ID of the network
+   * @param nodeID  ID of the node in the database
+   * @param networkID ID of the network
    * @return Node, with null for all dependent objects.
    */
   public Node readRow(long nodeID, long networkID) throws DatabaseException {
@@ -172,8 +172,8 @@ public class NodeReader extends ReaderBase {
   /**
    * Execute a query for the specified node.
    * 
-   * @param nodeID  numerical ID of the node in the database
-   * @param networkID numerical ID of the network
+   * @param nodeID  ID of the node in the database
+   * @param networkID ID of the network
    * @return String     query string, may be passed to psRSNext or nodeFromQueryRS
    */
   protected String runQueryOneNode(long nodeID, long networkID) throws DatabaseException {
@@ -204,8 +204,8 @@ public class NodeReader extends ReaderBase {
   /**
    * Execute a query for all nodes in specified network.
    * 
-   * @param nodeID  numerical ID of the node in the database
-   * @param networkID numerical ID of the network
+   * @param nodeID  ID of the node in the database
+   * @param networkID ID of the network
    * @return String     query string, may be passed to psRSNext or nodeFromQueryRS
    */
   protected String runQueryAllNodes(long networkID) throws DatabaseException {

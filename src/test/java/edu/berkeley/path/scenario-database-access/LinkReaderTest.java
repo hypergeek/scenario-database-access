@@ -64,8 +64,8 @@ public class LinkReaderTest {
     ln1 = lnReader.read(1L, networkID);
     ln2 = lnReader.read(2L, networkID);
 
-    //System.out.println("testReadOneLink: ln1: " + ln1);
-    //System.out.println("testReadOneLink: ln2: " + ln2);
+    System.out.println("testReadOneLink: ln1: " + ln1);
+    System.out.println("testReadOneLink: ln2: " + ln2);
     
     assertEquals(ln1Id, ln1.getLongId());
     assertEquals(ln2Id, ln2.getLongId());
@@ -76,16 +76,14 @@ public class LinkReaderTest {
     assertEquals("2", ln2.getBeginId());
     assertEquals("3", ln2.getEndId());
 
-//TODO
-//    assertEquals(123, ln1.getSpeedLimit());
-//    assertEquals(124, ln2.getSpeedLimit());
+    assertEquals((Integer)123, ln1.getSpeedLimit());
+    assertEquals((Integer)124, ln2.getSpeedLimit());
 
     assertEquals((Double)1000.0, ln1.getLength());
     assertEquals((Double)1001.0, ln2.getLength());
 
-//TODO
-//    assertEquals(1, ln1.getDetailLevel());
-//    assertEquals(2, ln2.getDetailLevel());
+    assertEquals((Integer)1, ln1.getDetailLevel());
+    assertEquals((Integer)2, ln2.getDetailLevel());
   }
   
   @Test

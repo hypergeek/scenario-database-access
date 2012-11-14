@@ -60,8 +60,8 @@ public class LinkReader extends ReaderBase {
   /**
    * Read one link with the given ID from the database.
    * 
-   * @param linkID    numerical ID of the link in the database
-   * @param networkID numerical ID of the network
+   * @param linkID    ID of the link in the database
+   * @param networkID ID of the network
    * @return Link
    */
   public Link read(long linkID, long networkID) throws DatabaseException {
@@ -106,8 +106,8 @@ public class LinkReader extends ReaderBase {
    * 
    * @see #read() if you want a transaction and logging around the operation.
    * 
-   * @param linkID  numerical ID of the link in the database
-   * @param networkID numerical ID of the network
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
    * @return Link.
    */
   public Link readWithAssociates(long linkID, long networkID) throws DatabaseException {
@@ -121,7 +121,7 @@ public class LinkReader extends ReaderBase {
    * This is intended to be called from @see NetworkReader, so it does
    * not set up a transaction of its own.
    * 
-   * @param networkID numerical ID of the network
+   * @param networkID ID of the network
    * @return List of links.
    */
   public ArrayList<Link> readLinks(long networkID) throws DatabaseException {
@@ -148,8 +148,8 @@ public class LinkReader extends ReaderBase {
   /**
    * Read just the link row with the given ID from the database.
    * 
-   * @param linkID  numerical ID of the link in the database
-   * @param networkID numerical ID of the network
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
    * @return Link, with null for all dependent objects.
    */
   public Link readRow(long linkID, long networkID) throws DatabaseException {
@@ -172,15 +172,28 @@ public class LinkReader extends ReaderBase {
   /**
    * Execute a query for the specified link.
    * 
-   * @param linkID  numerical ID of the link in the database
-   * @param networkID numerical ID of the network
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
    * @return String     query string, may be passed to psRSNext or linkFromQueryRS
    */
   protected String runQueryOneLink(long linkID, long networkID) throws DatabaseException {
     String query = "read_link_" + linkID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"LINKS\" WHERE ((\"ID\" = ?) AND (\"NETWORK_ID\" = ?))"
+      "SELECT " +
+          "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
+          "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
+          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE " +
+        "FROM VIA.LINKS " +
+        "LEFT OUTER JOIN VIA.LINK_NAMES " +
+          "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
+              "(VIA.LINK_NAMES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
+          "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
+              "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_TYPES " +
+          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) " +
+        "WHERE ((LINKS.ID = ?) AND (LINKS.NETWORK_ID = ?))"
     );
     
     dbr.psClearParams(query);
@@ -194,15 +207,28 @@ public class LinkReader extends ReaderBase {
   /**
    * Execute a query for all links in specified network.
    * 
-   * @param linkID  numerical ID of the link in the database
-   * @param networkID numerical ID of the network
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
    * @return String     query string, may be passed to psRSNext or linkFromQueryRS
    */
   protected String runQueryAllLinks(long networkID) throws DatabaseException {
     String query = "read_links_network" + networkID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"LINKS\" WHERE (\"NETWORK_ID\" = ?)"
+      "SELECT " +
+          "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
+          "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
+          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE " +
+        "FROM VIA.LINKS " +
+        "LEFT OUTER JOIN VIA.LINK_NAMES " +
+          "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
+              "(VIA.LINK_NAMES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
+          "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
+              "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_TYPES " +
+          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) " +
+        "WHERE (LINKS.NETWORK_ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -235,22 +261,17 @@ public class LinkReader extends ReaderBase {
       Double length = dbr.psRSGetDouble(query, "LENGTH");
       Integer detail = dbr.psRSGetInteger(query, "DETAIL_LEVEL");
       
-// TODO go to the link_names table for this
-//      String name = dbr.psRSGetVarChar(query, "NAME");
-// TODO where is this now?
-//      String type = dbr.psRSGetVarChar(query, "TYPE");
+      String name = dbr.psRSGetVarChar(query, "NAME");
+      String type = dbr.psRSGetVarChar(query, "TYPE");
       
       link.setId(id);
-//      link.name = name;
-//      link.type = type;
+      link.setName(name);
+      link.setType(type);
       link.setBeginId(bId.toString());
       link.setEndId(eId.toString());
       link.setSpeedLimit(speed);
       link.setDetailLevel(detail);
       link.setLength(length);
-//detail
-
-      //System.out.println("Link: " + link);
     }
 
     return link;
