@@ -184,5 +184,22 @@ public class LinkWriterTest {
     actualIds.add(links2.get(1).getLongId());
     
     assertEquals(expectedIds, actualIds);
+    
+    HashSet<String> expectedNames = new HashSet<String>();
+    HashSet<String> actualNames = new HashSet<String>();
+    
+    expectedNames.add(ln1.getNameString());
+    expectedNames.add(ln2.getNameString());
+    
+    actualNames.add(links2.get(0).getNameString());
+    actualNames.add(links2.get(1).getNameString());
+
+    assertEquals(expectedNames, actualNames);
+    
+    lnWriter.deleteAllLinks(networkID);
+    ArrayList<Link> links3 = lnReader.readLinks(networkID);
+    assertEquals(0, links3.size());
+    
+    // todo check no rows in names or types table
   }
 }
