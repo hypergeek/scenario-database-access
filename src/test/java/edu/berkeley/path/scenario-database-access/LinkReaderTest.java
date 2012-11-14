@@ -64,8 +64,8 @@ public class LinkReaderTest {
     ln1 = lnReader.read(1L, networkID);
     ln2 = lnReader.read(2L, networkID);
 
-    System.out.println("testReadOneLink: ln1: " + ln1);
-    System.out.println("testReadOneLink: ln2: " + ln2);
+    //System.out.println("testReadOneLink: ln1: " + ln1);
+    //System.out.println("testReadOneLink: ln2: " + ln2);
     
     assertEquals(ln1Id, ln1.getLongId());
     assertEquals(ln2Id, ln2.getLongId());
@@ -87,6 +87,9 @@ public class LinkReaderTest {
 
     assertEquals((Double)3.0, ln1.getLaneCount());
     assertEquals((Double)4.0, ln2.getLaneCount());
+
+    assertEquals((Integer)0, ln1.getLaneOffset());
+    assertEquals((Integer)4, ln2.getLaneOffset());
   }
   
   @Test

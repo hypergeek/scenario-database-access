@@ -183,7 +183,8 @@ public class LinkReader extends ReaderBase {
       "SELECT " +
           "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
           "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
-          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES " +
+          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES, " +
+          "LINK_LANE_OFFSET.DISPLAY_LANE_OFFSET " +
         "FROM VIA.LINKS " +
         "LEFT OUTER JOIN VIA.LINK_NAMES " +
           "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
@@ -191,6 +192,9 @@ public class LinkReader extends ReaderBase {
         "LEFT OUTER JOIN VIA.LINK_LANES " +
           "ON ((VIA.LINK_LANES.LINK_ID = VIA.LINKS.ID) AND " +
               "(VIA.LINK_LANES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_LANE_OFFSET " +
+          "ON ((VIA.LINK_LANE_OFFSET.LINK_ID = VIA.LINKS.ID) AND " +
+              "(VIA.LINK_LANE_OFFSET.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
         "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
           "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
               "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
@@ -221,7 +225,8 @@ public class LinkReader extends ReaderBase {
       "SELECT " +
           "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
           "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
-          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES " +
+          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES, " +
+          "LINK_LANE_OFFSET.DISPLAY_LANE_OFFSET " +
         "FROM VIA.LINKS " +
         "LEFT OUTER JOIN VIA.LINK_NAMES " +
           "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
@@ -229,6 +234,9 @@ public class LinkReader extends ReaderBase {
         "LEFT OUTER JOIN VIA.LINK_LANES " +
           "ON ((VIA.LINK_LANES.LINK_ID = VIA.LINKS.ID) AND " +
               "(VIA.LINK_LANES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+        "LEFT OUTER JOIN VIA.LINK_LANE_OFFSET " +
+          "ON ((VIA.LINK_LANE_OFFSET.LINK_ID = VIA.LINKS.ID) AND " +
+              "(VIA.LINK_LANE_OFFSET.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
         "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
           "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
               "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
@@ -271,6 +279,7 @@ public class LinkReader extends ReaderBase {
       String type = dbr.psRSGetVarChar(query, "TYPE");
       
       Double lanes = dbr.psRSGetDouble(query, "LANES");
+      Integer offset = dbr.psRSGetInteger(query, "DISPLAY_LANE_OFFSET");
       
       link.setId(id);
       link.setName(name);
@@ -281,6 +290,7 @@ public class LinkReader extends ReaderBase {
       link.setDetailLevel(detail);
       link.setLength(length);
       link.setLaneCount(lanes);
+      link.setLaneOffset(offset);
     }
 
     return link;
