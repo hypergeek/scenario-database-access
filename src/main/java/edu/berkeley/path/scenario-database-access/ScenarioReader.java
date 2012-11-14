@@ -239,8 +239,8 @@ public class ScenarioReader extends ReaderBase {
         throw new DatabaseException(null, "Scenario not unique: " + query, dbr, query);
       }
       
-      String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
-      System.out.println("columns: [" + columns + "]");
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
+      //System.out.println("columns: [" + columns + "]");
       
       scenario = new Scenario();
       
