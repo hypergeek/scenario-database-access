@@ -55,7 +55,6 @@ public class NodeWriterTest {
   @Before
   public void setup() throws core.DatabaseException {
     // we assume node (1, 99995) exists, but we could insert it here
-    // assume node_names has rows for (1, 99995)
     // we assume network 99996 exists, but we could insert it here
     
     ndWriter.deleteAllNodes(99996L);

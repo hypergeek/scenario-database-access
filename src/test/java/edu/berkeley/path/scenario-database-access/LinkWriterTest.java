@@ -71,9 +71,9 @@ public class LinkWriterTest {
     ln.setEndId("2");
     ln.setSpeedLimit(45);
     ln.setDetailLevel(2);
-    
-    // TODO set more fields
-        
+    ln.setName(null);
+    ln.setType(null);
+            
     lnWriter.update(ln, networkID);
     
     Link ln2 = lnReader.read(ln.getLongId(), networkID);
@@ -83,8 +83,33 @@ public class LinkWriterTest {
     assertEquals((Double)555.0, ln2.getLength());
     assertEquals((Integer)45, ln2.getSpeedLimit());
     assertEquals((Integer)2, ln2.getDetailLevel());
+    assertEquals(null, ln2.getName());
+    assertEquals(null, ln2.getType());
 
-    // TODO check more fields
+    ln.setName("bob"); // code path 1: update null to non-null
+    ln.setType("Freeway");
+    lnWriter.update(ln, networkID);
+    ln2 = lnReader.read(ln.getLongId(), networkID);
+    assertTrue(null != ln2);
+    assertEquals(ln.getLongId(), ln2.getLongId());
+    assertEquals("bob", ln2.getName());
+    assertEquals("Freeway", ln2.getType());
+
+    ln.setName("alice"); // code path 2: update non-null to non-null
+    ln.setType("Street");
+    lnWriter.update(ln, networkID);
+    ln2 = lnReader.read(ln.getLongId(), networkID);
+    assertTrue(null != ln2);
+    assertEquals("alice", ln2.getName());
+    assertEquals("Street", ln2.getType());
+
+    ln.setName(null); // code path 3: update non-null to null
+    ln.setType(null);
+    lnWriter.update(ln, networkID);
+    ln2 = lnReader.read(ln.getLongId(), networkID);
+    assertTrue(null != ln2);
+    assertEquals(null, ln2.getName());
+    assertEquals(null, ln2.getType());
   }
   
   @Test
