@@ -64,28 +64,46 @@ public class NodeWriterTest {
   @Test
   public void testUpdateOneNode() throws core.DatabaseException {
     Long networkID = 99995L;
+    Node nd2;
     
     Node nd = new Node();
     nd.setId(1L);
     nd.setName(null);
+    nd.setType(null);
         
     ndWriter.update(nd, networkID);
     
-    Node nd2 = ndReader.read(nd.getLongId(), networkID);
+    nd2 = ndReader.read(nd.getLongId(), networkID);
     
     assertTrue(null != nd2);
     assertEquals(nd.getLongId(), nd2.getLongId());
     assertEquals(null, nd2.getName());
+    assertEquals(null, nd2.getType());
 
-    nd.setName("bob");
-
+    nd.setName("bob"); // code path 1: update null to non-null
+    nd.setType("Freeway");
     ndWriter.update(nd, networkID);
-    
-    Node nd3 = ndReader.read(nd.getLongId(), networkID);
-    
-    assertTrue(null != nd3);
-    assertEquals(nd.getLongId(), nd3.getLongId());
-    assertEquals("bob", nd3.getName());
+    nd2 = ndReader.read(nd.getLongId(), networkID);
+    assertTrue(null != nd2);
+    assertEquals(nd.getLongId(), nd2.getLongId());
+    assertEquals("bob", nd2.getName());
+    assertEquals("Freeway", nd2.getType());
+
+    nd.setName("alice"); // code path 2: update non-null to non-null
+    nd.setType("Terminal");
+    ndWriter.update(nd, networkID);
+    nd2 = ndReader.read(nd.getLongId(), networkID);
+    assertTrue(null != nd2);
+    assertEquals("alice", nd2.getName());
+    assertEquals("Terminal", nd2.getType());
+
+    nd.setName(null); // code path 3: update non-null to null
+    nd.setType(null);
+    ndWriter.update(nd, networkID);
+    nd2 = ndReader.read(nd.getLongId(), networkID);
+    assertTrue(null != nd2);
+    assertEquals(null, nd2.getName());
+    assertEquals(null, nd2.getType());
   }
   
   @Test
@@ -163,5 +181,7 @@ public class NodeWriterTest {
     ndWriter.deleteAllNodes(networkID);
     ArrayList<Node> nodes3 = ndReader.readNodes(networkID);
     assertEquals(0, nodes3.size());
+    
+    // todo check no rows in names or types table
   }
 }
