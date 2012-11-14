@@ -110,6 +110,7 @@ public class LinkWriter extends WriterBase {
   protected void insertLinks(List<Link> links, long networkID) throws DatabaseException {
     LinksRowInserter linksInserter = new LinksRowInserter(networkID, dbw);
     LinkNamesRowInserter linkNamesInserter = new LinkNamesRowInserter(networkID, dbw);
+    LinkLanesRowInserter linkLanesInserter = new LinkLanesRowInserter(networkID, dbw);
     LinkTypesRowInserter linkTypesInserter = new LinkTypesRowInserter(networkID, dbw);
 
     try {
@@ -117,6 +118,9 @@ public class LinkWriter extends WriterBase {
         linksInserter.insert(link);
         if (link.getName() != null) {
           linkNamesInserter.insert(link);
+        }
+        if (link.getLaneCount() != null) {
+          linkLanesInserter.insert(link);
         }
         if (link.getType() != null) {
           linkTypesInserter.insert(link);
@@ -126,6 +130,7 @@ public class LinkWriter extends WriterBase {
     finally {
       linksInserter.release();
       linkNamesInserter.release();
+      linkLanesInserter.release();
       linkTypesInserter.release();
     }
   }
@@ -176,6 +181,10 @@ public class LinkWriter extends WriterBase {
     LinkNamesRowInserter  linkNameInserter = new LinkNamesRowInserter(networkID, dbw);
     LinkNamesRowDeleter   linkNameDeleter  = new LinkNamesRowDeleter(networkID, dbw);
     
+    LinkLanesRowUpdater   linkLaneUpdater  = new LinkLanesRowUpdater(networkID, dbw);
+    LinkLanesRowInserter  linkLaneInserter = new LinkLanesRowInserter(networkID, dbw);
+    LinkLanesRowDeleter   linkLaneDeleter  = new LinkLanesRowDeleter(networkID, dbw);
+    
     LinkTypesRowUpdater   linkTypeUpdater  = new LinkTypesRowUpdater(networkID, dbw);
     LinkTypesRowInserter  linkTypeInserter = new LinkTypesRowInserter(networkID, dbw);
     LinkTypesRowDeleter   linkTypeDeleter  = new LinkTypesRowDeleter(networkID, dbw);
@@ -191,6 +200,16 @@ public class LinkWriter extends WriterBase {
           long rows = linkNameUpdater.update(link);
           if (rows == 0) {
             linkNameInserter.insert(link);
+          }
+        }
+        
+        if (link.getLaneCount() == null) {
+          linkLaneDeleter.delete(link.getLongId());
+        }
+        else {
+          long rows = linkLaneUpdater.update(link);
+          if (rows == 0) {
+            linkLaneInserter.insert(link);
           }
         }
         
@@ -211,6 +230,10 @@ public class LinkWriter extends WriterBase {
       linkNameUpdater.release();
       linkNameInserter.release();
       linkNameDeleter.release();
+      
+      linkLaneUpdater.release();
+      linkLaneInserter.release();
+      linkLaneDeleter.release();
       
       linkTypeUpdater.release();
       linkTypeInserter.release();
@@ -260,17 +283,20 @@ public class LinkWriter extends WriterBase {
   protected void deleteLinks(List<Long> linkIDs, long networkID) throws DatabaseException {
     LinksRowDeleter linkDeleter = new LinksRowDeleter(networkID, dbw);
     LinkNamesRowDeleter linkNameDeleter = new LinkNamesRowDeleter(networkID, dbw);
+    LinkLanesRowDeleter linkLaneDeleter = new LinkLanesRowDeleter(networkID, dbw);
     LinkTypesRowDeleter linkTypeDeleter = new LinkTypesRowDeleter(networkID, dbw);
       
     try {
       for (long linkID : linkIDs) {
         linkNameDeleter.delete(linkID);
+        linkLaneDeleter.delete(linkID);
         linkTypeDeleter.delete(linkID);
         linkDeleter.delete(linkID);
       }
     }
     finally {
       linkNameDeleter.release();
+      linkLaneDeleter.release();
       linkTypeDeleter.release();
       linkDeleter.release();
     }
@@ -288,6 +314,7 @@ public class LinkWriter extends WriterBase {
     dbw.psCreate(query,
       "begin\n" +
       "DELETE FROM VIA.LINK_NAMES WHERE (NETWORK_ID = ?);\n" +
+      "DELETE FROM VIA.LINK_LANES WHERE (NETWORK_ID = ?);\n" +
       "DELETE FROM VIA.LINK_TYPE_DET WHERE (NETWORK_ID = ?);\n" +
       "DELETE FROM VIA.LINKS WHERE (NETWORK_ID = ?);\n" +
       "end;"
@@ -298,6 +325,7 @@ public class LinkWriter extends WriterBase {
       dbw.psSetBigInt(query, 1, networkID);
       dbw.psSetBigInt(query, 2, networkID);
       dbw.psSetBigInt(query, 3, networkID);
+      dbw.psSetBigInt(query, 4, networkID);
       long rows = dbw.psUpdate(query);
       return rows;
     }
@@ -358,6 +386,23 @@ public class LinkWriter extends WriterBase {
       dbw.psClearParams(psname);
       dbw.psSetBigInt(psname, 1, link.getLongId());
       dbw.psSetVarChar(psname, 2, link.getNameString());
+      dbw.psUpdate(psname);
+    }
+  }
+  
+  protected class LinkLanesRowInserter extends RowOp {
+    protected LinkLanesRowInserter(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "insert_link_lanes_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "INSERT INTO VIA.LINK_LANES (LINK_ID, NETWORK_ID, LANES) VALUES(?, " + networkID + ", ?)"
+      );
+    }
+
+    protected void insert(Link link) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetBigInt(psname, 1, link.getLongId());
+      dbw.psSetDouble(psname, 2, link.getLaneCount());
       dbw.psUpdate(psname);
     }
   }
@@ -441,6 +486,31 @@ public class LinkWriter extends WriterBase {
     }
   }
   
+  protected class LinkLanesRowUpdater extends RowOp {
+    protected LinkLanesRowUpdater(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "update_link_lanes_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "UPDATE VIA.LINK_LANES SET lanes = ? WHERE ((LINK_ID = ?) AND (NETWORK_ID = " + networkID + "))"
+      );
+    }
+    
+    protected long update(Link link) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetDouble(psname, 1, link.getLaneCount());
+      dbw.psSetBigInt(psname, 2, link.getLongId());
+      
+      long rows = dbw.psUpdate(psname);
+      
+      if (rows > 1) {
+        throw new DatabaseException(null, "Link lane not unique: there exist " +
+          rows + " with id=" + link.getId(), dbw, psname);
+      }
+      
+      return rows;
+    }
+  }
+  
   protected class LinkTypesRowUpdater extends RowOp {
     protected LinkTypesRowUpdater(long networkID, DatabaseWriter dbw) throws DatabaseException {
       this.dbw = dbw;
@@ -509,6 +579,30 @@ public class LinkWriter extends WriterBase {
       
       if (rows > 1) {
         throw new DatabaseException(null, "Link name not unique: network has " +
+          rows + " rows with id=" + linkID, dbw, psname);
+      }
+      
+      return rows;
+    }
+  }
+
+  protected class LinkLanesRowDeleter extends RowOp {
+    protected LinkLanesRowDeleter(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "delete_link_lanes_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "DELETE FROM VIA.LINK_LANES WHERE (LINK_ID = ? AND NETWORK_ID = " + networkID + ")"
+      );
+    }
+    
+    protected long delete(long linkID) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetBigInt(psname, 1, linkID);
+      
+      long rows = dbw.psUpdate(psname);
+      
+      if (rows > 1) {
+        throw new DatabaseException(null, "Link lane not unique: network has " +
           rows + " rows with id=" + linkID, dbw, psname);
       }
       

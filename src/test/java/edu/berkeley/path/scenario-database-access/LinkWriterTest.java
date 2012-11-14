@@ -73,6 +73,7 @@ public class LinkWriterTest {
     ln.setDetailLevel(2);
     ln.setName(null);
     ln.setType(null);
+    ln.setLaneCount(null);
             
     lnWriter.update(ln, networkID);
     
@@ -85,31 +86,38 @@ public class LinkWriterTest {
     assertEquals((Integer)2, ln2.getDetailLevel());
     assertEquals(null, ln2.getName());
     assertEquals(null, ln2.getType());
+    assertEquals(null, ln2.getLaneCount());
 
     ln.setName("bob"); // code path 1: update null to non-null
     ln.setType("Freeway");
+    ln.setLaneCount(1.0);
     lnWriter.update(ln, networkID);
     ln2 = lnReader.read(ln.getLongId(), networkID);
     assertTrue(null != ln2);
     assertEquals(ln.getLongId(), ln2.getLongId());
     assertEquals("bob", ln2.getName());
     assertEquals("Freeway", ln2.getType());
+    assertEquals((Double)1.0, ln2.getLaneCount());
 
     ln.setName("alice"); // code path 2: update non-null to non-null
     ln.setType("Street");
+    ln.setLaneCount(2.0);
     lnWriter.update(ln, networkID);
     ln2 = lnReader.read(ln.getLongId(), networkID);
     assertTrue(null != ln2);
     assertEquals("alice", ln2.getName());
     assertEquals("Street", ln2.getType());
+    assertEquals((Double)2.0, ln2.getLaneCount());
 
     ln.setName(null); // code path 3: update non-null to null
     ln.setType(null);
+    ln.setLaneCount(null);
     lnWriter.update(ln, networkID);
     ln2 = lnReader.read(ln.getLongId(), networkID);
     assertTrue(null != ln2);
     assertEquals(null, ln2.getName());
     assertEquals(null, ln2.getType());
+    assertEquals(null, ln2.getLaneCount());
   }
   
   @Test

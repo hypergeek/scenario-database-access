@@ -289,8 +289,14 @@ public class LinkReader extends ReaderBase {
       link.setSpeedLimit(speed);
       link.setDetailLevel(detail);
       link.setLength(length);
-      link.setLaneCount(lanes);
-      link.setLaneOffset(offset);
+
+      if (lanes != null) {
+        link.setLaneCount(lanes);
+      }
+
+      if (offset != null) {
+        link.setLaneOffset(offset);
+      }
     }
 
     return link;
