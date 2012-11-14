@@ -111,6 +111,7 @@ public class LinkWriter extends WriterBase {
     LinksRowInserter linksInserter = new LinksRowInserter(networkID, dbw);
     LinkNamesRowInserter linkNamesInserter = new LinkNamesRowInserter(networkID, dbw);
     LinkLanesRowInserter linkLanesInserter = new LinkLanesRowInserter(networkID, dbw);
+    LinkLaneOffsetRowInserter linkLaneOffsetInserter = new LinkLaneOffsetRowInserter(networkID, dbw);
     LinkTypesRowInserter linkTypesInserter = new LinkTypesRowInserter(networkID, dbw);
 
     try {
@@ -122,6 +123,9 @@ public class LinkWriter extends WriterBase {
         if (link.getLaneCount() != null) {
           linkLanesInserter.insert(link);
         }
+        if (link.getLaneOffset() != null) {
+          linkLaneOffsetInserter.insert(link);
+        }
         if (link.getType() != null) {
           linkTypesInserter.insert(link);
         }
@@ -131,6 +135,7 @@ public class LinkWriter extends WriterBase {
       linksInserter.release();
       linkNamesInserter.release();
       linkLanesInserter.release();
+      linkLaneOffsetInserter.release();
       linkTypesInserter.release();
     }
   }
@@ -185,6 +190,10 @@ public class LinkWriter extends WriterBase {
     LinkLanesRowInserter  linkLaneInserter = new LinkLanesRowInserter(networkID, dbw);
     LinkLanesRowDeleter   linkLaneDeleter  = new LinkLanesRowDeleter(networkID, dbw);
     
+    LinkLaneOffsetRowUpdater   linkLaneOffsetUpdater  = new LinkLaneOffsetRowUpdater(networkID, dbw);
+    LinkLaneOffsetRowInserter  linkLaneOffsetInserter = new LinkLaneOffsetRowInserter(networkID, dbw);
+    LinkLaneOffsetRowDeleter   linkLaneOffsetDeleter  = new LinkLaneOffsetRowDeleter(networkID, dbw);
+    
     LinkTypesRowUpdater   linkTypeUpdater  = new LinkTypesRowUpdater(networkID, dbw);
     LinkTypesRowInserter  linkTypeInserter = new LinkTypesRowInserter(networkID, dbw);
     LinkTypesRowDeleter   linkTypeDeleter  = new LinkTypesRowDeleter(networkID, dbw);
@@ -213,6 +222,16 @@ public class LinkWriter extends WriterBase {
           }
         }
         
+        if (link.getLaneOffset() == null) {
+          linkLaneOffsetDeleter.delete(link.getLongId());
+        }
+        else {
+          long rows = linkLaneOffsetUpdater.update(link);
+          if (rows == 0) {
+            linkLaneOffsetInserter.insert(link);
+          }
+        }
+        
         if (link.getType() == null) {
           linkTypeDeleter.delete(link.getLongId());
         }
@@ -235,6 +254,10 @@ public class LinkWriter extends WriterBase {
       linkLaneInserter.release();
       linkLaneDeleter.release();
       
+      linkLaneOffsetUpdater.release();
+      linkLaneOffsetInserter.release();
+      linkLaneOffsetDeleter.release();
+
       linkTypeUpdater.release();
       linkTypeInserter.release();
       linkTypeDeleter.release();
@@ -284,12 +307,14 @@ public class LinkWriter extends WriterBase {
     LinksRowDeleter linkDeleter = new LinksRowDeleter(networkID, dbw);
     LinkNamesRowDeleter linkNameDeleter = new LinkNamesRowDeleter(networkID, dbw);
     LinkLanesRowDeleter linkLaneDeleter = new LinkLanesRowDeleter(networkID, dbw);
+    LinkLaneOffsetRowDeleter linkLaneOffsetDeleter = new LinkLaneOffsetRowDeleter(networkID, dbw);
     LinkTypesRowDeleter linkTypeDeleter = new LinkTypesRowDeleter(networkID, dbw);
       
     try {
       for (long linkID : linkIDs) {
         linkNameDeleter.delete(linkID);
         linkLaneDeleter.delete(linkID);
+        linkLaneOffsetDeleter.delete(linkID);
         linkTypeDeleter.delete(linkID);
         linkDeleter.delete(linkID);
       }
@@ -297,6 +322,7 @@ public class LinkWriter extends WriterBase {
     finally {
       linkNameDeleter.release();
       linkLaneDeleter.release();
+      linkLaneOffsetDeleter.release();
       linkTypeDeleter.release();
       linkDeleter.release();
     }
@@ -315,6 +341,7 @@ public class LinkWriter extends WriterBase {
       "begin\n" +
       "DELETE FROM VIA.LINK_NAMES WHERE (NETWORK_ID = ?);\n" +
       "DELETE FROM VIA.LINK_LANES WHERE (NETWORK_ID = ?);\n" +
+      "DELETE FROM VIA.LINK_LANE_OFFSET WHERE (NETWORK_ID = ?);\n" +
       "DELETE FROM VIA.LINK_TYPE_DET WHERE (NETWORK_ID = ?);\n" +
       "DELETE FROM VIA.LINKS WHERE (NETWORK_ID = ?);\n" +
       "end;"
@@ -326,6 +353,7 @@ public class LinkWriter extends WriterBase {
       dbw.psSetBigInt(query, 2, networkID);
       dbw.psSetBigInt(query, 3, networkID);
       dbw.psSetBigInt(query, 4, networkID);
+      dbw.psSetBigInt(query, 5, networkID);
       long rows = dbw.psUpdate(query);
       return rows;
     }
@@ -403,6 +431,23 @@ public class LinkWriter extends WriterBase {
       dbw.psClearParams(psname);
       dbw.psSetBigInt(psname, 1, link.getLongId());
       dbw.psSetDouble(psname, 2, link.getLaneCount());
+      dbw.psUpdate(psname);
+    }
+  }
+  
+  protected class LinkLaneOffsetRowInserter extends RowOp {
+    protected LinkLaneOffsetRowInserter(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "insert_link_lane_offset_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "INSERT INTO VIA.LINK_LANE_OFFSET (LINK_ID, NETWORK_ID, DISPLAY_LANE_OFFSET) VALUES(?, " + networkID + ", ?)"
+      );
+    }
+
+    protected void insert(Link link) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetBigInt(psname, 1, link.getLongId());
+      dbw.psSetInteger(psname, 2, link.getLaneOffset());
       dbw.psUpdate(psname);
     }
   }
@@ -503,7 +548,32 @@ public class LinkWriter extends WriterBase {
       long rows = dbw.psUpdate(psname);
       
       if (rows > 1) {
-        throw new DatabaseException(null, "Link lane not unique: there exist " +
+        throw new DatabaseException(null, "Link lanes not unique: there exist " +
+          rows + " with id=" + link.getId(), dbw, psname);
+      }
+      
+      return rows;
+    }
+  }
+  
+  protected class LinkLaneOffsetRowUpdater extends RowOp {
+    protected LinkLaneOffsetRowUpdater(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "update_link_lane_offset_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "UPDATE VIA.LINK_LANE_OFFSET SET display_lane_offset = ? WHERE ((LINK_ID = ?) AND (NETWORK_ID = " + networkID + "))"
+      );
+    }
+    
+    protected long update(Link link) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetInteger(psname, 1, link.getLaneOffset());
+      dbw.psSetBigInt(psname, 2, link.getLongId());
+      
+      long rows = dbw.psUpdate(psname);
+      
+      if (rows > 1) {
+        throw new DatabaseException(null, "Link lane offset not unique: there exist " +
           rows + " with id=" + link.getId(), dbw, psname);
       }
       
@@ -602,7 +672,31 @@ public class LinkWriter extends WriterBase {
       long rows = dbw.psUpdate(psname);
       
       if (rows > 1) {
-        throw new DatabaseException(null, "Link lane not unique: network has " +
+        throw new DatabaseException(null, "Link lanes not unique: network has " +
+          rows + " rows with id=" + linkID, dbw, psname);
+      }
+      
+      return rows;
+    }
+  }
+
+  protected class LinkLaneOffsetRowDeleter extends RowOp {
+    protected LinkLaneOffsetRowDeleter(long networkID, DatabaseWriter dbw) throws DatabaseException {
+      this.dbw = dbw;
+      this.psname = "delete_link_lane_offset_in_network_" + networkID;
+      dbw.psCreate(psname,
+        "DELETE FROM VIA.LINK_LANE_OFFSET WHERE (LINK_ID = ? AND NETWORK_ID = " + networkID + ")"
+      );
+    }
+    
+    protected long delete(long linkID) throws DatabaseException {
+      dbw.psClearParams(psname);
+      dbw.psSetBigInt(psname, 1, linkID);
+      
+      long rows = dbw.psUpdate(psname);
+      
+      if (rows > 1) {
+        throw new DatabaseException(null, "Link lane offset not unique: network has " +
           rows + " rows with id=" + linkID, dbw, psname);
       }
       
