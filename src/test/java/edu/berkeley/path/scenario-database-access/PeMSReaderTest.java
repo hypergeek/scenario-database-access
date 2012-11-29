@@ -29,57 +29,66 @@
 
 package edu.berkeley.path.scenario_database_access;
 
-import core.*;
+import org.junit.*;
+import static org.junit.Assert.*;
+
+import java.util.List;
+
+import edu.berkeley.path.model_elements.*;
+
+import org.joda.time.Interval;
 
 /**
- * Base class for all classes that write to a database.
- * Can be constructed with or without a DatabaseWriter.
- * In the former case, the dbParams are used to construct a writer.
- * The latter case is for passing a writer down the containment
- * hierarchy (such as from DemandSetWriter to DemandProfileWriter), so
- * that all instances in the hierarchy use the same underlying connection.
- * 
- * @see DBParams
+ * Tests methods for reading PeMS from a database.
  * @author vjoel
  */
-public class WriterBase {
-  protected DatabaseWriter dbw;
-  protected DBParams dbParams;
+public class PeMSReaderTest {
+  static PeMSReader pemsReader;
   
-  /**
-   * Create a writer base with a new connection to the db,
-   * specified by the dbParams.
-   **/
-  public WriterBase(
-          DBParams dbParams
-          ) throws DatabaseException {
-    this.dbParams = dbParams;
-    this.dbw = new DatabaseWriter(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
+  @BeforeClass public static void dbsetup() throws core.DatabaseException {
+    pemsReader = new PeMSReader(new DBParams());
+  }
+
+  @Before
+  public void setup() {
   }
   
-  /**
-   * Create a writer base reusing a given connection to the db,
-   * specified by the dbWriter.
-   **/
-  public WriterBase(
-          DBParams dbParams,
-          DatabaseWriter dbWriter
-          ) throws DatabaseException {
-    this.dbParams = dbParams;
-    this.dbw = dbWriter;
-  }
-  
-  public DBParams getDBParams() {
-    return dbParams;
-  }
-  
-  public DatabaseWriter getDatabaseWriter() {
-    return dbw;
+  @Test
+  public void testReadOneStation() throws core.DatabaseException {
+    PeMSProfile profile;
+    
+    org.joda.time.DateTime timeBegin = new org.joda.time.DateTime(
+      // YYYY, MM, DD, HH, MM
+         2012, 11, 29,  9,  0,
+      org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+    );
+    
+    org.joda.time.Duration dt = org.joda.time.Duration.standardHours(1);
+    
+    Interval interval = new Interval(timeBegin, dt);
+    
+    Long vdsId = 400211L;
+    
+    profile = pemsReader.read(interval, vdsId);
+    
+    List<PeMS> pemsList = profile.getPemsList();
+    //System.out.println(profile);
+    
+    // this was correct, but of course might not always be...
+    assertEquals(6, pemsList.size());
+    
+    // check that the list is sorted
+    PeMS prev = null;
+    for (PeMS pems : pemsList) {
+      if (prev == null) {
+        prev = pems;
+      }
+      else {
+        assertTrue(
+          prev.getJodaTimeMeasured().isBefore(
+            pems.getJodaTimeMeasured()
+        ));
+      }
+    }
   }
 }

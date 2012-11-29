@@ -29,57 +29,31 @@
 
 package edu.berkeley.path.scenario_database_access;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.HashSet;
+
+import edu.berkeley.path.model_elements.*;
+
 import core.*;
 
 /**
- * Base class for all classes that write to a database.
- * Can be constructed with or without a DatabaseWriter.
- * In the former case, the dbParams are used to construct a writer.
- * The latter case is for passing a writer down the containment
- * hierarchy (such as from DemandSetWriter to DemandProfileWriter), so
- * that all instances in the hierarchy use the same underlying connection.
- * 
+ * Implements methods for writing PeMS data to a database.
  * @see DBParams
  * @author vjoel
  */
-public class WriterBase {
-  protected DatabaseWriter dbw;
-  protected DBParams dbParams;
-  
-  /**
-   * Create a writer base with a new connection to the db,
-   * specified by the dbParams.
-   **/
-  public WriterBase(
+public class PeMSWriter extends WriterBase {
+  public PeMSWriter(
           DBParams dbParams
           ) throws DatabaseException {
-    this.dbParams = dbParams;
-    this.dbw = new DatabaseWriter(
-      dbParams.usingOracle,
-      dbParams.host,
-      dbParams.port,
-      dbParams.name,
-      dbParams.user,
-      dbParams.pass);
+    super(dbParams);
   }
   
-  /**
-   * Create a writer base reusing a given connection to the db,
-   * specified by the dbWriter.
-   **/
-  public WriterBase(
+    public PeMSWriter(
           DBParams dbParams,
           DatabaseWriter dbWriter
           ) throws DatabaseException {
-    this.dbParams = dbParams;
-    this.dbw = dbWriter;
-  }
-  
-  public DBParams getDBParams() {
-    return dbParams;
-  }
-  
-  public DatabaseWriter getDatabaseWriter() {
-    return dbw;
+    super(dbParams, dbWriter);
   }
 }

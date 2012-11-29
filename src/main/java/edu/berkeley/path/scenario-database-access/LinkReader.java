@@ -235,7 +235,7 @@ public class LinkReader extends ReaderBase {
   }
 
   /**
-   * Instantiate and populate a link object from the result set
+   * Instantiate and populate a link object from the next item in the result set
    * of a link query.
    * 
    * @param query string

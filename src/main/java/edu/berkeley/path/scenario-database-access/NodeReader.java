@@ -233,7 +233,7 @@ public class NodeReader extends ReaderBase {
   }
 
   /**
-   * Instantiate and populate a node object from the result set
+   * Instantiate and populate a node object from the next item in the result set
    * of a node query.
    * 
    * @param query string

@@ -46,6 +46,10 @@ public class ReaderBase {
   protected DatabaseReader dbr;
   protected DBParams dbParams;
   
+  /**
+   * Create a reader base with a new connection to the db,
+   * specified by the dbParams.
+   **/
   public ReaderBase(
           DBParams dbParams
           ) throws DatabaseException {
@@ -59,6 +63,10 @@ public class ReaderBase {
       dbParams.pass);
   }
   
+  /**
+   * Create a reader base reusing a given connection to the db,
+   * specified by the dbReader.
+   **/
   public ReaderBase(
           DBParams dbParams,
           DatabaseReader dbReader
