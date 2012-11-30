@@ -32,7 +32,7 @@ package edu.berkeley.path.scenario_database_access;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import java.util.List;
+import java.util.*;
 
 import edu.berkeley.path.model_elements.*;
 
@@ -90,5 +90,37 @@ public class PeMSReaderTest {
         ));
       }
     }
+  }
+
+  @Test
+  public void testReadStationSet() throws core.DatabaseException {
+    PeMSSet set;
+    
+    org.joda.time.DateTime timeBegin = new org.joda.time.DateTime(
+      // YYYY, MM, DD, HH, MM
+         2012, 11, 29,  9,  0,
+      org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+    );
+    
+    org.joda.time.Duration dt = org.joda.time.Duration.standardHours(1);
+    
+    Interval interval = new Interval(timeBegin, dt);
+    
+    ArrayList<Long> vdsIds = new ArrayList<Long>();
+    vdsIds.add(400211L);
+    vdsIds.add(400212L);
+    
+    set = pemsReader.read(interval, vdsIds);
+    //System.out.println(set);
+    
+    // this was correct, but of course might not always be...
+    
+    assertEquals(2, set.getPemsMapList().get(0).getMap().size());
+    assertEquals(2, set.getPemsMapList().get(1).getMap().size());
+    assertEquals(2, set.getPemsMapList().get(2).getMap().size());
+    assertEquals(1, set.getPemsMapList().get(3).getMap().size());
+    assertEquals(2, set.getPemsMapList().get(4).getMap().size());
+    assertEquals(2, set.getPemsMapList().get(5).getMap().size());
+    assertEquals(2, set.getPemsMapList().get(6).getMap().size());
   }
 }

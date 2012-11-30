@@ -102,7 +102,39 @@ public class PeMSReader extends ReaderBase {
    */
   public PeMSSet read(Interval interval, List<Long> vdsIds) throws DatabaseException {
     PeMSSet set = null;
-    // todo
+    
+    String pemsIdStr = "pems.{vds_id=[" + vdsIds.get(0) + "," + vdsIds.get(1) + ",...], interval=" + interval + "}";
+    
+    long timeBegin = System.nanoTime();
+    
+    try {
+      dbr.transactionBegin();
+      Monitor.debug("PeMS reader transaction beginning on " + pemsIdStr);
+
+      set = readSet(interval, vdsIds);
+
+      dbr.transactionCommit();
+      Monitor.debug("PeMS reader transaction committing on " + pemsIdStr);
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+    finally {
+      try {
+        dbr.transactionRollback();
+        Monitor.debug("PeMS reader transaction rollback on " + pemsIdStr);
+      }
+      catch(Exception Exc) {
+        // Do nothing.
+      }
+    }
+    
+    long timeCommit = System.nanoTime();
+    if (set != null) {
+      Monitor.duration("Read " + pemsIdStr, timeCommit - timeBegin);
+    }
+
     return set;
   }
 
@@ -131,6 +163,45 @@ public class PeMSReader extends ReaderBase {
     }
     
     return profile;
+  }
+  
+  /**
+   * Read all PeMS data in the given time range and having a VDS ID in the
+   * given list.
+   * 
+   * @see #read() if you want a transaction and logging around the operation.
+   */
+  public PeMSSet readSet(Interval interval, List<Long> vdsIds) throws DatabaseException {
+    PeMSSet set = new PeMSSet();
+    List<PeMSMap> mapList = set.getPemsMapList();
+
+    PeMS pems;
+    String query = null;
+    
+    try {
+      query = runQuerySet(interval, vdsIds);
+      org.joda.time.DateTime prevTime = null;
+      PeMSMap map = null;
+      
+      while (null != (pems = pemsFromQueryRS(query))) {
+        org.joda.time.DateTime curTime = pems.getJodaTimeMeasured();
+        
+        if (map == null || !prevTime.equals(curTime)) {
+          map = new PeMSMap();
+          mapList.add(map);
+          prevTime = curTime;
+        }
+        
+        map.getMap().put(pems.getVdsId().toString(), pems);
+      }
+    }
+    finally {
+      if (query != null) {
+        dbr.psDestroy(query);
+      }
+    }
+    
+    return set;
   }
   
   /**
@@ -174,6 +245,56 @@ public class PeMSReader extends ReaderBase {
     dbr.psSetTimestampMilliseconds(query, 1, interval.getStartMillis());
     dbr.psSetTimestampMilliseconds(query, 2, interval.getEndMillis());
     dbr.psSetBigInt(query, 3, vdsId);
+    dbr.psQuery(query);
+
+    return query;
+  }
+
+  /**
+   * Execute a query for the specified pems data.
+   * 
+   * @return String     query string, may be passed to psRSNext or pemsFromQueryRS
+   */
+  protected String runQuerySet(Interval interval, List<Long> vdsIds) throws DatabaseException {
+    String query = "read_pems_set";
+    String yuckyuck = org.apache.commons.lang.StringUtils.join(vdsIds, ", ");
+    
+    dbr.psCreate(query,
+      "SELECT " +
+        "VDS_ID, " +
+        "MEASURE_DT, " +
+        "FLOW, " +
+        "DENSITY, " +
+        "DENSITY_ERR, " +
+        "SPEED, " +
+        "SPEED_ERROR, " +
+        "FF_SPEED, " +
+        "FUNC_LOOP_FACT, " +
+        "G_FACTOR_LANE_0, " +
+        "G_FACTOR_LANE_1, " +
+        "G_FACTOR_LANE_2, " +
+        "G_FACTOR_LANE_3, " +
+        "G_FACTOR_LANE_4, " +
+        "G_FACTOR_LANE_5, " +
+        "G_FACTOR_LANE_6, " +
+        "G_FACTOR_LANE_7, " +
+        "G_FACTOR_LANE_8, " +
+        "G_FACTOR_LANE_9 " +
+      "FROM VIA.PEMS_30SEC_FILT " +
+      "WHERE " +
+         "MEASURE_DT BETWEEN ? AND ? " +
+         "AND " +
+         "VDS_ID IN (" + yuckyuck + ") " +
+      "ORDER BY MEASURE_DT"
+    );
+    
+    dbr.psClearParams(query);
+    dbr.psSetTimestampMilliseconds(query, 1, interval.getStartMillis());
+    dbr.psSetTimestampMilliseconds(query, 2, interval.getEndMillis());
+    
+    // this doesn't seem to work, hence the yuck hack above:
+    //dbr.psSetArrayLong(query, 3, vdsIds.toArray(new Long[vdsIds.size()]));
+
     dbr.psQuery(query);
 
     return query;
