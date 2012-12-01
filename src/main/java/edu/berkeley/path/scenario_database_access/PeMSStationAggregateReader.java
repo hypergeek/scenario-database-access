@@ -243,14 +243,15 @@ public class PeMSStationAggregateReader extends ReaderBase {
           if (level == PeMSAggregate.AggregationLevel.PEMS_5MIN) {
             agg.setSamples(dbr.psRSGetBigInt(query, prefix + "SAMPLES"));
             String obs = dbr.psRSGetVarChar(query, prefix + "OBSERVED");
-            if (obs == "1") {
-              agg.setObserved(1.0);
+            if (obs.equals("1")) {
+              agg.setObserved(100.0);
             }
-            else if (obs == "0") {
+            else if (obs.equals("0")) {
               agg.setObserved(0.0);
             }
             else {
-              // throw?
+              System.out.println("Warning: unrecognized 'observed' value: '" + obs + "'.");
+              // throw? log warning?
             }
           }
           

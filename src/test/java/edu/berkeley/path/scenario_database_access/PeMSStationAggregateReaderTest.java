@@ -73,6 +73,7 @@ public class PeMSStationAggregateReaderTest {
     vdsIds.add(400212L);
     
     saggs = saggReader.read(interval, vdsIds, PeMSAggregate.AggregationLevel.PEMS_5MIN);
+    //System.out.println(saggs);
     
     // this was correct, but of course might not always be...
     assertEquals(39, saggs.size());
@@ -93,6 +94,17 @@ public class PeMSStationAggregateReaderTest {
         );
       }
     }
+
+    // a few checks that the data read correctly
+    PeMSStationAggregate sagg = saggs.get(0);
+    assertEquals((Double)75.7, sagg.getTotal().getAvgSpeed());
+    assertEquals((Long)30L, sagg.getTotal().getSamples());
+    assertEquals(null, sagg.getDelay());
+    assertEquals((Double)17.0, sagg.getByLane().get(1).getFlow());
+    assertEquals((Double)100.0, sagg.getByLane().get(1).getObserved());
+
+    PeMSStationAggregate sagg2 = saggs.get(2);
+    assertEquals((Double)75.0, sagg2.getTotal().getObserved());
   }
 
   @Test
@@ -115,6 +127,7 @@ public class PeMSStationAggregateReaderTest {
     vdsIds.add(400212L);
     
     saggs = saggReader.read(interval, vdsIds, PeMSAggregate.AggregationLevel.PEMS_1HOUR);
+    //System.out.println(saggs);
     
     // this was correct, but of course might not always be...
     assertEquals(6, saggs.size());
@@ -135,6 +148,13 @@ public class PeMSStationAggregateReaderTest {
         );
       }
     }
+    
+    // a few checks that the data read correctly
+    PeMSStationAggregate sagg = saggs.get(0);
+    assertEquals((Double)1799.0, sagg.getTotal().getFlow());
+    assertEquals((Long)348L, sagg.getTotal().getSamples());
+    assertEquals((Double)0.0, sagg.getDelay().get("55"));
+    assertEquals((Double)0.0173, sagg.getByLane().get(1).getAvgOccupancy());
   }
 
   @Test
@@ -157,6 +177,7 @@ public class PeMSStationAggregateReaderTest {
     vdsIds.add(400212L);
     
     saggs = saggReader.read(interval, vdsIds, PeMSAggregate.AggregationLevel.PEMS_1DAY);
+    //System.out.println(saggs);
     
     // this was correct, but of course might not always be...
     assertEquals(3, saggs.size());
@@ -177,5 +198,11 @@ public class PeMSStationAggregateReaderTest {
         );
       }
     }
+    
+    // a few checks that the data read correctly
+    PeMSStationAggregate sagg = saggs.get(1);
+    assertEquals((Double)70659.0, sagg.getTotal().getFlow());
+    assertEquals((Double)0.0, sagg.getDelay().get("55"));
+    assertEquals(null, sagg.getByLane());
   }
 }

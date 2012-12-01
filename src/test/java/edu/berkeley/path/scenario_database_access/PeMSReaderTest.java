@@ -70,9 +70,9 @@ public class PeMSReaderTest {
     Long vdsId = 400211L;
     
     profile = pemsReader.read(interval, vdsId);
+    //System.out.println(profile);
     
     List<PeMS> pemsList = profile.getPemsList();
-    //System.out.println(profile);
     
     // this was correct, but of course might not always be...
     assertEquals(6, pemsList.size());
