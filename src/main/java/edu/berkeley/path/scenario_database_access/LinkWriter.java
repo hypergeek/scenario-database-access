@@ -394,7 +394,7 @@ public class LinkWriter extends WriterBase {
       dbw.psSetBigInt(psname, ++i, link.getLongId());
       dbw.psSetBigInt(psname, ++i, link.getBeginLongId());
       dbw.psSetBigInt(psname, ++i, link.getEndLongId());
-      dbw.psSetInteger(psname, ++i, link.getSpeedLimit());
+      dbw.psSetDouble(psname, ++i, link.getSpeedLimit());
       dbw.psSetDouble(psname, ++i, link.getLength());
       dbw.psSetInteger(psname, ++i, link.getDetailLevel());
       dbw.psUpdate(psname);
@@ -490,7 +490,7 @@ public class LinkWriter extends WriterBase {
       int i=0;
       dbw.psSetBigInt(psname, ++i, link.getBeginLongId());
       dbw.psSetBigInt(psname, ++i, link.getEndLongId());
-      dbw.psSetInteger(psname, ++i, link.getSpeedLimit());
+      dbw.psSetDouble(psname, ++i, link.getSpeedLimit());
       dbw.psSetDouble(psname, ++i, link.getLength());
       dbw.psSetInteger(psname, ++i, link.getDetailLevel());
       dbw.psSetBigInt(psname, ++i, link.getLongId());

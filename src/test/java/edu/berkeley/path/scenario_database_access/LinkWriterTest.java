@@ -69,7 +69,7 @@ public class LinkWriterTest {
     ln.setLength(555.0);
     ln.setBeginId("1"); // TODO create nodes instead
     ln.setEndId("2");
-    ln.setSpeedLimit(45);
+    ln.setSpeedLimit(45.0);
     ln.setDetailLevel(2);
     ln.setName(null);
     ln.setType(null);
@@ -83,7 +83,7 @@ public class LinkWriterTest {
     assertTrue(null != ln2);
     assertEquals(ln.getLongId(), ln2.getLongId());
     assertEquals((Double)555.0, ln2.getLength());
-    assertEquals((Integer)45, ln2.getSpeedLimit());
+    assertEquals((Double)45.0, ln2.getSpeedLimit());
     assertEquals((Integer)2, ln2.getDetailLevel());
     assertEquals(null, ln2.getName());
     assertEquals(null, ln2.getType());
@@ -137,7 +137,7 @@ public class LinkWriterTest {
     ln.setLength(555.0);
     ln.setBeginId("1"); // TODO create nodes instead
     ln.setEndId("2");
-    ln.setSpeedLimit(45);
+    ln.setSpeedLimit(45.0);
     ln.setDetailLevel(2);
     ln.setName("alice");
     ln.setType("Street");
@@ -151,7 +151,7 @@ public class LinkWriterTest {
     assertTrue(null != ln2);
     assertEquals(ln.getLongId(), ln2.getLongId());
     assertEquals((Double)555.0, ln2.getLength());
-    assertEquals((Integer)45, ln2.getSpeedLimit());
+    assertEquals((Double)45.0, ln2.getSpeedLimit());
     assertEquals((Integer)2, ln2.getDetailLevel());
     assertEquals("alice", ln2.getName());
     assertEquals("Street", ln2.getType());

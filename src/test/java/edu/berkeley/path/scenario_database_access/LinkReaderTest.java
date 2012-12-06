@@ -76,8 +76,8 @@ public class LinkReaderTest {
     assertEquals("2", ln2.getBeginId());
     assertEquals("3", ln2.getEndId());
 
-    assertEquals((Integer)123, ln1.getSpeedLimit());
-    assertEquals((Integer)124, ln2.getSpeedLimit());
+    assertEquals((Double)123.0, ln1.getSpeedLimit());
+    assertEquals((Double)124.0, ln2.getSpeedLimit());
 
     assertEquals((Double)1000.0, ln1.getLength());
     assertEquals((Double)1001.0, ln2.getLength());

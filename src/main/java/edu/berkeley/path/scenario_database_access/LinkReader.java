@@ -253,7 +253,7 @@ public class LinkReader extends ReaderBase {
       Long id = dbr.psRSGetBigInt(query, "ID");
       Long bId = dbr.psRSGetBigInt(query, "BEG_NODE_ID");
       Long eId = dbr.psRSGetBigInt(query, "END_NODE_ID");
-      Integer speed = dbr.psRSGetInteger(query, "SPEED_LIMIT");
+      Double speed = dbr.psRSGetDouble(query, "SPEED_LIMIT");
       Double length = dbr.psRSGetDouble(query, "LENGTH");
       Integer detail = dbr.psRSGetInteger(query, "DETAIL_LEVEL");
       
