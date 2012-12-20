@@ -191,7 +191,7 @@ public class ScenarioReader extends ReaderBase {
     
     try {
       query = runQuery(scenarioID);
-      scenario = scenarioFromQueryRS(query, associateIDs);
+      scenario = scenarioFromQueryRS(query, associateIDs, true);
     }
     finally {
       if (query != null) {
@@ -225,17 +225,19 @@ public class ScenarioReader extends ReaderBase {
   /**
    * Instantiate and populate a scenario object from the result set
    * of a scenario query. Do not attempt to read related rows, such
-   * as networks, profile sets, etc.
+   * as networks, profile sets, etc. Consumes one result from the
+   * result set.
    * 
    * @param query string
    * @param associateIDs map of column name to id value for 1-1 associated tables
+   * @param checkUniq expect that the result is unique
    * @return Scenario
    */
-  protected Scenario scenarioFromQueryRS(String query, HashMap<String, Long> associateIDs) throws DatabaseException {
+  protected Scenario scenarioFromQueryRS(String query, HashMap<String, Long> associateIDs, boolean checkUniq) throws DatabaseException {
     Scenario scenario = null;
     
     while (dbr.psRSNext(query)) {
-      if (scenario != null) {
+      if (checkUniq && scenario != null) {
         throw new DatabaseException(null, "Scenario not unique: " + query, dbr, query);
       }
       
@@ -261,6 +263,10 @@ public class ScenarioReader extends ReaderBase {
       }
 
       //System.out.println("Scenario: " + scenario);
+      
+      if (!checkUniq) {
+        break;
+      }
     }
 
     return scenario;
