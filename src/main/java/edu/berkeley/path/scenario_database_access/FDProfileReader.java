@@ -221,7 +221,8 @@ public class FDProfileReader extends ReaderBase {
     
     try {
       dbr.psCreate(query,
-        "SELECT VIA.SEQ_FD_PROFS_ID.nextVal AS ID FROM dual");
+        "SELECT VIA.SEQ_DEMAND_PROFS_ID.nextVal AS ID FROM dual");
+        // should use SEQ_FD_PROFS_ID, when it exists
       
       dbr.psQuery(query);
       
