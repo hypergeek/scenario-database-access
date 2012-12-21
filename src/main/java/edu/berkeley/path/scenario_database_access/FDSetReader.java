@@ -168,6 +168,7 @@ public class FDSetReader extends ReaderBase {
         "FUND_DIAG_SETS.ID AS ID, " +
         "FUND_DIAG_SETS.NAME AS NAME, " +
         "FUND_DIAG_SETS.DESCRIPTION AS DESCRIPTION, " +
+        "FUND_DIAG_SETS.PROJECT_ID AS PROJECT_ID, " +
         "FUND_DIAG_TYPES.ID AS TYPE_ID, " +
         "FUND_DIAG_TYPES.NAME AS TYPE_NAME, " +
         "FUND_DIAG_TYPES.DESCRIPTION AS TYPE_DESCRIPTION " +
@@ -208,10 +209,12 @@ public class FDSetReader extends ReaderBase {
       Long id = dbr.psRSGetBigInt(query, "ID");
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
+      Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       
       fdSet.setId(id);
       fdSet.setName(name);
       fdSet.setDescription(desc);
+      fdSet.setProjectId(prjId == null ? null : prjId.toString());
       
       FDType fdType = new FDType();
 

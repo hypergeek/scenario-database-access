@@ -59,6 +59,7 @@ public class FDSetReaderTest {
     fds = fdsReader.read(fdSetID);
 
     //System.out.println("Test FD: " + fds);
+    //{"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": null, "type": {"id": "1", "name": "Triangular", "description": null}, "profile": {"101": {"startTime": 25300.0, "sampleRate": 700.0, "fd": [{"freeFlowSpeed": null, "criticalSpeed": null, "congestionWaveSpeed": null, "capacity": 2.0, "jamDensity": null, "capacityDrop": null, "freeFlowSpeedStd": null, "congestionWaveSpeedStd": null, "capacityStd": null}, {"freeFlowSpeed": null, "criticalSpeed": null, "congestionWaveSpeed": null, "capacity": 2.1, "jamDensity": null, "capacityDrop": null, "freeFlowSpeedStd": null, "congestionWaveSpeedStd": null, "capacityStd": null}]}, "100": {"startTime": 25200.0, "sampleRate": 600.0, "fd": [{"freeFlowSpeed": null, "criticalSpeed": null, "congestionWaveSpeed": null, "capacity": 1.0, "jamDensity": null, "capacityDrop": null, "freeFlowSpeedStd": null, "congestionWaveSpeedStd": null, "capacityStd": null}, {"freeFlowSpeed": null, "criticalSpeed": null, "congestionWaveSpeed": null, "capacity": 1.1, "jamDensity": null, "capacityDrop": null, "freeFlowSpeedStd": null, "congestionWaveSpeedStd": null, "capacityStd": null}]}}}
     
     assertEquals(fdSetID.toString(), fds.getId());
     

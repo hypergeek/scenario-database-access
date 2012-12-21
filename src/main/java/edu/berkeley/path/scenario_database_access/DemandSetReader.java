@@ -198,10 +198,12 @@ public class DemandSetReader extends ReaderBase {
       Long id = dbr.psRSGetBigInt(query, "ID");
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
+      Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       
-      demandSet.setId(id.toString());
-      demandSet.name = name;
-      demandSet.description = desc;
+      demandSet.setId(id);
+      demandSet.setName(name);
+      demandSet.setDescription(desc);
+      demandSet.setProjectId(prjId == null ? null : prjId.toString());
 
       //System.out.println("DemandSet: " + demandSet);
     }

@@ -164,7 +164,7 @@ public class SplitRatioSetReader extends ReaderBase {
     String query = "read_splitratioSet_" + splitratioSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"SPLIT_RATIO_SETS\" WHERE (\"ID\" = ?)"
+      "SELECT * FROM VIA.SPLIT_RATIO_SETS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -198,10 +198,12 @@ public class SplitRatioSetReader extends ReaderBase {
       Long id = dbr.psRSGetBigInt(query, "ID");
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
+      Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       
       splitratioSet.setId(id.toString());
       splitratioSet.name = name;
       splitratioSet.description = desc;
+      splitratioSet.setProjectId(prjId == null ? null : prjId.toString());
 
       //System.out.println("SplitRatioSet: " + splitratioSet);
     }

@@ -57,8 +57,8 @@ public class SplitRatioSetReaderTest {
         
     srs = srsReader.read(splitratioSetID);
 
-    //System.out.println("Test SplitRatio: " + srs);
-    // {"id": "99999", "name": "scenario-database-access-test", "description": null, "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
+    System.out.println("Test SplitRatio: " + srs);
+    // {"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": "1", "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
     
     assertEquals(splitratioSetID.toString(), srs.getId());
     

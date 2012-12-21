@@ -61,7 +61,8 @@ public class ScenarioReaderTest {
     
     sc = scReader.read(scenarioID);
 
-//    System.out.println("Test Scenario: " + sc);
+    //System.out.println("Test Scenario: " + sc);
+    //{"id": "99999", "name": "test", "description": null, "projectId": "99999", "networks": [{"id": "99989", "name": "ScenarioReaderTest testReadOneScenario", "description": null, "projectId": null, "nodes": [{"id": "2", "name": null, "type": null}, {"id": "1", "name": null, "type": null}], "links": [{"id": "1", "name": null, "type": null, "laneCount": null, "length": 100.0, "laneOffset": null, "speedLimit": 100.0, "detailLevel": 1, "beginId": "1", "endId": "2"}]}], "initialDensity": null, "initialVelocity": null, "fdSet": null, "demandSet": {"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": "1", "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "knob": 0.5, "stdDevAdd": 0.1, "stdDevMult": 0.2, "flow": {"1": [0.1, 0.2, 0.3]}}}}, "splitratioSet": {"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": null, "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}, "sensorSet": null}
     
     assertEquals(scenarioID, sc.getLongId());
     
