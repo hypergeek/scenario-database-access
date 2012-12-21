@@ -103,6 +103,87 @@ public class ProjectReader extends ReaderBase {
 
     return project;
   }
+
+  /**
+   * Read the list of all projects.
+   * 
+   * @return List of projects.
+   */
+  public List<Project> readProjects() throws DatabaseException {
+    List<Project> projects = new ArrayList<Project>();
+    
+    long timeBegin = System.nanoTime();
+    
+    try {
+      dbr.transactionBegin();
+      Monitor.debug(
+        "Project.readProjects transaction beginning");
+
+      projects = readProjectRows();
+
+      dbr.transactionCommit();
+      Monitor.debug(
+        "Project.readProjects transaction committing");
+    }
+    catch (DatabaseException dbExc) {
+      Monitor.err(dbExc);
+      throw dbExc;
+    }
+    finally {
+      try {
+        dbr.transactionRollback();
+        Monitor.debug(
+          "Project.readProjects transaction rollback");
+      }
+      catch(Exception Exc) {
+        // Do nothing.
+      }
+    }
+    
+    long timeCommit = System.nanoTime();
+    Monitor.duration("Project.readProjects", timeCommit - timeBegin);
+    Monitor.count("Found Projects", projects.size());
+    
+    return projects;
+  }
+
+  /**
+   * Read the list of all projects.
+   * 
+   * @see readProjects() if you want a transaction and logging around the operation.
+   * 
+   * @param projectID  ID of the project in the database
+   * @return List of project IDs.
+   */
+  public List<Project> readProjectRows() throws DatabaseException {
+    List<Project> projects = new ArrayList<Project>();
+    ProjectReader prjr = new ProjectReader(dbParams, dbr);
+
+    String query = "read_projects";
+
+    try {
+      dbr.psCreate(query,
+        "SELECT * FROM VIA.PROJECTS"
+      );
+    
+      dbr.psClearParams(query);
+      dbr.psQuery(query);
+
+      Project project;
+      while (null != (project = prjr.projectFromQueryRS(query, false))) {
+        projects.add(project);
+      }
+    }
+    finally {
+      if (query != null) {
+        dbr.psDestroy(query);
+      }
+    }
+    
+    return projects;
+  }
+
+
   
   /**
    * Read the list of scenarios associated with the given project.
@@ -172,7 +253,7 @@ public class ProjectReader extends ReaderBase {
 
     try {
       dbr.psCreate(query,
-        "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"PROJECT_ID\" = ?)"
+        "SELECT * FROM VIA.SCENARIOS WHERE (PROJECT_ID = ?)"
       );
     
       dbr.psClearParams(query);
@@ -227,7 +308,7 @@ public class ProjectReader extends ReaderBase {
     String query = "read_project_" + projectID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"PROJECTS\" WHERE (\"ID\" = ?)"
+      "SELECT * FROM VIA.PROJECTS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);

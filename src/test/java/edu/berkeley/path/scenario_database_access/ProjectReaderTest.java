@@ -79,4 +79,13 @@ public class ProjectReaderTest {
 
     assertEquals(2, scenarios.size());
   }
+  
+  @Test
+  public void testReadProjects() throws core.DatabaseException {
+    List<Project> projects = prjReader.readProjects();
+    //System.out.println(projects);
+    //[{"id": "1", "name": "test", "description": "This is a test project"}, {"id": "99999", "name": "reader test", "description": null}]
+
+    assertTrue(2 <= projects.size());
+  }
 }
