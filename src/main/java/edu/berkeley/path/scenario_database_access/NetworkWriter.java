@@ -130,6 +130,8 @@ public class NetworkWriter extends WriterBase {
     String query = "insert_network_" + network.getId();
     dbw.psCreate(query,
       "INSERT INTO \"VIA\".\"NETWORKS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
+      // DB doesn't support this yet:
+      //"INSERT INTO \"VIA\".\"NETWORKS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -142,6 +144,10 @@ public class NetworkWriter extends WriterBase {
       
       dbw.psSetVarChar(query, 3,
         network.getDescription() == null ? null : network.getDescription().toString());
+      
+      // DB doesn't support this yet:
+      //dbw.psSetBigInt(query, 4,
+      //  network.getProjectId() == null ? null : network.getLongProjectId());
       
       long rows = dbw.psUpdate(query);
       if (rows != 1) {
@@ -218,6 +224,8 @@ public class NetworkWriter extends WriterBase {
     dbw.psCreate(query,
       "UPDATE \"VIA\".\"NETWORKS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
     );
+    // Note: do not update the project id. Must use separate API to move
+    // this to a different project.
     
     try {
       dbw.psClearParams(query);

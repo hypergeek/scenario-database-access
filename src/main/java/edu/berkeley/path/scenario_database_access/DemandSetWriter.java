@@ -119,7 +119,7 @@ public class DemandSetWriter extends WriterBase {
   public void insertRow(DemandSet demandSet) throws DatabaseException {
     String query = "insert_demandSet_" + demandSet.getId();
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"DEMAND_SETS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
+      "INSERT INTO VIA.DEMAND_SETS (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -133,6 +133,9 @@ public class DemandSetWriter extends WriterBase {
       dbw.psSetVarChar(query, 3,
         demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
       
+      dbw.psSetBigInt(query, 4,
+        demandSet.getProjectId() == null ? null : demandSet.getLongProjectId());
+
       dbw.psUpdate(query);
     }
     finally {
@@ -202,8 +205,10 @@ public class DemandSetWriter extends WriterBase {
   public void updateRow(DemandSet demandSet) throws DatabaseException {
     String query = "update_demandSet_" + demandSet.getId();
     dbw.psCreate(query,
-      "UPDATE \"VIA\".\"DEMAND_SETS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
+      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?"
     );
+    // Note: do not update the project id. Must use separate API to move
+    // this to a different project.
     
     try {
       dbw.psClearParams(query);
@@ -273,7 +278,7 @@ public class DemandSetWriter extends WriterBase {
   public void deleteRow(long demandSetID) throws DatabaseException {
     String query = "delete_demandSet_" + demandSetID;
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"DEMAND_SETS\" WHERE \"ID\" = ?"
+      "DELETE FROM VIA.DEMAND_SETS WHERE ID = ?"
     );
     
     try {

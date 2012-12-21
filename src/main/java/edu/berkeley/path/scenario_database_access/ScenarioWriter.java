@@ -129,7 +129,9 @@ public class ScenarioWriter extends WriterBase {
       dbw.psSetVarChar(query, 3,
         scenario.getDescription() == null ? null : scenario.getDescription().toString());
       
-      dbw.psSetInteger(query, 4, 1); // project id
+      dbw.psSetBigInt(query, 4,
+        scenario.getProjectId() == null ? 1L : scenario.getLongProjectId());
+        // NOTE using id=1L because the scenarios table doesn't allow nulls--should be fixed
 
       long rows = dbw.psUpdate(query);
       if (rows != 1) {
@@ -199,6 +201,8 @@ public class ScenarioWriter extends WriterBase {
     dbw.psCreate(query,
       "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
     );
+    // Note: do not update the project id. Must use separate API to move
+    // this to a different project.
     
     try {
       dbw.psClearParams(query);

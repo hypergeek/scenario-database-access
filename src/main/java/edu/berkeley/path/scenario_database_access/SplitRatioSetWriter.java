@@ -119,7 +119,7 @@ public class SplitRatioSetWriter extends WriterBase {
   public void insertRow(SplitRatioSet splitratioSet) throws DatabaseException {
     String query = "insert_splitratioSet_" + splitratioSet.getId();
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"SPLIT_RATIO_SETS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
+      "INSERT INTO \"VIA\".\"SPLIT_RATIO_SETS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -132,6 +132,9 @@ public class SplitRatioSetWriter extends WriterBase {
       
       dbw.psSetVarChar(query, 3,
         splitratioSet.getDescription() == null ? null : splitratioSet.getDescription().toString());
+      
+      dbw.psSetBigInt(query, 4,
+        splitratioSet.getProjectId() == null ? null : splitratioSet.getLongProjectId());
       
       dbw.psUpdate(query);
     }
@@ -204,6 +207,8 @@ public class SplitRatioSetWriter extends WriterBase {
     dbw.psCreate(query,
       "UPDATE \"VIA\".\"SPLIT_RATIO_SETS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
     );
+    // Note: do not update the project id. Must use separate API to move
+    // this to a different project.
     
     try {
       dbw.psClearParams(query);

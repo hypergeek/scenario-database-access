@@ -119,7 +119,7 @@ public class FDSetWriter extends WriterBase {
   public void insertRow(FDSet fdSet) throws DatabaseException {
     String query = "insert_fdSet_" + fdSet.getId();
     dbw.psCreate(query,
-      "INSERT INTO VIA.FUND_DIAG_SETS (ID, NAME, DESCRIPTION, FUND_DIAG_TYPE) VALUES(?, ?, ?, ?)"
+      "INSERT INTO VIA.FUND_DIAG_SETS (ID, NAME, DESCRIPTION, FUND_DIAG_TYPE, PROJECT_ID) VALUES(?, ?, ?, ?, ?)"
     );
   
     try {
@@ -135,6 +135,9 @@ public class FDSetWriter extends WriterBase {
       
       dbw.psSetBigInt(query, 4,
         fdSet.getType() == null ? null : ((FDType)fdSet.getType()).getLongId());
+      
+      dbw.psSetBigInt(query, 5,
+        fdSet.getProjectId() == null ? null : fdSet.getLongProjectId());
 
       dbw.psUpdate(query);
     }
@@ -207,6 +210,8 @@ public class FDSetWriter extends WriterBase {
     dbw.psCreate(query,
       "UPDATE VIA.FUND_DIAG_SETS SET NAME = ?, DESCRIPTION = ?, FUND_DIAG_TYPE = ? WHERE ID = ?"
     );
+    // Note: do not update the project id. Must use separate API to move
+    // this to a different project.
     
     try {
       dbw.psClearParams(query);
