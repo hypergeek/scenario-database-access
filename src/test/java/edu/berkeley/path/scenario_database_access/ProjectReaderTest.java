@@ -50,7 +50,7 @@ public class ProjectReaderTest {
   @Before
   public void setup() {
     // we assume project 99999 exists, but we could insert it here
-    // we assume scenarios 99999, 99998 exist and are in project 99999
+    // we assume scenarios 99999, 99996 exist and are in project 99999
   }
   
   @Test
@@ -72,10 +72,11 @@ public class ProjectReaderTest {
     
     List<Scenario> scenarios = prjReader.readScenarios(projectID);
     
-    assertEquals(2, scenarios.size());
     //System.out.println("Scenarios in project: " + projectID);
     //for (Scenario sc : scenarios) {
     //  System.out.println(sc);
     //}
+
+    assertEquals(2, scenarios.size());
   }
 }
