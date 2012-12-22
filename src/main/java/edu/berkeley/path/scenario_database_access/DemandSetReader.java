@@ -164,7 +164,7 @@ public class DemandSetReader extends ReaderBase {
     String query = "read_demandSet_" + demandSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"DEMAND_SETS\" WHERE (\"ID\" = ?)"
+      "SELECT * FROM VIA.DEMAND_SETS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);

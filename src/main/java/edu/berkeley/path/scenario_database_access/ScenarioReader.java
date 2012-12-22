@@ -131,7 +131,7 @@ public class ScenarioReader extends ReaderBase {
         scenario.splitratioSet = srsr.readWithDependents(srSetID);
       }
       
-      Long demSetID = associateIDs.get("SPLIT_RATIO_SET");
+      Long demSetID = associateIDs.get("DEMAND_SET");
       if (null != demSetID) {
         DemandSetReader dsr = new DemandSetReader(dbParams, dbr);
         scenario.demandSet = dsr.readWithDependents(demSetID);
