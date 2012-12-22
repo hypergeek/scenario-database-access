@@ -73,7 +73,7 @@ public class DemandProfileWriter extends WriterBase {
     String query = "insert_profiles_in_demandSet_" + demandSetID;
     
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"DEMAND_PROFS\" " +
+      "INSERT INTO VIA.DEMAND_PROFS " +
         "(ID, ORG_LINK_ID, DEST_NETWORK_ID, DEMAND_SET_ID, START_TIME, SAMPLE_RATE, KNOB, STD_DEV_ADD, STD_DEV_MULT) " +
         "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
@@ -122,7 +122,7 @@ public class DemandProfileWriter extends WriterBase {
     String query = "insert_demands_in_profile_" + profileID;
     
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"DEMANDS\" " +
+      "INSERT INTO VIA.DEMANDS " +
         "(ID, DEMAND_PROF_ID, VEH_TYPE_ID, DEMAND_ORDER, FLOW) " +
         "VALUES(VIA.SEQ_DEMAND_PROFS_ID.nextVal, ?, ?, ?, ?)"
     ); // SEQ_DEMAND_PROFS_ID should be SEQ_DEMANDS_ID, when it exists
@@ -173,9 +173,9 @@ public class DemandProfileWriter extends WriterBase {
     String dpQuery = "delete_demands_in_profiles_of_demandSet_" + demandSetID;
 
     dbw.psCreate(dpQuery,
-      "DELETE FROM \"VIA\".\"DEMANDS\" " +
-        "WHERE \"DEMAND_PROF_ID\" IN " +
-          "(SELECT \"ID\" FROM \"VIA\".\"DEMAND_PROFS\" WHERE \"DEMAND_SET_ID\" = ?)"
+      "DELETE FROM VIA.DEMANDS " +
+        "WHERE DEMAND_PROF_ID IN " +
+          "(SELECT ID FROM VIA.DEMAND_PROFS WHERE DEMAND_SET_ID = ?)"
     );
 
     try {
@@ -192,7 +192,7 @@ public class DemandProfileWriter extends WriterBase {
     String query = "delete_profiles_in_demandSet_" + demandSetID;
 
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"DEMAND_PROFS\" WHERE (\"DEMAND_SET_ID\" = ?)"
+      "DELETE FROM VIA.DEMAND_PROFS WHERE (DEMAND_SET_ID = ?)"
     );
 
     try {
