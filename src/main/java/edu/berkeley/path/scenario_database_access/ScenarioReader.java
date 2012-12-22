@@ -136,6 +136,18 @@ public class ScenarioReader extends ReaderBase {
         DemandSetReader dsr = new DemandSetReader(dbParams, dbr);
         scenario.demandSet = dsr.readWithDependents(demSetID);
       }
+      
+      Long fdSetID = associateIDs.get("FD_SET");
+      if (null != fdSetID) {
+        FDSetReader fdsr = new FDSetReader(dbParams, dbr);
+        scenario.fdSet = fdsr.readWithDependents(fdSetID);
+      }
+      
+      Long sensorSetID = associateIDs.get("SENSOR_SET");
+      if (null != sensorSetID) {
+        SensorSetReader ssr = new SensorSetReader(dbParams, dbr);
+        scenario.sensorSet = ssr.readWithDependents(sensorSetID);
+      }
     }
     
     return scenario;
@@ -261,6 +273,10 @@ public class ScenarioReader extends ReaderBase {
           dbr.psRSGetBigInt(query, "SPLIT_RATIO_SET"));
         associateIDs.put("DEMAND_SET",
           dbr.psRSGetBigInt(query, "DEMAND_PROF_SET")); // should be DEMAND_SET
+        associateIDs.put("FD_SET",
+          dbr.psRSGetBigInt(query, "FUND_DIAG_SET"));
+        associateIDs.put("SENSOR_SET",
+          dbr.psRSGetBigInt(query, "SENSOR_SET"));
         // TODO: more sets and things
       }
 
