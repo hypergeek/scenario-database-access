@@ -96,11 +96,11 @@ public class SplitRatioProfileWriter extends WriterBase {
         dbw.psSetDouble(query, ++i, profile.getStartTime());
         dbw.psSetDouble(query, ++i, profile.getSampleRate());
         
-        Monitor.debug("inserting profile " + profileID + " into set " + splitratioSetID + " at node " + nodeID + " with data " + profile);
+        //Monitor.debug("inserting profile " + profileID + " into set " + splitratioSetID + " at node " + nodeID + " with data " + profile);
         
         dbw.psUpdate(query);
         
-        Monitor.debug("inserted profile " + profileID + " with data " + profile);
+        //Monitor.debug("inserted profile " + profileID + " with data " + profile);
 
         insertRatios(profile.getRatio(), profileID);
       }

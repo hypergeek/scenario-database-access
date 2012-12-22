@@ -60,8 +60,8 @@ public class SensorSetReaderTest {
 
     ss = ssReader.read(sensorSetID);
 
-    System.out.println("Test SensorSet: " + ss);
-    // {"id": "99999", "name": "test", "description": null, "projectId": "99999", "sensors": [{"id": "99999", "type": "Loop", "entity_id": "ent1", "measurement_feed_id": "1", "link_id": "100", "link_offset": 50.0, "lane_num": 3.0, "health_status": 1.0}, {"id": "99998", "type": "Magnetic", "entity_id": "ent2", "measurement_feed_id": "2", "link_id": "101", "link_offset": 60.0, "lane_num": 4.0, "health_status": 1.0}]}
+    //System.out.println("Test SensorSet: " + ss);
+    //{"id": "99999", "name": "test", "description": null, "projectId": "99999", "sensors": [{"type": "Loop", "entityId": "ent1", "measurementFeedId": "1", "linkId": "100", "linkOffset": 50.0, "laneNum": 3.0, "healthStatus": 1.0}, {"type": "Magnetic", "entityId": "ent2", "measurementFeedId": "2", "linkId": "101", "linkOffset": 60.0, "laneNum": 4.0, "healthStatus": 1.0}]}
 
     assertEquals(sensorSetID, ss.getLongId());
     List<Sensor> sensors = ss.getSensorList();
@@ -69,10 +69,10 @@ public class SensorSetReaderTest {
     
     Sensor s0 = sensors.get(0);
     assertEquals("Loop", s0.getType());
-    assertEquals(50.0, s0.getLinkOffset());
+    assertEquals((Double)50.0, s0.getLinkOffset());
     
     Sensor s1 = sensors.get(1);
     assertEquals("Magnetic", s1.getType());
-    assertEquals(60.0, s1.getLinkOffset());
+    assertEquals((Double)60.0, s1.getLinkOffset());
   }
 }

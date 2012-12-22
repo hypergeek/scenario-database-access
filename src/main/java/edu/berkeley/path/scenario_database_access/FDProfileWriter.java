@@ -95,11 +95,11 @@ public class FDProfileWriter extends WriterBase {
         dbw.psSetDouble(query, ++i, profile.getStartTime());
         dbw.psSetDouble(query, ++i, profile.getSampleRate());
         
-        Monitor.debug("inserting profile " + profileID + " into set " + fdSetID + " at link " + linkID + " with data " + profile);
+        //Monitor.debug("inserting profile " + profileID + " into set " + fdSetID + " at link " + linkID + " with data " + profile);
         
         dbw.psUpdate(query);
         
-        Monitor.debug("inserted profile " + profileID + " with data " + profile);
+        //Monitor.debug("inserted profile " + profileID + " with data " + profile);
 
         insertFDs(profile.getFdList(), profileID);
       }

@@ -243,7 +243,6 @@ public class SensorSetReader extends ReaderBase {
     
     dbr.psCreate(query,
       "SELECT " +
-        "SENSORS.ID AS SENSOR_ID, " +
         "SENSOR_TYPES.NAME AS SENSOR_TYPE_NAME, " +
         "ENTITY_ID, " +
         "DATA_FEED_ID, " +
@@ -282,20 +281,20 @@ public class SensorSetReader extends ReaderBase {
       
       sensor = new Sensor();
       
-      Long id = dbr.psRSGetBigInt(query, "SENSOR_ID");
       String type = dbr.psRSGetVarChar(query, "SENSOR_TYPE_NAME");
       String entityId = dbr.psRSGetVarChar(query, "ENTITY_ID");
       Long feedId = dbr.psRSGetBigInt(query, "DATA_FEED_ID");
       // geom
       Long linkId = dbr.psRSGetBigInt(query, "LINK_ID");
       Double linkOffset = dbr.psRSGetDouble(query, "LINK_OFFSET");
+      
+      // these two are not consistent between ME and DB
       Double laneNum = dbr.psRSGetDouble(query, "LANE_NUM");
       Double healthStatus = dbr.psRSGetDouble(query, "HEALTH_STATUS");
       
-      sensor.setId(id);
       sensor.setType(type);
       sensor.setEntityId(entityId);
-      sensor.setMeasurementFeedId(feedId.toString());
+      sensor.setMeasurementFeedId(feedId);
       // geom
       sensor.setLinkId(linkId);
       sensor.setLinkOffset(linkOffset);

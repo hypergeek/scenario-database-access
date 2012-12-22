@@ -99,11 +99,11 @@ public class DemandProfileWriter extends WriterBase {
         dbw.psSetDouble(query, ++i, profile.getStdDevAdd());
         dbw.psSetDouble(query, ++i, profile.getStdDevMult());
         
-        Monitor.debug("inserting profile " + profileID + " into set " + demandSetID + " at link " + linkID + " with data " + profile);
+        //Monitor.debug("inserting profile " + profileID + " into set " + demandSetID + " at link " + linkID + " with data " + profile);
         
         dbw.psUpdate(query);
         
-        Monitor.debug("inserted profile " + profileID + " with data " + profile);
+        //Monitor.debug("inserted profile " + profileID + " with data " + profile);
 
         insertFlows(profile.getFlow(), profileID);
       }
