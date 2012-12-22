@@ -147,10 +147,10 @@ public class DemandProfileWriter extends WriterBase {
           
           dbw.psSetDouble(query, ++i, flow);
           
-          Monitor.debug("inserting flow " + flow +
-            " at (" +
-              vehTypeId + ", " +
-              ord + ")");
+          //Monitor.debug("inserting flow " + flow +
+          //  " at (" +
+          //    vehTypeId + ", " +
+          //    ord + ")");
 
           dbw.psUpdate(query);
         }

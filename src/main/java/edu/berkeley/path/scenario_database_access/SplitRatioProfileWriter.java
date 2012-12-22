@@ -156,12 +156,12 @@ public class SplitRatioProfileWriter extends WriterBase {
               
               dbw.psSetDouble(query, ++i, ratio);
               
-              Monitor.debug("inserting ratio " + ratio +
-                " at (" +
-                  inLinkId + ", " +
-                  outLinkId + ", " +
-                  vehTypeId + ", " +
-                  ord + ")");
+              //Monitor.debug("inserting ratio " + ratio +
+              //  " at (" +
+              //    inLinkId + ", " +
+              //    outLinkId + ", " +
+              //    vehTypeId + ", " +
+              //    ord + ")");
 
               dbw.psUpdate(query);
             }
