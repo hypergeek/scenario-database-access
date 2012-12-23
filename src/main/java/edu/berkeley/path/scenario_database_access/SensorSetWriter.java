@@ -161,12 +161,11 @@ public class SensorSetWriter extends WriterBase {
          "ENTITY_ID, DATA_FEED_ID, LINK_ID, " +
          "LINK_OFFSET, LANE_NUM, HEALTH_STATUS) " +
         "SELECT " +
-            "VIA.SEQ_DEMAND_PROFS_ID.nextVal, " +
+            "VIA.SEQ_SENSOR_SETS_ID.nextVal, " +
             "ID, " +
             "?, ?, ?, ?, ?, ?, ? " +
           "FROM VIA.SENSOR_TYPES " +
           "WHERE NAME = ? "
-        // todo: use a different sequence!
         // geom
     );
 
