@@ -118,7 +118,7 @@ public class ScenarioWriter extends WriterBase {
   public void insertRow(Scenario scenario) throws DatabaseException {
     String query = "insert_scenario_" + scenario.getId();
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"SCENARIOS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
+      "INSERT INTO VIA.SCENARIOS (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -207,7 +207,7 @@ public class ScenarioWriter extends WriterBase {
   public void updateRow(Scenario scenario) throws DatabaseException {
     String query = "update_scenario_" + scenario.getId();
     dbw.psCreate(query,
-      "UPDATE \"VIA\".\"SCENARIOS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ?, \"PROJECT_ID\" = ? WHERE \"ID\" = ?"
+      "UPDATE VIA.SCENARIOS SET NAME = ?, DESCRIPTION = ?, PROJECT_ID = ? WHERE ID = ?"
     );
     // Note: do not update the project id. Must use separate API to move
     // this to a different project.
@@ -282,7 +282,7 @@ public class ScenarioWriter extends WriterBase {
   public void deleteRow(long scenarioID) throws DatabaseException {
     String query = "delete_scenario_" + scenarioID;
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"SCENARIOS\" WHERE \"ID\" = ?"
+      "DELETE FROM VIA.SCENARIOS WHERE ID = ?"
     );
     
     try {

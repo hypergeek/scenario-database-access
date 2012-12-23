@@ -132,9 +132,9 @@ public class NetworkWriter extends WriterBase {
   public void insertRow(Network network) throws DatabaseException {
     String query = "insert_network_" + network.getId();
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"NETWORKS\" (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
+      "INSERT INTO VIA.NETWORKS (ID, NAME, DESCRIPTION) VALUES(?, ?, ?)"
       // DB doesn't support this yet:
-      //"INSERT INTO \"VIA\".\"NETWORKS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
+      //"INSERT INTO VIA.NETWORKS (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -230,7 +230,7 @@ public class NetworkWriter extends WriterBase {
   public void updateRow(Network network) throws DatabaseException {
     String query = "update_network_" + network.getId();
     dbw.psCreate(query,
-      "UPDATE \"VIA\".\"NETWORKS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
+      "UPDATE VIA.NETWORKS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?"
     );
     // Note: do not update the project id. Must use separate API to move
     // this to a different project.
@@ -304,7 +304,7 @@ public class NetworkWriter extends WriterBase {
   public void deleteRow(long networkID) throws DatabaseException {
     String query = "delete_network_" + networkID;
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"NETWORKS\" WHERE \"ID\" = ?"
+      "DELETE FROM VIA.NETWORKS WHERE ID = ?"
     );
     
     try {

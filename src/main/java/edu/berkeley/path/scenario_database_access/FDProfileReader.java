@@ -96,7 +96,7 @@ public class FDProfileReader extends ReaderBase {
     String query = "read_profiles_fdSet" + fdSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"FUND_DIAG_PROFS\" WHERE (\"FUND_DIAG_SET\" = ?)"
+      "SELECT * FROM VIA.FUND_DIAG_PROFS WHERE (FUND_DIAG_SET = ?)"
     );
     
     dbr.psClearParams(query);
@@ -172,7 +172,7 @@ public class FDProfileReader extends ReaderBase {
     String query = "read_fds_profile" + profileID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"FUND_DIAGRAMS\" WHERE (\"FUND_DIAG_PROF_ID\" = ?) ORDER BY \"DIAG_ORDER\""
+      "SELECT * FROM VIA.FUND_DIAGRAMS WHERE (FUND_DIAG_PROF_ID = ?) ORDER BY DIAG_ORDER"
     );
     
     dbr.psClearParams(query);

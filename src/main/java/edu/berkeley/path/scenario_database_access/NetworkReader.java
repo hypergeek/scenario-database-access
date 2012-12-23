@@ -157,7 +157,7 @@ public class NetworkReader extends ReaderBase {
     String query = "read_network_" + networkID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"NETWORKS\" WHERE (\"ID\" = ?)"
+      "SELECT * FROM VIA.NETWORKS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);

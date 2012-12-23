@@ -166,7 +166,7 @@ public class ScenarioReader extends ReaderBase {
     
     try {
       dbr.psCreate(query,
-        "SELECT * FROM \"VIA\".\"NETWORK_SETS\" WHERE (\"SCENARIO_ID\" = ?)"
+        "SELECT * FROM VIA.NETWORK_SETS WHERE (SCENARIO_ID = ?)"
       );
     
       dbr.psClearParams(query);
@@ -224,7 +224,7 @@ public class ScenarioReader extends ReaderBase {
     String query = "read_scenario_" + scenarioID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"SCENARIOS\" WHERE (\"ID\" = ?)"
+      "SELECT * FROM VIA.SCENARIOS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);

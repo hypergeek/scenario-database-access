@@ -96,7 +96,7 @@ public class DemandProfileReader extends ReaderBase {
     String query = "read_profiles_demandSet" + demandSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"DEMAND_PROFS\" WHERE (\"DEMAND_SET_ID\" = ?)"
+      "SELECT * FROM VIA.DEMAND_PROFS WHERE (DEMAND_SET_ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -194,7 +194,7 @@ public class DemandProfileReader extends ReaderBase {
     String query = "read_flows_profile" + profileID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"DEMANDS\" WHERE (\"DEMAND_PROF_ID\" = ?) ORDER BY \"DEMAND_ORDER\""
+      "SELECT * FROM VIA.DEMANDS WHERE (DEMAND_PROF_ID = ?) ORDER BY DEMAND_ORDER"
     );
     
     dbr.psClearParams(query);

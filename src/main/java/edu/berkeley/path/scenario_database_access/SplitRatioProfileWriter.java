@@ -73,7 +73,7 @@ public class SplitRatioProfileWriter extends WriterBase {
     String query = "insert_profiles_in_splitratioSet_" + splitratioSetID;
     
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"SPLIT_RATIO_PROFS\" " +
+      "INSERT INTO VIA.SPLIT_RATIO_PROFS " +
         "(ID, NODE_ID, DEST_NETWORK_ID, SPLIT_RATIO_SET_ID, START_TIME, SAMPLE_RATE) " +
         "VALUES(?, ?, ?, ?, ?, ?)"
     );
@@ -119,7 +119,7 @@ public class SplitRatioProfileWriter extends WriterBase {
     String query = "insert_splitratios_in_profile_" + profileID;
     
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"SPLIT_RATIOS\" " +
+      "INSERT INTO VIA.SPLIT_RATIOS " +
         "(SPLIT_RATIO_PROF_ID, IN_LINK_ID, OUT_LINK_ID, VEH_TYPE_ID, RATIO_ORDER, RATIO) " +
         "VALUES(?, ?, ?, ?, ?, ?)"
     );
@@ -186,9 +186,9 @@ public class SplitRatioProfileWriter extends WriterBase {
     String srQuery = "delete_splitratios_in_profiles_of_splitratioSet_" + splitratioSetID;
 
     dbw.psCreate(srQuery,
-      "DELETE FROM \"VIA\".\"SPLIT_RATIOS\" " +
-        "WHERE \"SPLIT_RATIO_PROF_ID\" IN " +
-          "(SELECT \"ID\" FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE \"SPLIT_RATIO_SET_ID\" = ?)"
+      "DELETE FROM VIA.SPLIT_RATIOS " +
+        "WHERE SPLIT_RATIO_PROF_ID IN " +
+          "(SELECT ID FROM VIA.SPLIT_RATIO_PROFS WHERE SPLIT_RATIO_SET_ID = ?)"
     );
 
     try {
@@ -205,7 +205,7 @@ public class SplitRatioProfileWriter extends WriterBase {
     String query = "delete_profiles_in_splitratioSet_" + splitratioSetID;
 
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE (\"SPLIT_RATIO_SET_ID\" = ?)"
+      "DELETE FROM VIA.SPLIT_RATIO_PROFS WHERE (SPLIT_RATIO_SET_ID = ?)"
     );
 
     try {

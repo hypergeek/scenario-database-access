@@ -96,7 +96,7 @@ public class SplitRatioProfileReader extends ReaderBase {
     String query = "read_profiles_splitratioSet" + splitratioSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"SPLIT_RATIO_PROFS\" WHERE (\"SPLIT_RATIO_SET_ID\" = ?)"
+      "SELECT * FROM VIA.SPLIT_RATIO_PROFS WHERE (SPLIT_RATIO_SET_ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -179,7 +179,7 @@ public class SplitRatioProfileReader extends ReaderBase {
     String query = "read_ratios_profile" + profileID;
     
     dbr.psCreate(query,
-      "SELECT * FROM \"VIA\".\"SPLIT_RATIOS\" WHERE (\"SPLIT_RATIO_PROF_ID\" = ?) ORDER BY \"RATIO_ORDER\""
+      "SELECT * FROM VIA.SPLIT_RATIOS WHERE (SPLIT_RATIO_PROF_ID = ?) ORDER BY RATIO_ORDER"
     );
     
     dbr.psClearParams(query);

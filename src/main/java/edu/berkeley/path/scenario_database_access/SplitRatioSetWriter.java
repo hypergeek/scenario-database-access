@@ -122,7 +122,7 @@ public class SplitRatioSetWriter extends WriterBase {
   public void insertRow(SplitRatioSet splitratioSet) throws DatabaseException {
     String query = "insert_splitratioSet_" + splitratioSet.getId();
     dbw.psCreate(query,
-      "INSERT INTO \"VIA\".\"SPLIT_RATIO_SETS\" (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
+      "INSERT INTO VIA.SPLIT_RATIO_SETS (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
     );
   
     try {
@@ -213,7 +213,7 @@ public class SplitRatioSetWriter extends WriterBase {
   public void updateRow(SplitRatioSet splitratioSet) throws DatabaseException {
     String query = "update_splitratioSet_" + splitratioSet.getId();
     dbw.psCreate(query,
-      "UPDATE \"VIA\".\"SPLIT_RATIO_SETS\" SET \"NAME\" = ?, \"DESCRIPTION\" = ? WHERE \"ID\" = ?"
+      "UPDATE VIA.SPLIT_RATIO_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?"
     );
     // Note: do not update the project id. Must use separate API to move
     // this to a different project.
@@ -286,7 +286,7 @@ public class SplitRatioSetWriter extends WriterBase {
   public void deleteRow(long splitratioSetID) throws DatabaseException {
     String query = "delete_splitratioSet_" + splitratioSetID;
     dbw.psCreate(query,
-      "DELETE FROM \"VIA\".\"SPLIT_RATIO_SETS\" WHERE \"ID\" = ?"
+      "DELETE FROM VIA.SPLIT_RATIO_SETS WHERE ID = ?"
     );
     
     try {
