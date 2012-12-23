@@ -76,7 +76,7 @@ public class SplitRatioSetWriterTest {
     
     profMap.put("2", prof);
     
-    System.out.println("Test SplitRatio -- input: " + srs);
+    //System.out.println("Test SplitRatio -- input: " + srs);
     // {"id": "99998", "name": "writer-test", "description": null, "profile": {"2": {"destinationNetworkId": "1", "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
 
     srsWriter.insert(srs);
@@ -84,7 +84,7 @@ public class SplitRatioSetWriterTest {
     SplitRatioSet srs2 = srsReader.read(splitratioSetID);
     assertTrue(null != srs2);
 
-    System.out.println("Test SplitRatio -- output: " + srs2);
+    //System.out.println("Test SplitRatio -- output: " + srs2);
     // {"id": "99998", "name": "writer-test", "description": null, "profile": {"2": {"destinationNetworkId": "1", "startTime": 25200.0, "sampleRate": 600.0, "ratio": {"1": {"1": {"1": [0.5, 0.2, 0.6]}}}}}}
     
     assertEquals(splitratioSetID.toString(), srs2.getId());
