@@ -210,4 +210,13 @@ public class DemandSetReader extends ReaderBase {
 
     return demandSet;
   }
+
+  
+  protected String seqQueryName() {
+    return "nextDemandSetID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_DEMAND_PROF_SETS_ID.nextVal AS ID FROM dual";
+  }
 }

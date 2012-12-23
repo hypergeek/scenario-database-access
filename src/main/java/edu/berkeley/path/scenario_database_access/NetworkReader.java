@@ -205,4 +205,12 @@ public class NetworkReader extends ReaderBase {
 
     return network;
   }
+  
+  protected String seqQueryName() {
+    return "nextNetworkID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_NETWORK_ID.nextVal AS ID FROM dual";
+  }
 }

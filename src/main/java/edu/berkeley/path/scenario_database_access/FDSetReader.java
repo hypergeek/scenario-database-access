@@ -236,4 +236,12 @@ public class FDSetReader extends ReaderBase {
 
     return fdSet;
   }
+  
+  protected String seqQueryName() {
+    return "nextFDSetID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_FUND_DIAG_SETS_ID.nextVal AS ID FROM dual";
+  }
 }

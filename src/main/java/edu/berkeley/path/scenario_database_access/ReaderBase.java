@@ -82,4 +82,28 @@ public class ReaderBase {
   public DatabaseReader getDatabaseReader() {
     return dbr;
   }
+  
+  protected String seqQueryName() {return null;}
+  protected String seqQuerySql() {return null;}
+
+  protected Long getNextID() throws DatabaseException {
+    String query = seqQueryName();
+    Long id = null;
+    
+    try {
+      dbr.psCreate(query, seqQuerySql());
+      dbr.psQuery(query);
+      
+      if (dbr.psRSNext(query)) {
+        id = dbr.psRSGetBigInt(query, "ID");
+      }
+    }
+    finally {
+      if (query != null) {
+        dbr.psDestroy(query);
+      }
+    }
+    
+    return id;
+  }
 }

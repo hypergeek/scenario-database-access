@@ -214,28 +214,12 @@ public class FDProfileReader extends ReaderBase {
     
     return fdList;
   }
-
-  protected Long getNextProfileID() throws DatabaseException {
-    String query = "getNextProfileID";
-    Long id = null;
-    
-    try {
-      dbr.psCreate(query,
-        "SELECT VIA.SEQ_DEMAND_PROFS_ID.nextVal AS ID FROM dual");
-        // should use SEQ_FD_PROFS_ID, when it exists
-      
-      dbr.psQuery(query);
-      
-      if (dbr.psRSNext(query)) {
-        id = dbr.psRSGetBigInt(query, "ID");
-      }
-    }
-    finally {
-      if (query != null) {
-        dbr.psDestroy(query);
-      }
-    }
-    
-    return id;
+  
+  protected String seqQueryName() {
+    return "nextFDProfileID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_FUND_DIAG_PROFILES_ID.nextVal AS ID FROM dual";
   }
 }

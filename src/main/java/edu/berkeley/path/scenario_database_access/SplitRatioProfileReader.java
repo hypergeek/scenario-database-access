@@ -216,27 +216,12 @@ public class SplitRatioProfileReader extends ReaderBase {
     
     return ratioMap;
   }
-
-  protected Long getNextProfileID() throws DatabaseException {
-    String query = "getNextProfileID";
-    Long id = null;
-    
-    try {
-      dbr.psCreate(query,
-        "SELECT VIA.SEQ_SPLIT_RATIO_PROFS_ID.nextVal AS ID FROM dual");
-      
-      dbr.psQuery(query);
-      
-      if (dbr.psRSNext(query)) {
-        id = dbr.psRSGetBigInt(query, "ID");
-      }
-    }
-    finally {
-      if (query != null) {
-        dbr.psDestroy(query);
-      }
-    }
-    
-    return id;
+  
+  protected String seqQueryName() {
+    return "nextSRProfileID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_SPLIT_RATIO_PROFS_ID.nextVal AS ID FROM dual";
   }
 }

@@ -86,7 +86,7 @@ public class DemandProfileWriter extends WriterBase {
       for (Map.Entry<String,DemandProfile> entry : profileMap.entrySet()) {
         Long linkID = Long.parseLong(entry.getKey());
         DemandProfile profile = entry.getValue();
-        Long profileID = dpReader.getNextProfileID();
+        Long profileID = dpReader.getNextID();
         int i = 0;
 
         dbw.psSetBigInt(query, ++i, profileID);

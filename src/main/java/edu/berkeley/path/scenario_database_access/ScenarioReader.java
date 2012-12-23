@@ -289,4 +289,12 @@ public class ScenarioReader extends ReaderBase {
 
     return scenario;
   }
+  
+  protected String seqQueryName() {
+    return "nextScenarioID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_SCENARIO_ID.nextVal AS ID FROM dual";
+  }
 }

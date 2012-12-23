@@ -86,7 +86,7 @@ public class FDProfileWriter extends WriterBase {
       for (Map.Entry<String,FDProfile> entry : profileMap.entrySet()) {
         Long linkID = Long.parseLong(entry.getKey());
         FDProfile profile = entry.getValue();
-        Long profileID = fdpReader.getNextProfileID();
+        Long profileID = fdpReader.getNextID();
         int i = 0;
 
         dbw.psSetBigInt(query, ++i, profileID);

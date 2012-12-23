@@ -210,4 +210,12 @@ public class SplitRatioSetReader extends ReaderBase {
 
     return splitratioSet;
   }
+  
+  protected String seqQueryName() {
+    return "nextSRSetID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_SPLIT_RATIO_SETS_ID.nextVal AS ID FROM dual";
+  }
 }

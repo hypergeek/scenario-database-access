@@ -86,7 +86,7 @@ public class SplitRatioProfileWriter extends WriterBase {
       for (Map.Entry<String,SplitRatioProfile> entry : profileMap.entrySet()) {
         Long nodeID = Long.parseLong(entry.getKey());
         SplitRatioProfile profile = entry.getValue();
-        Long profileID = srpReader.getNextProfileID();
+        Long profileID = srpReader.getNextID();
         int i = 0;
 
         dbw.psSetBigInt(query, ++i, profileID);

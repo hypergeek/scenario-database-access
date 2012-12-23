@@ -356,4 +356,12 @@ public class ProjectReader extends ReaderBase {
 
     return project;
   }
+  
+  protected String seqQueryName() {
+    return "nextProjectID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_PROJECT_ID.nextVal AS ID FROM dual";
+  }
 }

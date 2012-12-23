@@ -306,4 +306,12 @@ public class SensorSetReader extends ReaderBase {
 
     return sensor;
   }
+  
+  protected String seqQueryName() {
+    return "nextSensorSetID";
+  }
+  
+  protected String seqQuerySql() {
+    return "SELECT VIA.SEQ_SENSOR_SETS_ID.nextVal AS ID FROM dual";
+  }
 }
