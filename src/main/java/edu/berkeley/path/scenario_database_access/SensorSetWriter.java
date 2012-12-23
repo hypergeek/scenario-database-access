@@ -169,7 +169,7 @@ public class SensorSetWriter extends WriterBase {
          "ENTITY_ID, DATA_FEED_ID, LINK_ID, " +
          "LINK_OFFSET, LANE_NUM, HEALTH_STATUS) " +
         "SELECT " +
-            "VIA.SEQ_SENSOR_SETS_ID.nextVal, " +
+            "VIA.SEQ_SENSORS_ID.nextVal, " +
             "ID, " +
             "?, ?, ?, ?, ?, ?, ? " +
           "FROM VIA.SENSOR_TYPES " +
