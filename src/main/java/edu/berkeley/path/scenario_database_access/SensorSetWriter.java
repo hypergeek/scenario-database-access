@@ -113,6 +113,9 @@ public class SensorSetWriter extends WriterBase {
   /**
    * Insert just the sensorSet row into the database. Ignores dependent objects.
    * 
+   * If the set's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the set's id.
+   * 
    * @param sensorSet  the sensorSet
    */
   public void insertRow(SensorSet sensorSet) throws DatabaseException {
@@ -124,6 +127,11 @@ public class SensorSetWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (sensorSet.getId() == null) {
+        SensorSetReader ssr = new SensorSetReader(dbParams);
+        sensorSet.setId(ssr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, sensorSet.getLongId());
       
       dbw.psSetVarChar(query, 2,

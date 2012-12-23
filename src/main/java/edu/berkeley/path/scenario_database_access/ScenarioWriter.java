@@ -110,6 +110,9 @@ public class ScenarioWriter extends WriterBase {
    * Does not insert networks, profiles, or other independently existing
    * data structures associated with the scenario.
    * 
+   * If the scenarios's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the scenario's id.
+   * 
    * @param scenario  the scenario
    */
   public void insertRow(Scenario scenario) throws DatabaseException {
@@ -121,6 +124,11 @@ public class ScenarioWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (scenario.getId() == null) {
+        ScenarioReader sr = new ScenarioReader(dbParams);
+        scenario.setId(sr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, scenario.getLongId());
       
       dbw.psSetVarChar(query, 2,

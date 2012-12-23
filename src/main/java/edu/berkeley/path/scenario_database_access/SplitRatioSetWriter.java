@@ -114,6 +114,9 @@ public class SplitRatioSetWriter extends WriterBase {
   /**
    * Insert just the splitratioSet row into the database. Ignores dependent objects.
    * 
+   * If the set's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the set's id.
+   * 
    * @param splitratioSet  the splitratioSet
    */
   public void insertRow(SplitRatioSet splitratioSet) throws DatabaseException {
@@ -125,6 +128,11 @@ public class SplitRatioSetWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (splitratioSet.getId() == null) {
+        SplitRatioSetReader srsr = new SplitRatioSetReader(dbParams);
+        splitratioSet.setId(srsr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, splitratioSet.getLongId());
       
       dbw.psSetVarChar(query, 2,

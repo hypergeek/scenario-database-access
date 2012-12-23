@@ -114,6 +114,9 @@ public class DemandSetWriter extends WriterBase {
   /**
    * Insert just the demandSet row into the database. Ignores dependent objects.
    * 
+   * If the set's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the set's id.
+   * 
    * @param demandSet  the demandSet
    */
   public void insertRow(DemandSet demandSet) throws DatabaseException {
@@ -125,6 +128,11 @@ public class DemandSetWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (demandSet.getId() == null) {
+        DemandSetReader dsr = new DemandSetReader(dbParams);
+        demandSet.setId(dsr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, demandSet.getLongId());
       
       dbw.psSetVarChar(query, 2,

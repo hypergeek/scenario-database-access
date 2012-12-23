@@ -114,6 +114,9 @@ public class FDSetWriter extends WriterBase {
   /**
    * Insert just the fdSet row into the database. Ignores dependent objects.
    * 
+   * If the set's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the set's id.
+   * 
    * @param fdSet  the fdSet
    */
   public void insertRow(FDSet fdSet) throws DatabaseException {
@@ -125,6 +128,11 @@ public class FDSetWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (fdSet.getId() == null) {
+        FDSetReader fdsr = new FDSetReader(dbParams);
+        fdSet.setId(fdsr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, fdSet.getLongId());
       
       dbw.psSetVarChar(query, 2,

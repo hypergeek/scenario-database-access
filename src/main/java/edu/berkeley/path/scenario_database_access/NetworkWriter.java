@@ -124,6 +124,9 @@ public class NetworkWriter extends WriterBase {
    * Insert just the network row into the database. Ignores dependent objects, such
    * as nodes and links.
    * 
+   * If the network's id is null, choose a new sequential id, insert with that id,
+   * and assign that id to the network's id.
+   * 
    * @param network  the network
    */
   public void insertRow(Network network) throws DatabaseException {
@@ -137,6 +140,11 @@ public class NetworkWriter extends WriterBase {
     try {
       dbw.psClearParams(query);
 
+      if (network.getId() == null) {
+        NetworkReader nr = new NetworkReader(dbParams);
+        network.setId(nr.getNextID());
+      }
+    
       dbw.psSetBigInt(query, 1, network.getLongId());
       
       dbw.psSetVarChar(query, 2,
