@@ -126,9 +126,63 @@ public class FreewayCTMReportWriterTest {
     assertEquals(0, reports.size());
   }
   
-  // test write several, preserve time order
+  /**
+   * Test that multiple reports are retrieved in time order, and deleted
+   * correctly.
+   **/
+  @Test
+  public void testMultipleReportOrder() throws core.DatabaseException {
+    FreewayCTMReport report = new FreewayCTMReport();
+    
+    Long runId = 99999L;
+    Long networkId = 99999L;
+    
+    report.setRunId(runId);
+    report.setNetworkId(networkId);
+    
+    // gotta have some data or else nothing will be written, so give it a
+    // dummy FD map.
+    
+    report.setFd(new FDMap());
+    Map<String,FD> fdMap = ((FDMap)report.getFd()).getFdMap();
+    FD fd = new FD();
+    
+    Long linkId = 99999L;
+    fdMap.put(linkId.toString(), fd);
+    
+    for (int i = 0; i < 10; i++) {
+      fd.setFreeFlowSpeed(100.0 + i);
+
+      org.joda.time.DateTime time = new org.joda.time.DateTime(
+        // YYYY, MM, DD, HH, MM
+           1970,  1,  2,  3, 45 + i,
+        org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+      );
+      report.setTime(DateTime.fromJoda(time));
+
+      reportWriter.insertDebug(report);
+    }
+    
+    org.joda.time.DateTime timeBegin = new org.joda.time.DateTime(
+      // YYYY, MM, DD, HH, MM
+         1970,  1,  2,  3,  0,
+      org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+    );
+    
+    org.joda.time.Duration dt = org.joda.time.Duration.standardMinutes(60);
+    
+    Interval interval = new Interval(timeBegin, dt);
+    
+    List<FreewayCTMReport> reports;
+    reports = reportReader.read(networkId, runId, interval, true);
+    //System.out.println(reports);
+    
+    assertEquals(10, reports.size());
+    
+    FreewayCTMReport r5 = reports.get(5);
+    assertEquals((Long)(128700000L + 5 * 60 * 1000), r5.getTime().getMilliseconds());
+
     // check that the list is sorted
-/*
     FreewayCTMReport prev = null;
     for (FreewayCTMReport rep : reports) {
       if (prev == null) {
@@ -141,7 +195,17 @@ public class FreewayCTMReportWriterTest {
         ));
       }
     }
-*/
+
+    Integer rows = reportWriter.delete(networkId, runId, interval, true);
+    assertEquals((Integer)10, rows);
+
+    reports = reportReader.read(networkId, runId, interval, true);
+    assertEquals(0, reports.size());
+  }
   
-  // test write complex structures
+  /**
+   * Test that a report with multiple rows, involving link flow, speed,
+   * and density, as well as origin queue lengths, as well as FDs, are
+   * written and read correctly.
+   **/
 }
