@@ -204,8 +204,142 @@ public class FreewayCTMReportWriterTest {
   }
   
   /**
-   * Test that a report with multiple rows, involving link flow, speed,
-   * and density, as well as origin queue lengths, as well as FDs, are
+   * Test that a single report with multiple rows, involving link flow, speed,
+   * and density, as well as origin queue lengths and FDs, are
    * written and read correctly.
    **/
+  @Test
+  public void testWriteReadDeleteComplex() throws core.DatabaseException {
+    FreewayCTMReport report = new FreewayCTMReport();
+    
+    Long runId = 99999L;
+    Long networkId = 99999L;
+    org.joda.time.DateTime time = new org.joda.time.DateTime(
+      // YYYY, MM, DD, HH, MM
+         1970,  1,  2,  4, 30,
+      org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+    );
+    
+    report.setRunId(runId);
+    report.setNetworkId(networkId);
+    report.setTime(DateTime.fromJoda(time));
+    
+    // assume a two-link network (the links don't have to exist)
+    Long link1Id = 101L;
+    Long link2Id = 102L;
+    
+    // set some FD values
+    report.setFd(new FDMap());
+    Map<String,FD> fdMap = ((FDMap)report.getFd()).getFdMap();
+/*
+    FD fd1 = new FD();
+    fdMap.put(link1Id.toString(), fd1);
+    fd1.setCapacity(12.34);
+    
+    FD fd2 = new FD();
+    fdMap.put(link2Id.toString(), fd2);
+    fd2.setJamDensity(45.67);
+*/
+    FreewayCTMState mean = new FreewayCTMState();
+    report.setMean(mean);
+
+    FreewayCTMState stdDev = new FreewayCTMState();
+    report.setStdDev(stdDev);
+
+    // set some queue values (mean and stdDev), assuming link 101 is an origin
+    Map<CharSequence,Double> meanQueueLengthMap = new HashMap<CharSequence,Double>();
+    mean.setQueueLength(meanQueueLengthMap);
+    meanQueueLengthMap.put(link1Id.toString(), 1.23);
+    
+    Map<CharSequence,Double> stdDevQueueLengthMap = new HashMap<CharSequence,Double>();
+    stdDev.setQueueLength(stdDevQueueLengthMap);
+    stdDevQueueLengthMap.put(link1Id.toString(), 4.56);
+    
+    // set some link state values, assuming link 102 is not an origin
+    
+    // mean link state
+    Map<CharSequence,FreewayLinkState> meanLinkStateMap =
+      new HashMap<CharSequence,FreewayLinkState>();
+    mean.setLinkStateMap(meanLinkStateMap);
+      
+    // std dev link state
+    Map<CharSequence,FreewayLinkState> stdDevLinkStateMap =
+      new HashMap<CharSequence,FreewayLinkState>();
+    stdDev.setLinkStateMap(stdDevLinkStateMap);
+    
+    // mean flow
+    Map<CharSequence,FreewayLinkFlowState> meanLinkFlowStateMap =
+      new HashMap<CharSequence,FreewayLinkFlowState>();
+    mean.setLinkFlowStateMap(meanLinkFlowStateMap);
+
+    // std dev flow
+    Map<CharSequence,FreewayLinkFlowState> stdDevLinkFlowStateMap =
+      new HashMap<CharSequence,FreewayLinkFlowState>();
+    stdDev.setLinkFlowStateMap(stdDevLinkFlowStateMap);
+
+    // populate the maps for link 102
+
+    FreewayLinkState meanLinkState = new FreewayLinkState();
+    meanLinkState.setDensity(100.1);
+    meanLinkState.setVelocity(10.1);
+    meanLinkStateMap.put(link2Id.toString(), meanLinkState);
+    
+    FreewayLinkState stdDevLinkState = new FreewayLinkState();
+    stdDevLinkState.setDensity(200.1);
+    stdDevLinkState.setVelocity(20.1);
+    stdDevLinkStateMap.put(link2Id.toString(), stdDevLinkState);
+    
+    FreewayLinkFlowState meanFlowState = new FreewayLinkFlowState();
+    meanFlowState.setInFlow(11.2);
+    meanFlowState.setOutFlow(12.3);
+    meanLinkFlowStateMap.put(link2Id.toString(), meanFlowState);
+
+    FreewayLinkFlowState stdDevFlowState = new FreewayLinkFlowState();
+    stdDevFlowState.setInFlow(21.2);
+    stdDevFlowState.setOutFlow(22.3);
+    stdDevLinkFlowStateMap.put(link2Id.toString(), stdDevFlowState);
+
+    // write the rows
+    reportWriter.insertDebug(report);
+    
+    org.joda.time.DateTime timeBegin = new org.joda.time.DateTime(
+      // YYYY, MM, DD, HH, MM
+         1970,  1,  2,  4,  30,
+      org.joda.time.DateTimeZone.forID("America/Los_Angeles")
+    );
+    
+    org.joda.time.Duration dt = org.joda.time.Duration.standardMinutes(1);
+    
+    Interval interval = new Interval(timeBegin, dt);
+    
+    List<FreewayCTMReport> reports;
+    reports = reportReader.read(networkId, runId, interval, true);
+    System.out.println(reports);
+    
+    assertEquals(1, reports.size());
+    
+    FreewayCTMReport r0 = reports.get(0);
+    assertEquals(report.getRunId(), r0.getRunId());
+    assertEquals(report.getNetworkId(), r0.getNetworkId());
+    assertEquals(report.getTime().getMilliseconds(), r0.getTime().getMilliseconds());
+
+/*
+    Map<String,FD> fdMap0 = ((FDMap)r0.getFd()).getFdMap();
+    assertEquals(
+      fdMap.get(linkId.toString()).getFreeFlowSpeed(),
+      fdMap0.get(linkId.toString()).getFreeFlowSpeed());
+
+    Integer rows = reportWriter.delete(networkId, runId, interval, true);
+    assertEquals((Integer)1, rows);
+
+    reports = reportReader.read(networkId, runId, interval, true);
+    assertEquals(0, reports.size());
+*/
+
+    Integer rows = reportWriter.delete(networkId, runId, interval, true);
+//    assertEquals((Integer)10, rows);
+
+    reports = reportReader.read(networkId, runId, interval, true);
+    assertEquals(0, reports.size());
+  }
 }

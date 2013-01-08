@@ -246,7 +246,8 @@ public class FreewayCTMReportReader extends ReaderBase {
         new edu.berkeley.path.model_elements.DateTime(dbr.psRSGetTimestampMilliseconds(query, "TS"));
 
       if (report == null ||
-          ts.getMilliseconds() != report.getTime().getMilliseconds()) {
+          !ts.getMilliseconds().equals(report.getTime().getMilliseconds())) {
+        
         report = new FreewayCTMReport();
         reports.add(report);
         
