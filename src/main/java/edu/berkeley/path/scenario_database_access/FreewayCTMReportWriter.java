@@ -290,11 +290,96 @@ public class FreewayCTMReportWriter extends WriterBase {
    * This is intended to be called from @see insert(), so it does
    * not set up a transaction of its own.
    * 
-   * @param report  the report
+   * @param report  the ensemble report (for many CTMs)
    */
   public void insertRows(FreewayCTMEnsembleReport report) throws DatabaseException {
     String query = "insert_fwy_ctm_ensemble_report";
-    ////////// TODO
+    
+    String qstr = "INSERT INTO VIA.LINK_DATA_TOTAL_DEBUG ( " +
+        // per report:
+        "NETWORK_ID, " +
+        "APP_RUN_ID, " +
+        "APP_TYPE_ID, " +
+        "TS, " +
+        
+        // per ctm in the ensemble:
+        "CTM_ID, " +
+        
+        // per link:
+        "LINK_ID, " +
+        
+        // per link, optional fd params:
+        "FREE_FLOW_SPEED, " +
+        "CRITICAL_SPEED, " +
+        "CONGESTION_WAVE_SPEED, " +
+        "CAPACITY, " +
+        "JAM_DENSITY, " +
+        "CAPACITY_DROP, " +
+
+        // per link and aggr type and qty type, optional flow measurements:
+        "AGG_TYPE_ID, " +
+        "QTY_TYPE_ID, " +
+        "IN_FLOW, "  +
+        "OUT_FLOW, " +
+        "DENSITY, " +
+        "SPEED, " +
+
+        // per origin link, optional queue length measurement:
+        "QUEUE_LENGTH " +
+      ") " +
+      "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    dbw.psCreate(query, qstr);
+  
+    try {
+      FreewayCTMEnsembleState fctmEnsembleState = (FreewayCTMEnsembleState)report.getEnsembleState();
+      if (fctmEnsembleState == null) {
+        return;
+      }
+      
+      DateTime t = fctmEnsembleState.getTime();
+      List<FreewayCTMState> ctmStates = fctmEnsembleState.getStates();
+      if (t == null || ctmStates == null) {
+        return;
+      }
+      
+      dbw.psClearParams(query);
+
+      int i = 0;
+      
+      dbw.psSetBigInt(query, ++i, report.getNetworkLongId());
+      dbw.psSetBigInt(query, ++i, report.getRunId());
+      dbw.psSetBigInt(query, ++i, 1L); // TODO lookup "Estimator" in types table? Or get this from an Enum?
+      dbw.psSetTimestampMilliseconds(query, ++i, t.getMilliseconds());
+
+      ++i;
+      for (int ctmId = 0; ctmId < ctmStates.size(); ctmId++ ) {
+        dbw.psSetInteger(query, i, ctmId);
+        
+        FreewayCTMState ctmState = (FreewayCTMState)ctmStates.get(ctmId);
+
+        // linkState and linkFlowState for non-origin links according to this ctm
+        if (ctmState != null && ctmState.getLinkState() != null) {
+          insertCTMLinkStateRows(query, i,
+            ctmState,
+            1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+            2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+        }
+
+        // queueLength for origin links according to this ctm
+        if (ctmState != null && ctmState.getQueueLength() != null) {
+          insertCTMQueueStateRows(query, i,
+            ctmState,
+            1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+            2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+        }
+      }
+    }
+    finally {
+      if (query != null) {
+        dbw.psDestroy(query);
+      }
+    }
   }
   
 

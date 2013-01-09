@@ -39,7 +39,7 @@ import edu.berkeley.path.model_elements.*;
 import org.joda.time.Interval;
 
 /**
- * Tests methods for writng reports from a database (and reading them as well).
+ * Tests methods for writng reports to a database (and reading them as well).
  * 
  * These tests use synthetic data in the debug table.
  * 
