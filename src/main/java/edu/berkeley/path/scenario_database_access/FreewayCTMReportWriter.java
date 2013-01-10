@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import edu.berkeley.path.model_elements.*;
 
@@ -239,44 +240,100 @@ public class FreewayCTMReportWriter extends WriterBase {
       dbw.psSetBigInt(query, ++i, 1L); // TODO lookup "Estimator" in types table? Or get this from an Enum?
       dbw.psSetTimestampMilliseconds(query, ++i, report.getTime().getMilliseconds());
       
-      // mean linkState and linkFlowState for non-origin links
-      if (report.getMean() != null && report.getMean().getLinkState() != null) {
-        insertCTMLinkStateRows(query, i,
-          (FreewayCTMState)report.getMean(),
-          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-          2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
-      }
-
-      // stdDev linkState and linkFlowState for non-origin links
-      if (report.getStdDev() != null && report.getStdDev().getLinkState() != null) {
-        insertCTMLinkStateRows(query, i,
-          (FreewayCTMState)report.getStdDev(),
-          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-          4L); // TODO lookup "STD Dev" in qty types table? Or get this from an Enum?
-      }
-
-      // mean queueLength for origin links
-      if (report.getMean() != null && report.getMean().getQueueLength() != null) {
-        insertCTMQueueStateRows(query, i,
-          (FreewayCTMState)report.getMean(),
-          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-          2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
-      }
-
-      // stdDev queueLength for origin links
-      if (report.getStdDev() != null && report.getStdDev().getQueueLength() != null) {
-        insertCTMQueueStateRows(query, i,
-          (FreewayCTMState)report.getStdDev(),
-          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-          4L); // TODO lookup "STD Dev" in qty types table? Or get this from an Enum?
-      }
-
-      // fd
-      if (report.getFd() != null) {
-        insertFDRows(query, i,
-          (FDMap)report.getFd());
+      FreewayCTMState ctmState;
+      
+      // get set of all non-origin links mentioned in any of:
+      //   report.getMean().getLinkState()
+      //   report.getMean().getLinkFlowStateMap()
+      //   report.getFd()
+      
+      Set<CharSequence> nonOriginMeanLinks = new HashSet<CharSequence>();
+      
+      ctmState = (FreewayCTMState)report.getMean();
+      if (ctmState != null) {
+        if (ctmState.getLinkState() != null) {
+          nonOriginMeanLinks.addAll(ctmState.getLinkState().keySet());
+        }
+        if (ctmState.getLinkFlowStateMap() != null) {
+          nonOriginMeanLinks.addAll(ctmState.getLinkFlowStateMap().keySet());
+        }
       }
       
+      if (report.getFd() != null && report.getFd().getFd() != null) {
+        nonOriginMeanLinks.addAll(report.getFd().getFd().keySet());
+      }
+
+      // get set of all non-origin links mentioned in any of:
+      //   report.getStdDev().getLinkState()
+      //   report.getStdDev().getLinkFlowStateMap()
+      //   But not: report.getFd()
+      
+      Set<CharSequence> nonOriginStdDevLinks = new HashSet<CharSequence>();
+      
+      ctmState = (FreewayCTMState)report.getStdDev();
+      if (ctmState != null) {
+        if (ctmState.getLinkState() != null) {
+          nonOriginStdDevLinks.addAll(ctmState.getLinkState().keySet());
+        }
+        if (ctmState.getLinkFlowStateMap() != null) {
+          nonOriginStdDevLinks.addAll(ctmState.getLinkFlowStateMap().keySet());
+        }
+      }
+      
+      // get set of all origin links mentioned in any of:
+      //   report.getMean().getQueueLength()
+      
+      Set<CharSequence> originMeanLinks = new HashSet<CharSequence>();
+      
+      if (report.getMean() != null) {
+        if (report.getMean().getQueueLength() != null) {
+          originMeanLinks.addAll(report.getMean().getQueueLength().keySet());
+        }
+      }
+
+      // get set of all origin links mentioned in any of:
+      //   report.getStdDev().getQueueLength()
+      
+      Set<CharSequence> originStdDevLinks = new HashSet<CharSequence>();
+      
+      if (report.getStdDev() != null) {
+        if (report.getStdDev().getQueueLength() != null) {
+          originStdDevLinks.addAll(report.getStdDev().getQueueLength().keySet());
+        }
+      }
+
+      // for each of the four sets, for each link in the set, insert whatever data
+      // is available in the relevant maps
+      
+      // mean linkState and linkFlowState, and FD, for non-origin links
+      insertCTMLinkStateRows(query, i,
+        nonOriginMeanLinks,
+        (FreewayCTMState)report.getMean(),
+        1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+        2L,  // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+        (FDMap)report.getFd());
+
+      // stdDev linkState and linkFlowState (but not FD) for non-origin links
+      insertCTMLinkStateRows(query, i,
+        nonOriginStdDevLinks,
+        (FreewayCTMState)report.getStdDev(),
+        1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+        4L,  // TODO lookup "STD Dev" in qty types table? Or get this from an Enum?
+        null);
+
+      // mean queueLength for origin links
+      insertCTMQueueStateRows(query, i,
+        originMeanLinks,
+        (FreewayCTMState)report.getMean(),
+        1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+        2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+
+      // stdDev queueLength for origin links
+      insertCTMQueueStateRows(query, i,
+        originStdDevLinks,
+        (FreewayCTMState)report.getStdDev(),
+        1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+        4L); // TODO lookup "STD Dev" in qty types table? Or get this from an Enum?
     }
     finally {
       if (query != null) {
@@ -358,21 +415,46 @@ public class FreewayCTMReportWriter extends WriterBase {
         
         FreewayCTMState ctmState = (FreewayCTMState)ctmStates.get(ctmId);
 
-        // linkState and linkFlowState for non-origin links according to this ctm
-        if (ctmState != null && ctmState.getLinkState() != null) {
-          insertCTMLinkStateRows(query, i,
-            ctmState,
-            1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-            2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+        // get set of all non-origin links mentioned in any of:
+        //   ctmState.getLinkState()
+        //   ctmState.getLinkFlowStateMap()
+        
+        Set<CharSequence> nonOriginMeanLinks = new HashSet<CharSequence>();
+        
+        if (ctmState != null) {
+          if (ctmState.getLinkState() != null) {
+            nonOriginMeanLinks.addAll(ctmState.getLinkState().keySet());
+          }
+          if (ctmState.getLinkFlowStateMap() != null) {
+            nonOriginMeanLinks.addAll(ctmState.getLinkFlowStateMap().keySet());
+          }
         }
 
-        // queueLength for origin links according to this ctm
-        if (ctmState != null && ctmState.getQueueLength() != null) {
-          insertCTMQueueStateRows(query, i,
-            ctmState,
-            1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
-            2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+        // get set of all origin links mentioned in any of:
+        //   ctmState.getQueueLength()
+        
+        Set<CharSequence> originMeanLinks = new HashSet<CharSequence>();
+        
+        if (ctmState != null) {
+          if (ctmState.getQueueLength() != null) {
+            originMeanLinks.addAll(ctmState.getQueueLength().keySet());
+          }
         }
+
+        // linkState and linkFlowState for non-origin links according to this ctm
+        insertCTMLinkStateRows(query, i,
+          nonOriginMeanLinks,
+          ctmState,
+          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+          2L,  // TODO lookup "Mean" in qty types table? Or get this from an Enum?
+          null);
+
+        // queueLength for origin links according to this ctm
+        insertCTMQueueStateRows(query, i,
+          originMeanLinks,
+          ctmState,
+          1L,  // TODO lookup "Raw" in agg types table? Or get this from an Enum?
+          2L); // TODO lookup "Mean" in qty types table? Or get this from an Enum?
       }
     }
     finally {
@@ -382,40 +464,58 @@ public class FreewayCTMReportWriter extends WriterBase {
     }
   }
   
-
   protected void insertCTMLinkStateRows(
       String query,
       int i,
+      Set<CharSequence> linkIdStrs,
       FreewayCTMState ctmState,
       Long aggType,
-      Long qtyType
+      Long qtyType,
+      FDMap fdMap
       ) throws DatabaseException {
         
-    for (Map.Entry<CharSequence,FreewayLinkState> entry : ctmState.getLinkStateMap().entrySet()) {
-      Long linkId = Long.parseLong(entry.getKey().toString());
-      FreewayLinkState linkState = entry.getValue();
+    for (CharSequence linkIdStr : linkIdStrs) {
+      Long linkId = Long.parseLong(linkIdStr.toString());
       
       int j = i;
       dbw.psSetBigInt(query, ++j, linkId);
+      
+      FreewayLinkState linkState = null;
+      if (ctmState != null && ctmState.getLinkStateMap() != null) {
+        linkState = ctmState.getLinkStateMap().get(linkIdStr);
+      }
 
-      // skip fd stuff (and don't just increment j, because we are reusing the ps).
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
+      FreewayLinkFlowState linkFlowState = null;
+      if (ctmState != null && ctmState.getLinkFlowStateMap() != null) {
+        linkFlowState = ctmState.getLinkFlowStateMap().get(linkIdStr);
+      }
+      
+      FD fd = null;
+      if (fdMap != null && fdMap.getFd() != null) {
+        fd = (FD)fdMap.getFd().get(linkIdStr);
+      }
+      
+      if (fd != null) {
+        dbw.psSetDouble(query, ++j, fd.getFreeFlowSpeed());
+        dbw.psSetDouble(query, ++j, fd.getCriticalSpeed());
+        dbw.psSetDouble(query, ++j, fd.getCongestionWaveSpeed());
+        dbw.psSetDouble(query, ++j, fd.getCapacity());
+        dbw.psSetDouble(query, ++j, fd.getJamDensity());
+        dbw.psSetDouble(query, ++j, fd.getCapacityDrop());
+      }
+      else {
+        // skip fd stuff (and don't just increment j, because we are reusing the ps)
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+      }
       
       dbw.psSetBigInt(query, ++j, aggType);
       dbw.psSetBigInt(query, ++j, qtyType);
 
-      Map<CharSequence,FreewayLinkFlowState> linkFlowStateMap = ctmState.getLinkFlowStateMap();
-      FreewayLinkFlowState linkFlowState = null;
-      
-      if (linkFlowStateMap != null) {
-        linkFlowState = linkFlowStateMap.get(linkId);
-      }
-      
       if (linkFlowState != null) {
         dbw.psSetDouble(query, ++j, linkFlowState.getInFlow());
         dbw.psSetDouble(query, ++j, linkFlowState.getOutFlow());
@@ -425,8 +525,14 @@ public class FreewayCTMReportWriter extends WriterBase {
         dbw.psSetDouble(query, ++j, null);
       }
 
-      dbw.psSetDouble(query, ++j, linkState.getDensity());
-      dbw.psSetDouble(query, ++j, linkState.getVelocity());
+      if (linkState != null) {
+        dbw.psSetDouble(query, ++j, linkState.getDensity());
+        dbw.psSetDouble(query, ++j, linkState.getVelocity());
+      }
+      else {
+        dbw.psSetDouble(query, ++j, null);
+        dbw.psSetDouble(query, ++j, null);
+      }
 
       // skip queue length (and don't just increment j, because we are reusing the ps).
       dbw.psSetDouble(query, ++j, null);
@@ -438,14 +544,14 @@ public class FreewayCTMReportWriter extends WriterBase {
   protected void insertCTMQueueStateRows(
       String query,
       int i,
+      Set<CharSequence> linkIdStrs,
       FreewayCTMState ctmState,
       Long aggType,
       Long qtyType
       ) throws DatabaseException {
     
-    for (Map.Entry<CharSequence,Double> entry : ctmState.getQueueLengthMap().entrySet()) {
-      Long linkId = Long.parseLong(entry.getKey().toString());
-      Double queueLength = entry.getValue();
+    for (CharSequence linkIdStr : linkIdStrs) {
+      Long linkId = Long.parseLong(linkIdStr.toString());
       
       int j = i;
       dbw.psSetBigInt(query, ++j, linkId);
@@ -467,48 +573,16 @@ public class FreewayCTMReportWriter extends WriterBase {
       dbw.psSetDouble(query, ++j, null);
       dbw.psSetDouble(query, ++j, null);
 
-      dbw.psSetDouble(query, ++j, queueLength);
+      if (ctmState != null) {
+        if (ctmState.getQueueLength() != null) {
+          dbw.psSetDouble(query, ++j, ctmState.getQueueLength().get(linkIdStr));
+        }
+      }
 
       dbw.psUpdate(query);
     }
   }
   
-  protected void insertFDRows(
-      String query,
-      int i,
-      FDMap fdMap
-      ) throws DatabaseException {
-    
-    for (Map.Entry<String,FD> entry : fdMap.getFdMap().entrySet()) {
-      Long linkId = Long.parseLong(entry.getKey());
-      FD fd = entry.getValue();
-      
-      int j = i;
-      dbw.psSetBigInt(query, ++j, linkId);
-    
-      dbw.psSetDouble(query, ++j, fd.getFreeFlowSpeed());
-      dbw.psSetDouble(query, ++j, fd.getCriticalSpeed());
-      dbw.psSetDouble(query, ++j, fd.getCongestionWaveSpeed());
-      dbw.psSetDouble(query, ++j, fd.getCapacity());
-      dbw.psSetDouble(query, ++j, fd.getJamDensity());
-      dbw.psSetDouble(query, ++j, fd.getCapacityDrop());
-
-      dbw.psSetBigInt(query, ++j, 1L); // TODO is "Raw" agg type right here?
-      dbw.psSetBigInt(query, ++j, 2L); // TODO is "Mean" qty type right here?
-
-      // skip the flow measurements (and don't just increment j, because we are reusing the ps)
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-      dbw.psSetDouble(query, ++j, null);
-
-      // skip queue length
-      dbw.psSetDouble(query, ++j, null);
-
-      dbw.psUpdate(query);
-    }
-  }
-
   // Note: no update methods for report classes. Update doesn't
   // really make sense for output rows.
   

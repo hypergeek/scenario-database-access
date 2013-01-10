@@ -231,15 +231,12 @@ public class FreewayCTMReportWriterTest {
     // set some FD values
     report.setFd(new FDMap());
     Map<String,FD> fdMap = ((FDMap)report.getFd()).getFdMap();
-/*
-    FD fd1 = new FD();
-    fdMap.put(link1Id.toString(), fd1);
-    fd1.setCapacity(12.34);
-    
-    FD fd2 = new FD();
-    fdMap.put(link2Id.toString(), fd2);
-    fd2.setJamDensity(45.67);
-*/
+
+    FD fd = new FD();
+    fdMap.put(link2Id.toString(), fd);
+    fd.setCapacity(12.34);
+    fd.setJamDensity(45.67);
+
     FreewayCTMState mean = new FreewayCTMState();
     report.setMean(mean);
 
@@ -323,21 +320,26 @@ public class FreewayCTMReportWriterTest {
     assertEquals(report.getNetworkId(), r0.getNetworkId());
     assertEquals(report.getTime().getMilliseconds(), r0.getTime().getMilliseconds());
 
-/*
     Map<String,FD> fdMap0 = ((FDMap)r0.getFd()).getFdMap();
-    assertEquals(
-      fdMap.get(linkId.toString()).getFreeFlowSpeed(),
-      fdMap0.get(linkId.toString()).getFreeFlowSpeed());
 
-    Integer rows = reportWriter.delete(networkId, runId, interval, true);
-    assertEquals((Integer)1, rows);
+    assertEquals(
+      fdMap.get(link2Id.toString()).getCapacity(),
+      fdMap0.get(link2Id.toString()).getCapacity());
+
+    assertEquals(
+      fdMap.get(link2Id.toString()).getJamDensity(),
+      fdMap0.get(link2Id.toString()).getJamDensity());
+
+    Integer rows;
+    
+    rows = reportWriter.delete(networkId, runId, interval, true);
+    assertEquals((Integer)4, rows); // {mean, stdDev} * {101, 102}
 
     reports = reportReader.read(networkId, runId, interval, true);
     assertEquals(0, reports.size());
-*/
 
-    Integer rows = reportWriter.delete(networkId, runId, interval, true);
-//    assertEquals((Integer)10, rows);
+    rows = reportWriter.delete(networkId, runId, interval, true);
+    assertEquals((Integer)0, rows);
 
     reports = reportReader.read(networkId, runId, interval, true);
     assertEquals(0, reports.size());
