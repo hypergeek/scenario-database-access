@@ -709,4 +709,23 @@ public class FreewayCTMReportWriter extends WriterBase {
     
     return rows;
   }
+
+  /**
+   * Delete the specified report rows from the LINK_DATA_TOTAL_DEBUG table.
+   * (Same as calling delete() with debug=true.) This method is provided
+   * as the standard API to use when deleting FreewayCTMEnsembleReports,
+   * which are stored only in the debug table.
+   * 
+   * @param networkId   ID of the network the data refers to
+   * @param runId       ID of the run used to generate the data
+   * @param interval    time interval of the data to be deleted
+   * @return number of rows deleted
+   */
+  public Integer delete(
+      Long networkId,
+      Long runId,
+      Interval interval
+      ) throws DatabaseException {
+    return delete(networkId, runId, interval, true);
+  }
 }
