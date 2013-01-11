@@ -595,12 +595,16 @@ public class FreewayCTMReportReader extends ReaderBase {
       if (ctmId.equals(prevCtmId)) {
         ctmState = ctmStates.get(ctmId);
       }
-      if (ctmId.equals(prevCtmId + 1)) {
+      else if (ctmId.equals(prevCtmId + 1)) {
+        prevCtmId = ctmId;
         ctmState = new FreewayCTMState();
         ctmStates.add(ctmState);
       }
-      else  {
-        throw new DatabaseException(null, "bad ctm index values in table", dbr, query);
+      else {
+        throw new DatabaseException(null, "bad ctm index values in table:" +
+          " prevCtmId = " + prevCtmId +
+          ", ctmId = " + ctmId,
+          dbr, query);
       }
       
       Long linkId = dbr.psRSGetBigInt(query, "LINK_ID");
