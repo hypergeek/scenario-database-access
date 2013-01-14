@@ -447,6 +447,7 @@ public class FreewayCTMReportWriterTest {
     List<FreewayCTMEnsembleReport> reports;
     reports = reportReader.read(networkId, runId, interval);
     //System.out.println(reports);
+    //[{"runId": 99999, "networkId": "99999", "ensembleState": {"ensembleState": [{"linkState": {"102": {"density": 100.0, "velocity": 10.0}}, "queueLength": {"101": 1.23}, "linkFlowState": {"102": {"inFlow": 230.1, "outFlow": 230.2}}}, {"linkState": {"102": {"density": 100.1, "velocity": 10.1}}, "queueLength": {"101": 1.23}, "linkFlowState": {"102": {"inFlow": 231.1, "outFlow": 231.2}}}], "t": {"milliseconds": 135000000}, "quality": null}}]
     
     assertEquals(1, reports.size());
     
@@ -458,6 +459,13 @@ public class FreewayCTMReportWriterTest {
       ((FreewayCTMEnsembleState)report.getEnsembleState()).getTime().getMilliseconds(),
       ((FreewayCTMEnsembleState)r0.getEnsembleState()).getTime().getMilliseconds());
 
+    List<FreewayCTMState> ctmStatesResult = ((FreewayCTMEnsembleState)r0.getEnsembleState()).getStates();
+    assertEquals(
+      ctmStates.get(0).toString(),
+      ctmStatesResult.get(0).toString());
+      // this assertion may be too simplistic, but it seems to work now.
+    
+    // test deletion
     Integer rows;
     
     rows = reportWriter.delete(networkId, runId, interval);
