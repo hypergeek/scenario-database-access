@@ -213,7 +213,7 @@ public class DemandSetWriter extends WriterBase {
   public void updateRow(DemandSet demandSet) throws DatabaseException {
     String query = "update_demandSet_" + demandSet.getId();
     dbw.psCreate(query,
-      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?"
+      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?, MODSTAMP = ?"
     );
     // Note: do not update the project id. Must use separate API to move
     // this to a different project.
@@ -228,11 +228,17 @@ public class DemandSetWriter extends WriterBase {
         demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
 
       dbw.psSetBigInt(query, 3, demandSet.getLongId());
+      dbw.psSetBigInt(query, 4, demandSet.getModstamp());
       
       long rows = dbw.psUpdate(query);
       
-      if (rows != 1) {
+      if (rows > 1) {
         throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSet.getId(), dbw, query);
+      }
+      
+      if (rows < 1) {
+        throw new DatabaseException(null, "DemandSet does not exist with id=" +
+          demandSet.getId() + " and modstamp=" + demandSet.getModstamp(), dbw, query);
       }
     }
     finally {
