@@ -109,4 +109,14 @@ public class DemandSetWriterTest {
     DemandSet ds3 = dsReader.read(demandSetID);
     assertEquals(null, ds3);
   }
+
+  @Test
+  public void testUpdateWrongModstamp() throws core.DatabaseException {
+    Long demandSetID = 99998L;
+    DemandSet ds =  dsReader.read(demandSetID);
+    assertTrue(null != ds);
+    
+    ds.setModstamp(ds.getModstamp() - 1);
+    dsWriter.update(ds); // should throw
+  }
 }
