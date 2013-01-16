@@ -200,6 +200,9 @@ public class DemandSetReader extends ReaderBase {
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
+      if (modstampMicros == null) {
+        modstampMicros = 0L;
+      }
       
       demandSet.setId(id);
       demandSet.setName(name);

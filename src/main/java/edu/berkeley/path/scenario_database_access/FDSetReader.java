@@ -212,6 +212,9 @@ public class FDSetReader extends ReaderBase {
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
+      if (modstampMicros == null) {
+        modstampMicros = 0L;
+      }
       
       fdSet.setId(id);
       fdSet.setName(name);

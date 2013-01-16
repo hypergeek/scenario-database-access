@@ -192,6 +192,9 @@ public class NetworkReader extends ReaderBase {
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
+      if (modstampMicros == null) {
+        modstampMicros = 0L;
+      }
       //The DB doesn't support this yet:
       //Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       

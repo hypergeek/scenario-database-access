@@ -200,6 +200,9 @@ public class SplitRatioSetReader extends ReaderBase {
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
       Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
+      if (modstampMicros == null) {
+        modstampMicros = 0L;
+      }
       
       splitratioSet.setId(id.toString());
       splitratioSet.name = name;
