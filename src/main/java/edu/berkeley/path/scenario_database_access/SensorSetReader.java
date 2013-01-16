@@ -193,11 +193,13 @@ public class SensorSetReader extends ReaderBase {
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
+      Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
       
       sensorSet.setId(id);
       sensorSet.setName(name);
       sensorSet.setDescription(desc);
       sensorSet.setProjectId(prjId == null ? null : prjId.toString());
+      sensorSet.setModstamp(modstampMicros);
 
       //System.out.println("SensorSet: " + sensorSet);
     }

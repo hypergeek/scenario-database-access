@@ -342,10 +342,12 @@ public class ProjectReader extends ReaderBase {
       Long id = dbr.psRSGetBigInt(query, "ID");
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
+      Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
       
       project.setId(id);
       project.name = name;
       project.description = desc;
+      project.setModstamp(modstampMicros);
 
       //System.out.println("Project: " + project);
       

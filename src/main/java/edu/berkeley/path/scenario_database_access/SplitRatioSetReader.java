@@ -199,11 +199,13 @@ public class SplitRatioSetReader extends ReaderBase {
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
+      Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
       
       splitratioSet.setId(id.toString());
       splitratioSet.name = name;
       splitratioSet.description = desc;
       splitratioSet.setProjectId(prjId == null ? null : prjId.toString());
+      splitratioSet.setModstamp(modstampMicros);
 
       //System.out.println("SplitRatioSet: " + splitratioSet);
     }

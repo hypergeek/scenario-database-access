@@ -262,11 +262,13 @@ public class ScenarioReader extends ReaderBase {
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
+      Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
       
       scenario.setId(id);
       scenario.setName(name);
       scenario.setDescription(desc);
       scenario.setProjectId(prjId == null ? null : prjId.toString());
+      scenario.setModstamp(modstampMicros);
       
       if (null != associateIDs) {
         associateIDs.put("SPLIT_RATIO_SET",
