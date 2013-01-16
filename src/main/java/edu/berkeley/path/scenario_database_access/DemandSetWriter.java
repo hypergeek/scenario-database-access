@@ -213,7 +213,7 @@ public class DemandSetWriter extends WriterBase {
   public void updateRow(DemandSet demandSet) throws DatabaseException {
     String query = "update_demandSet_" + demandSet.getId();
     dbw.psCreate(query,
-      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ?, MODSTAMP = ?"
+      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ? AND MODSTAMP = ?"
     );
     // Note: do not update the project id. Must use separate API to move
     // this to a different project.
@@ -228,7 +228,7 @@ public class DemandSetWriter extends WriterBase {
         demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
 
       dbw.psSetBigInt(query, 3, demandSet.getLongId());
-      dbw.psSetBigInt(query, 4, demandSet.getModstamp());
+      dbw.psSetTimestampMicroseconds(query, 4, demandSet.getModstamp());
       
       long rows = dbw.psUpdate(query);
       

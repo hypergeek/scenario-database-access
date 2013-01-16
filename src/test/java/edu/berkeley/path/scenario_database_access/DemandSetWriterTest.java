@@ -52,6 +52,7 @@ public class DemandSetWriterTest {
   @Before
   public void setup() {
     // we assume demand set 99998 does not exist, but we could delete it here
+    // we assume demand set 99999 exists, but we could insert it here
   }
   
   @Test
@@ -112,7 +113,7 @@ public class DemandSetWriterTest {
 
   @Test
   public void testUpdateWrongModstamp() throws core.DatabaseException {
-    Long demandSetID = 99998L;
+    Long demandSetID = 99999L;
     DemandSet ds =  dsReader.read(demandSetID);
     assertTrue(null != ds);
     
