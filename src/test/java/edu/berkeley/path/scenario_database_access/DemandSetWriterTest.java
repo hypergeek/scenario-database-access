@@ -112,12 +112,27 @@ public class DemandSetWriterTest {
   }
 
   @Test
+  public void testUpdateRightModstamp() throws core.DatabaseException {
+    Long demandSetID = 99999L;
+    DemandSet ds =  dsReader.read(demandSetID);
+    assertTrue(null != ds);
+    
+    dsWriter.update(ds); // should not throw
+  }
+
+  @Test
   public void testUpdateWrongModstamp() throws core.DatabaseException {
     Long demandSetID = 99999L;
     DemandSet ds =  dsReader.read(demandSetID);
     assertTrue(null != ds);
     
     ds.setModstamp(ds.getModstamp() - 1);
-    dsWriter.update(ds); // should throw
+    
+    try {
+      dsWriter.update(ds); // should throw
+      fail("exception was expected but not thrown");
+    }
+    catch(core.DatabaseException exc) {
+    }
   }
 }
