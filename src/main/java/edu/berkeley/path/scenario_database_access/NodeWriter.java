@@ -325,7 +325,7 @@ public class NodeWriter extends WriterBase {
         "declare\n" +
         "mygeom sdo_geometry ;\n" +
         "begin\n" +
-        "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+        "select SDO_UTIL.FROM_WKTGEOMETRY(?) into mygeom from dual ;\n" +
         "mygeom.sdo_srid := 8307 ;\n" +
         "INSERT INTO VIA.NODES (ID, NETWORK_ID, geom) VALUES(?, " + networkID + ", mygeom);\n" +
         "end;"
@@ -333,8 +333,13 @@ public class NodeWriter extends WriterBase {
     }
 
     protected void insert(Node node) throws DatabaseException {
+      int i = 0;
       dbw.psClearParams(psname);
-      dbw.psSetBigInt(psname, 1, node.getLongId());
+      dbw.psSetVarChar(psname, ++i,
+        "POINT ( " +
+          node.getLongitude() + " " +
+          node.getLatitude() + " )" );
+      dbw.psSetBigInt(psname, ++i, node.getLongId());
       dbw.psUpdate(psname);
     }
   }
@@ -382,7 +387,7 @@ public class NodeWriter extends WriterBase {
         "declare\n" +
         "mygeom sdo_geometry ;\n" +
         "begin\n" +
-        "select SDO_UTIL.FROM_WKTGEOMETRY('POINT (-75.97469 40.90164)') into mygeom from dual ;\n" +
+        "select SDO_UTIL.FROM_WKTGEOMETRY(?) into mygeom from dual ;\n" +
         "mygeom.sdo_srid := 8307 ;\n" +
         "UPDATE VIA.NODES SET geom = mygeom WHERE ((ID = ?) AND (NETWORK_ID = " + networkID + "));\n" +
         "end;"
@@ -390,8 +395,13 @@ public class NodeWriter extends WriterBase {
     }
     
     protected long update(Node node) throws DatabaseException {
+      int i = 0;
       dbw.psClearParams(psname);
-      dbw.psSetBigInt(psname, 1, node.getLongId());
+      dbw.psSetVarChar(psname, ++i,
+        "POINT ( " +
+          node.getLongitude() + " " +
+          node.getLatitude() + " )" );
+      dbw.psSetBigInt(psname, ++i, node.getLongId());
 
       long rows = dbw.psUpdate(psname);
     

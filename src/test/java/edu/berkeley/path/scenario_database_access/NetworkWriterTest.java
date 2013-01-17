@@ -128,6 +128,8 @@ public class NetworkWriterTest {
     
     Node nd = new Node();
     nd.setId(42L);
+    nd.setLongitude(-75.97469);
+    nd.setLatitude(40.90164);
     
     nw.getNodeList().add(nd);
 
@@ -139,7 +141,11 @@ public class NetworkWriterTest {
 
     assertTrue(null != nw2);
     assertEquals(1, nw2.getNodeList().size());
-    assertEquals(nd.getLongId(), (nw2.getNodeList().get(0)).getLongId());
+    
+    Node nd0 = nw2.getNodeList().get(0);
+    assertEquals(nd.getLongId(), nd0.getLongId());
+    assertEquals(nd.getLongitude(), nd0.getLongitude());
+    assertEquals(nd.getLatitude(), nd0.getLatitude());
     
     nwWriter.delete(networkID);
     
