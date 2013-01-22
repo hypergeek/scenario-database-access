@@ -30,6 +30,7 @@
 package edu.berkeley.path.scenario_database_access;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -117,6 +118,40 @@ public class LinkReader extends ReaderBase {
   }
   
   /**
+   * Represents the result of querying the geom of a link. These objects
+   * should not be used outside of transferring the query results into
+   * the links. The Link instance doesn't refer to Vertex instances.
+   **/
+  protected static class Vertex {
+    /**
+     * id of the link this vertex belongs to
+     **/
+    public Long linkId;
+    
+    /**
+     * index of this vertex in the list of all vertices of the link
+     **/
+    public Long index;
+    
+    /**
+     * x coordinate of this vertex
+     **/
+    public Double x;
+    
+    /**
+     * y coordinate of this vertex
+     **/
+    public Double y;
+    
+    public Vertex(Long linkId, Long index, Double x, Double y) {
+      this.linkId = linkId;
+      this.index = index;
+      this.x = x;
+      this.y = y;
+    }
+  }
+
+  /**
    * Read the list of links associated with a network from the database.
    * This is intended to be called from @see NetworkReader, so it does
    * not set up a transaction of its own.
@@ -128,10 +163,10 @@ public class LinkReader extends ReaderBase {
     ArrayList<Link> links = new ArrayList<Link>();
     
     String query = null;
-    Link link = null;
     
     try {
       query = runQueryAllLinks(networkID);
+      Link link = null;
       while (null != (link = linkFromQueryRS(query))) {
         links.add(link);
       }
@@ -142,9 +177,52 @@ public class LinkReader extends ReaderBase {
       }
     }
     
+    String vertexQuery = null;
+    try {
+      vertexQuery = runVertexQueryAllLinks(networkID);
+      
+      int i = 0;
+      Link link = null;
+      Vertex vertex = null;
+      
+      while (null != (vertex = vertexFromQueryRS(vertexQuery))) {
+        link = links.get(i);
+        
+        if (!vertex.linkId.equals(link.getLongId())) {
+          i++;
+          link = links.get(i);
+          
+          if (!vertex.linkId.equals(link.getLongId())) {
+            throw new DatabaseException(null,
+              "Links not in same order as vertex query results",
+              dbr, vertexQuery);
+          }
+        }
+        
+        List<Point> points = link.getPointList();
+        
+        if (points.size() + 1 != vertex.index) {
+          throw new DatabaseException(null,
+            "Link vertices not in order",
+            dbr, vertexQuery);
+        }
+        
+        Point point = new Point();
+        point.setLongitude(vertex.x);
+        point.setLatitude(vertex.y);
+        
+        points.add(point);
+      }
+    }
+    finally {
+      if (vertexQuery != null) {
+        dbr.psDestroy(vertexQuery);
+      }
+    }
+    
     return links;
   }
-
+  
   /**
    * Read just the link row with the given ID from the database.
    * 
@@ -166,30 +244,70 @@ public class LinkReader extends ReaderBase {
       }
     }
     
+    String vertexQuery = null;
+    try {
+      vertexQuery = runVertexQueryOneLink(linkID, networkID);
+      
+      Vertex vertex = null;
+      
+      while (null != (vertex = vertexFromQueryRS(vertexQuery))) {
+        if (!vertex.linkId.equals(link.getLongId())) {
+          throw new DatabaseException(null,
+            "Wrong Link ID in vertex query result",
+            dbr, vertexQuery);
+        }
+        
+        List<Point> points = link.getPointList();
+        
+        if (points.size() + 1 != vertex.index) {
+          throw new DatabaseException(null,
+            "Link vertices not in order",
+            dbr, vertexQuery);
+        }
+        
+        Point point = new Point();
+        point.setLongitude(vertex.x);
+        point.setLatitude(vertex.y);
+        
+        points.add(point);
+      }
+    }
+    finally {
+      if (vertexQuery != null) {
+        dbr.psDestroy(vertexQuery);
+      }
+    }
+    
     return link;
   }
   
   private static String queryFragment =
       "SELECT " +
-          "LINKS.ID, LINKS.BEG_NODE_ID, LINKS.END_NODE_ID, " +
-          "LINKS.SPEED_LIMIT, LINKS.LENGTH, LINKS.DETAIL_LEVEL, " +
-          "LINK_NAMES.NAME, LINK_TYPES.NAME TYPE, LINK_LANES.LANES, " +
-          "LINK_LANE_OFFSET.DISPLAY_LANE_OFFSET " +
-        "FROM VIA.LINKS " +
-        "LEFT OUTER JOIN VIA.LINK_NAMES " +
-          "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_NAMES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_LANES " +
-          "ON ((VIA.LINK_LANES.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_LANES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_LANE_OFFSET " +
-          "ON ((VIA.LINK_LANE_OFFSET.LINK_ID = VIA.LINKS.ID) AND " +
-              "(VIA.LINK_LANE_OFFSET.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
-          "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
-              "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
-        "LEFT OUTER JOIN VIA.LINK_TYPES " +
-          "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) ";
+        "LINKS.ID, " +
+        "LINKS.BEG_NODE_ID, " +
+        "LINKS.END_NODE_ID, " +
+        "LINKS.SPEED_LIMIT, " +
+        "LINKS.LENGTH, " +
+        "LINKS.DETAIL_LEVEL, " +
+        "LINK_NAMES.NAME, " +
+        "LINK_TYPES.NAME TYPE, " +
+        "LINK_LANES.LANES, " +
+        "LINK_LANE_OFFSET.DISPLAY_LANE_OFFSET " +
+      "FROM VIA.LINKS " +
+      "LEFT OUTER JOIN VIA.LINK_NAMES " +
+        "ON ((VIA.LINK_NAMES.LINK_ID = VIA.LINKS.ID) AND " +
+            "(VIA.LINK_NAMES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+      "LEFT OUTER JOIN VIA.LINK_LANES " +
+        "ON ((VIA.LINK_LANES.LINK_ID = VIA.LINKS.ID) AND " +
+            "(VIA.LINK_LANES.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+      "LEFT OUTER JOIN VIA.LINK_LANE_OFFSET " +
+        "ON ((VIA.LINK_LANE_OFFSET.LINK_ID = VIA.LINKS.ID) AND " +
+            "(VIA.LINK_LANE_OFFSET.NETWORK_ID = VIA.LINKS.NETWORK_ID)) " +
+      "LEFT OUTER JOIN VIA.LINK_TYPE_DET " +
+        "ON ((VIA.LINK_TYPE_DET.LINK_ID = LINKS.ID) AND " +
+            "(VIA.LINK_TYPE_DET.NETWORK_ID = LINKS.NETWORK_ID)) " +
+      "LEFT OUTER JOIN VIA.LINK_TYPES " +
+        "ON (VIA.LINK_TYPES.ID = LINK_TYPE_DET.LINK_TYPE) ";
 
   /**
    * Execute a query for the specified link.
@@ -202,7 +320,7 @@ public class LinkReader extends ReaderBase {
     String query = "read_link_" + linkID;
     
     dbr.psCreate(query, queryFragment +
-        "WHERE ((LINKS.ID = ?) AND (LINKS.NETWORK_ID = ?))"
+      "WHERE ((LINKS.ID = ?) AND (LINKS.NETWORK_ID = ?)) "
     );
     
     dbr.psClearParams(query);
@@ -216,7 +334,6 @@ public class LinkReader extends ReaderBase {
   /**
    * Execute a query for all links in specified network.
    * 
-   * @param linkID  ID of the link in the database
    * @param networkID ID of the network
    * @return String     query string, may be passed to psRSNext or linkFromQueryRS
    */
@@ -224,7 +341,8 @@ public class LinkReader extends ReaderBase {
     String query = "read_links_network" + networkID;
     
     dbr.psCreate(query, queryFragment +
-        "WHERE (LINKS.NETWORK_ID = ?)"
+      "WHERE (LINKS.NETWORK_ID = ?) " +
+      "ORDER BY LINKS.ID"
     );
     
     dbr.psClearParams(query);
@@ -282,5 +400,96 @@ public class LinkReader extends ReaderBase {
     }
 
     return link;
+  }
+
+  /**
+   * Execute a query for the vertices of a specified link in specified network.
+   * 
+   * @param linkID  ID of the link in the database
+   * @param networkID ID of the network
+   * @return String     query string, may be passed to psRSNext or vertexFromQueryRS
+   */
+  protected String runVertexQueryOneLink(long linkID, long networkID) throws DatabaseException {
+    String query = "read_vertices_link_" + linkID;
+    
+    dbr.psCreate(query,
+      "SELECT " +
+        "L.ID LINK_ID, " +
+        "POINTS.X X, " +
+        "POINTS.Y Y, " +
+        "POINTS.ID POINT_ID " +
+      "FROM " +
+        "VIA.LINKS L, " +
+        "TABLE( SDO_UTIL.GETVERTICES(L.GEOM) ) POINTS " +
+      "WHERE " +
+        "L.ID = ? AND " +
+        "NETWORK_ID = ? " +
+      "ORDER BY " +
+        "POINTS.ID"
+    );
+    
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, linkID);
+    dbr.psSetBigInt(query, 2, networkID);
+    dbr.psQuery(query);
+
+    return query;
+  }
+
+  /**
+   * Execute a query for all vertices of all links in specified network.
+   * 
+   * @param networkID ID of the network
+   * @return String     query string, may be passed to psRSNext or vertexFromQueryRS
+   */
+  protected String runVertexQueryAllLinks(long networkID) throws DatabaseException {
+    String query = "read_link_vertices_network" + networkID;
+    
+    dbr.psCreate(query,
+      "SELECT " +
+        "L.ID LINK_ID, " +
+        "POINTS.X X, " +
+        "POINTS.Y Y, " +
+        "POINTS.ID POINT_ID " +
+      "FROM " +
+        "VIA.LINKS L, " +
+        "TABLE( SDO_UTIL.GETVERTICES(L.GEOM) ) POINTS " +
+      "WHERE " +
+        "NETWORK_ID = ? " +
+      "ORDER BY " +
+        "L.ID, " +
+        "POINTS.ID"
+    );
+    
+    dbr.psClearParams(query);
+    dbr.psSetBigInt(query, 1, networkID);
+    dbr.psQuery(query);
+
+    return query;
+  }
+
+  /**
+   * Instantiate and populate a Vertex object from the next item in the result set
+   * of a vertex query.
+   * 
+   * @param query string
+   * @return Vertex
+   */
+  protected Vertex vertexFromQueryRS(String query) throws DatabaseException {
+    Vertex vertex = null;
+    
+    if (dbr.psRSNext(query)) {
+      //String columns = org.apache.commons.lang.StringUtils.join(dbr.psRSColumnNames(query), ", ");
+      //System.out.println("columns: [" + columns + "]");
+      
+      Long linkId = dbr.psRSGetBigInt(query, "LINK_ID");
+      Double longitude = dbr.psRSGetDouble(query, "X");
+      Double latitude = dbr.psRSGetDouble(query, "Y");
+      Long vertexIndex = dbr.psRSGetBigInt(query, "POINT_ID");
+      
+      vertex = new Vertex(linkId, vertexIndex, longitude, latitude);
+    }
+
+    return vertex;
   }
 }
