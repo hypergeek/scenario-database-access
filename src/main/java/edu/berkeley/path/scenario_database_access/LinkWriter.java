@@ -381,7 +381,7 @@ public class LinkWriter extends WriterBase {
         "declare\n" +
         "mygeom sdo_geometry ;\n" +
         "begin\n" +
-        "select SDO_UTIL.FROM_WKTGEOMETRY('LINESTRING (-75.97469 40.90164, -75.97393 40.90226, -75.97344 40.90274, -75.97314 40.90328)') into mygeom from dual ;\n" +
+        "select SDO_UTIL.FROM_WKTGEOMETRY(?) into mygeom from dual ;\n" +
         "mygeom.sdo_srid := 8307 ;\n" +
         "INSERT INTO VIA.LINKS (ID, NETWORK_ID, BEG_NODE_ID, END_NODE_ID, SPEED_LIMIT, LENGTH, DETAIL_LEVEL, geom) VALUES(?, " + networkID + ", ?, ?, ?, ?, ?, mygeom);\n" +
         "end;"
@@ -391,6 +391,21 @@ public class LinkWriter extends WriterBase {
     protected void insert(Link link) throws DatabaseException {
       dbw.psClearParams(psname);
       int i = 0;
+      
+      List<String> vertstrings = new ArrayList<String>();
+      for (Point point : link.getPointList()) {
+        vertstrings.add(
+          point.getLongitude() + " " +
+          point.getLatitude());
+      }
+      
+      String linestring = org.apache.commons.lang.StringUtils.join(vertstrings, ", ");
+      String linestring_wkt = 
+        "LINESTRING ( " +
+        linestring +
+        " )";
+      dbw.psSetVarChar(psname, ++i, linestring_wkt);
+      
       dbw.psSetBigInt(psname, ++i, link.getLongId());
       dbw.psSetBigInt(psname, ++i, link.getBeginLongId());
       dbw.psSetBigInt(psname, ++i, link.getEndLongId());
@@ -478,7 +493,7 @@ public class LinkWriter extends WriterBase {
         "declare\n" +
         "mygeom sdo_geometry ;\n" +
         "begin\n" +
-        "select SDO_UTIL.FROM_WKTGEOMETRY('LINESTRING (-75.97469 40.90164, -75.97393 40.90226, -75.97344 40.90274, -75.97314 40.90328)') into mygeom from dual ;\n" +
+        "select SDO_UTIL.FROM_WKTGEOMETRY(?) into mygeom from dual ;\n" +
         "mygeom.sdo_srid := 8307 ;\n" +
         "UPDATE VIA.LINKS SET BEG_NODE_ID = ?, END_NODE_ID = ?, SPEED_LIMIT = ?, LENGTH = ?, DETAIL_LEVEL = ?, geom = mygeom WHERE ((ID = ?) AND (NETWORK_ID = " + networkID + "));\n" +
         "end;"
@@ -488,6 +503,21 @@ public class LinkWriter extends WriterBase {
     protected long update(Link link) throws DatabaseException {
       dbw.psClearParams(psname);
       int i=0;
+      
+      List<String> vertstrings = new ArrayList<String>();
+      for (Point point : link.getPointList()) {
+        vertstrings.add(
+          point.getLongitude() + " " +
+          point.getLatitude());
+      }
+      
+      String linestring = org.apache.commons.lang.StringUtils.join(vertstrings, ", ");
+      String linestring_wkt = 
+        "LINESTRING ( " +
+        linestring +
+        " )";
+      dbw.psSetVarChar(psname, ++i, linestring_wkt);
+      
       dbw.psSetBigInt(psname, ++i, link.getBeginLongId());
       dbw.psSetBigInt(psname, ++i, link.getEndLongId());
       dbw.psSetDouble(psname, ++i, link.getSpeedLimit());
