@@ -124,8 +124,8 @@ public class DemandProfileWriter extends WriterBase {
     dbw.psCreate(query,
       "INSERT INTO VIA.DEMANDS " +
         "(ID, DEMAND_PROF_ID, VEH_TYPE_ID, DEMAND_ORDER, FLOW) " +
-        "VALUES(VIA.SEQ_DEMAND_PROFS_ID.nextVal, ?, ?, ?, ?)"
-    ); // SEQ_DEMAND_PROFS_ID should be SEQ_DEMANDS_ID, when it exists
+        "VALUES(VIA.SEQ_DEMANDS_ID.nextVal, ?, ?, ?, ?)"
+    );
 
     try {
 
