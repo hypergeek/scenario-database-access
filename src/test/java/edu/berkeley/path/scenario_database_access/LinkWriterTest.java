@@ -76,6 +76,17 @@ public class LinkWriterTest {
     ln.setLaneCount(null);
     ln.setLaneOffset(null);
 
+    Point p0 = new Point();
+    p0.setLongitude(-75.97469);
+    p0.setLatitude(40.90164);
+
+    Point p1 = new Point();
+    p1.setLongitude(-76.97469);
+    p1.setLatitude(41.90164);
+    
+    ln.getPointList().add(p0);
+    ln.getPointList().add(p1);
+
     lnWriter.update(ln, networkID);
     
     Link ln2 = lnReader.read(ln.getLongId(), networkID);
@@ -143,6 +154,17 @@ public class LinkWriterTest {
     ln.setType("Street");
     ln.setLaneCount(2.0);
     ln.setLaneOffset(5);
+
+    Point p0 = new Point();
+    p0.setLongitude(-75.97469);
+    p0.setLatitude(40.90164);
+
+    Point p1 = new Point();
+    p1.setLongitude(-76.97469);
+    p1.setLatitude(41.90164);
+    
+    ln.getPointList().add(p0);
+    ln.getPointList().add(p1);
     
     lnWriter.insert(ln, networkID);
         
@@ -177,11 +199,33 @@ public class LinkWriterTest {
     ln1.setBeginId("1"); // TODO create nodes instead
     ln1.setEndId("2");
 
+    Point p10 = new Point();
+    p10.setLongitude(-75.97469);
+    p10.setLatitude(40.90164);
+
+    Point p11 = new Point();
+    p11.setLongitude(-76.97469);
+    p11.setLatitude(41.90164);
+    
+    ln1.getPointList().add(p10);
+    ln1.getPointList().add(p11);
+
     Link ln2 = new Link();
     ln2.setId(ln2Id);
     ln2.setLength(555.0);
     ln2.setBeginId("2"); // TODO create nodes instead
     ln2.setEndId("3");
+
+    Point p20 = new Point();
+    p20.setLongitude(-75.97469);
+    p20.setLatitude(40.90164);
+
+    Point p21 = new Point();
+    p21.setLongitude(-76.97469);
+    p21.setLatitude(41.90164);
+    
+    ln2.getPointList().add(p20);
+    ln2.getPointList().add(p21);
 
     ArrayList<Link> links = new ArrayList<Link>();
     

@@ -181,6 +181,18 @@ public class NetworkWriterTest {
     ln1.setId(44L);
     ln1.setBegin(nd1);
     ln1.setEnd(nd2);
+
+    Point p0 = new Point();
+    p0.setLongitude(-75.97469);
+    p0.setLatitude(40.90164);
+
+    Point p1 = new Point();
+    p1.setLongitude(-76.97469);
+    p1.setLatitude(41.90164);
+    
+    ln1.getPointList().add(p0);
+    ln1.getPointList().add(p1);
+
     nw.getLinkList().add(ln1);
 
     //System.out.println("Test Network: " + nw);
@@ -195,6 +207,19 @@ public class NetworkWriterTest {
     assertEquals(1, nw2.getLinkList().size());
     Link ln2 = nw2.getLinkList().get(0);
     assertEquals(ln1.getLongId(), ln2.getLongId());
+
+    assertEquals(
+        ln1.getPointList().get(0).getLongitude(),
+        ln2.getPointList().get(0).getLongitude());
+    assertEquals(
+        ln1.getPointList().get(1).getLongitude(),
+        ln2.getPointList().get(1).getLongitude());
+    assertEquals(
+        ln1.getPointList().get(0).getLatitude(),
+        ln2.getPointList().get(0).getLatitude());
+    assertEquals(
+        ln1.getPointList().get(1).getLatitude(),
+        ln2.getPointList().get(1).getLatitude());
     
     nwWriter.delete(networkID);
     
