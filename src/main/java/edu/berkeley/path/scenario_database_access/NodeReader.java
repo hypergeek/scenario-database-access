@@ -180,8 +180,13 @@ public class NodeReader extends ReaderBase {
     String query = "read_node_" + nodeID;
     
     dbr.psCreate(query,
-      "SELECT NODES.ID, NODE_NAMES.NAME, NODE_TYPES.NAME TYPE " +
-        "FROM VIA.NODES " +
+      "SELECT " +
+        "NODES.ID, " +
+        "NODES.GEOM.SDO_POINT.X X, " +
+        "NODES.GEOM.SDO_POINT.Y Y, " +
+        "NODE_NAMES.NAME, " +
+        "NODE_TYPES.NAME TYPE " +
+      "FROM VIA.NODES " +
         "LEFT OUTER JOIN VIA.NODE_NAMES " +
           "ON ((VIA.NODE_NAMES.NODE_ID = VIA.NODES.ID) AND " +
               "(VIA.NODE_NAMES.NETWORK_ID = VIA.NODES.NETWORK_ID)) " +
