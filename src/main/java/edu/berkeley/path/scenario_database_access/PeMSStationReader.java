@@ -188,6 +188,8 @@ public class PeMSStationReader extends ReaderBase {
       Double  absPostmile     = dbr.psRSGetDouble(query, "ABS_PM");
       Double  latitude        = dbr.psRSGetDouble(query, "LATITUDE");
       Double  longitude       = dbr.psRSGetDouble(query, "LONGITUDE");
+      // note: if we start using geom column instead of lat/lng, this should
+      // be rewritten as in the Node reader.
       Double  detectorLength  = dbr.psRSGetDouble(query, "DET_LENGTH");
       String  detectorType    = dbr.psRSGetVarChar(query, "DET_TYPE");
       String  detectorName    = dbr.psRSGetVarChar(query, "DET_NAME");
