@@ -101,8 +101,22 @@ public class SensorSetWriterTest {
     
     assertEquals(sensorSetID, ss2.getLongId());
     
-    Sensor s20 = ss2.getSensorList().get(0);
-    Sensor s21 = ss2.getSensorList().get(1);
+    Sensor s20 = null;
+    Sensor s21 = null;
+    
+    for (Sensor s : ss2.getSensorList()) {
+      if (s.getEntityId().equals("ent0")) {
+        s20 = s;
+        break;
+      }
+    }
+
+    for (Sensor s : ss2.getSensorList()) {
+      if (s.getEntityId().equals("ent1")) {
+        s21 = s;
+        break;
+      }
+    }
     
     assertEquals(s0.getType(), s20.getType());
     assertEquals(s0.getEntityId(), s20.getEntityId());
