@@ -38,43 +38,32 @@ import java.util.HashSet;
 import edu.berkeley.path.model_elements.*;
 
 import core.*;
+import core.oraSPEnums.*;
 
 /**
  * Implements methods for writing DemandSets to a database.
  * @see DBParams
  * @author vjoel
  */
-public class DemandSetWriter extends WriterBase {
-  public DemandSetWriter(
-          DBParams dbParams
-          ) throws DatabaseException {
-    super(dbParams);
-  }
-  
-  public DemandSetWriter(
-          DBParams dbParams,
-          DatabaseWriter dbWriter
-          ) throws DatabaseException {
-    super(dbParams, dbWriter);
-  }
-  
+public class DemandSetWriter {
   /**
    * Insert the given demand set into the database.
    * 
    * @param demandSet  the demand set
    */
-  public void insert(DemandSet demandSet) throws DatabaseException {
+  public Long insert(DemandSet demandSet) throws DatabaseException {
     long timeBegin = System.nanoTime();
+    Long id = null;
     
     try {
-      dbw.transactionBegin();
-      Monitor.debug("DemandSet insert transaction beginning on demandSet.id=" + demandSet.getId());
+//      dbw.transactionBegin();
+//      Monitor.debug("DemandSet insert transaction beginning on demandSet.id=" + demandSet.getId());
       
-      insertWithDependents(demandSet);
+      id = insertWithDependents(demandSet);
 
-      Monitor.debug("DemandSet insert transaction committing on demandSet.id=" + demandSet.getId());
-      dbw.transactionCommit();
-      Monitor.debug("DemandSet insert transaction committed on demandSet.id=" + demandSet.getId());
+//      Monitor.debug("DemandSet insert transaction committing on demandSet.id=" + demandSet.getId());
+//      dbw.transactionCommit();
+//      Monitor.debug("DemandSet insert transaction committed on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -82,8 +71,8 @@ public class DemandSetWriter extends WriterBase {
     }
     finally {
       try {
-        dbw.transactionRollback();
-        Monitor.debug("DemandSet insert transaction rollback on demandSet.id=" + demandSet.getId());
+//        dbw.transactionRollback();
+//        Monitor.debug("DemandSet insert transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -92,6 +81,8 @@ public class DemandSetWriter extends WriterBase {
 
     long timeCommit = System.nanoTime();
     Monitor.duration("Insert demandSet.id=" + demandSet.getId(), timeCommit - timeBegin);
+    
+    return id;
   }
 
   /**
@@ -99,14 +90,20 @@ public class DemandSetWriter extends WriterBase {
    * 
    * @param demandSet  the demandSet
    */
-  public void insertWithDependents(DemandSet demandSet) throws DatabaseException {
-    insertRow(demandSet);
+  public Long insertWithDependents(DemandSet demandSet) throws DatabaseException {
+    Long id = null;
+    
+    id = insertRow(demandSet);
+    demandSet.setId(id);
+    
     insertDependents(demandSet);
+    
+    return id;
   }
   
   private void insertDependents(DemandSet demandSet) throws DatabaseException {
-    DemandProfileWriter dpWriter = new DemandProfileWriter(dbParams, dbw);
-    long demandSetID = demandSet.getLongId();
+    DemandProfileWriter dpWriter = new DemandProfileWriter();
+    Long demandSetID = demandSet.getLongId();
     
     dpWriter.insertProfiles(demandSet.getProfileMap(), demandSetID);
   }
@@ -114,43 +111,30 @@ public class DemandSetWriter extends WriterBase {
   /**
    * Insert just the demandSet row into the database. Ignores dependent objects.
    * 
-   * If the set's id is null, choose a new sequential id, insert with that id,
-   * and assign that id to the set's id.
-   * 
    * @param demandSet  the demandSet
    */
-  public void insertRow(DemandSet demandSet) throws DatabaseException {
-    String query = "insert_demandSet_" + demandSet.getId();
-    dbw.psCreate(query,
-      "INSERT INTO VIA.DEMAND_SETS (ID, NAME, DESCRIPTION, PROJECT_ID) VALUES(?, ?, ?, ?)"
-    );
-  
-    try {
-      dbw.psClearParams(query);
+  public Long insertRow(DemandSet demandSet) throws DatabaseException {
+    oraSPParams[] params = new oraSPParams[5];
+    int i = 0;
 
-      if (demandSet.getId() == null) {
-        DemandSetReader dsr = new DemandSetReader(dbParams);
-        demandSet.setId(dsr.getNextID());
-      }
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      demandSet.getName() == null ? null : demandSet.getName().toString(),
+      null);
     
-      dbw.psSetBigInt(query, 1, demandSet.getLongId());
-      
-      dbw.psSetVarChar(query, 2,
-        demandSet.getName() == null ? null : demandSet.getName().toString());
-      
-      dbw.psSetVarChar(query, 3,
-        demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
-      
-      dbw.psSetBigInt(query, 4,
-        demandSet.getProjectId() == null ? null : demandSet.getLongProjectId());
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      demandSet.getDescription() == null ? null : demandSet.getDescription().toString(),
+      null);
+    
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+      demandSet.getProjectId() == null ? 1L : demandSet.getLongProjectId(), 0F, null, null);
+    
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
+    
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
 
-      dbw.psUpdate(query);
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
-    }
+    int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.INS", params);
+    
+    return result == 0 ? params[3].intParam : null;
   }
   
   /**
@@ -162,13 +146,13 @@ public class DemandSetWriter extends WriterBase {
     long timeBegin = System.nanoTime();
     
     try {
-      dbw.transactionBegin();
-      Monitor.debug("DemandSet update transaction beginning on demandSet.id=" + demandSet.getId());
+//      dbw.transactionBegin();
+//      Monitor.debug("DemandSet update transaction beginning on demandSet.id=" + demandSet.getId());
       
       updateWithDependents(demandSet);
 
-      dbw.transactionCommit();
-      Monitor.debug("DemandSet update transaction committing on demandSet.id=" + demandSet.getId());
+//      dbw.transactionCommit();
+//      Monitor.debug("DemandSet update transaction committing on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -176,8 +160,8 @@ public class DemandSetWriter extends WriterBase {
     }
     finally {
       try {
-        dbw.transactionRollback();
-        Monitor.debug("DemandSet update transaction rollback on demandSet.id=" + demandSet.getId());
+//        dbw.transactionRollback();
+//        Monitor.debug("DemandSet update transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -193,7 +177,7 @@ public class DemandSetWriter extends WriterBase {
    * demand profiles and demands.
    * Note the pre-existing dependents in the database are deleted first.
    * 
-   * @see #write() if you want a transaction and logging around the operation.
+   * @see #update() if you want a transaction and logging around the operation.
    * 
    * @param demandSet  the demandSet
    */
@@ -211,41 +195,37 @@ public class DemandSetWriter extends WriterBase {
    * @param demandSet  the demandSet
    */
   public void updateRow(DemandSet demandSet) throws DatabaseException {
-    String query = "update_demandSet_" + demandSet.getId();
-    dbw.psCreate(query,
-      "UPDATE VIA.DEMAND_SETS SET NAME = ?, DESCRIPTION = ? WHERE ID = ? AND MODSTAMP = ?"
-    );
-    // Note: do not update the project id. Must use separate API to move
-    // this to a different project.
+    oraSPParams[] params = new oraSPParams[8];
+    int i = 0;
+
+    params[i++] = null; //modified
+
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      demandSet.getName() == null ? null : demandSet.getName().toString(),
+      null);
     
-    try {
-      dbw.psClearParams(query);
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      demandSet.getDescription() == null ? null : demandSet.getDescription().toString(),
+      null);
+    
+    params[i++] = null; //modstamp
+    
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+      demandSet.getProjectId() == null ? 1L : demandSet.getLongProjectId(), 0F, null, null);
+      // This should not be updated in this method!
+    
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+      demandSet.getLongId(), 0F, null, null);
+    
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      SingleOracleConnector.getUser(),
+      null);
 
-      dbw.psSetVarChar(query, 1,
-        demandSet.getName() == null ? null : demandSet.getName().toString());
-      
-      dbw.psSetVarChar(query, 2,
-        demandSet.getDescription() == null ? null : demandSet.getDescription().toString());
-
-      dbw.psSetBigInt(query, 3, demandSet.getLongId());
-      dbw.psSetTimestampMicroseconds(query, 4, demandSet.getModstamp());
-      
-      long rows = dbw.psUpdate(query);
-      
-      if (rows > 1) {
-        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSet.getId(), dbw, query);
-      }
-      
-      if (rows < 1) {
-        throw new DatabaseException(null, "DemandSet does not exist with id=" +
-          demandSet.getId() + " and modstamp=" + demandSet.getModstamp(), dbw, query);
-      }
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
-    }
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
+    
+    int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.UPD", params);
+    
+    return result == 0 ? params[7].intParam : null;
   }
 
   /**
@@ -257,14 +237,14 @@ public class DemandSetWriter extends WriterBase {
     long timeBegin = System.nanoTime();
     
     try {
-      dbw.transactionBegin();
-      Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
+//      dbw.transactionBegin();
+//      Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
       
       deleteDependents(demandSetID);
       deleteRow(demandSetID);
 
-      dbw.transactionCommit();
-      Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
+//      dbw.transactionCommit();
+//      Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -272,8 +252,8 @@ public class DemandSetWriter extends WriterBase {
     }
     finally {
       try {
-        dbw.transactionRollback();
-        Monitor.debug("DemandSet delete transaction rollback on demandSet.id=" + demandSetID);
+//        dbw.transactionRollback();
+//        Monitor.debug("DemandSet delete transaction rollback on demandSet.id=" + demandSetID);
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -290,26 +270,18 @@ public class DemandSetWriter extends WriterBase {
    * @param demandSet  the demandSet
    */
   public void deleteRow(long demandSetID) throws DatabaseException {
-    String query = "delete_demandSet_" + demandSetID;
-    dbw.psCreate(query,
-      "DELETE FROM VIA.DEMAND_SETS WHERE ID = ?"
-    );
+    oraSPParams[] params = new oraSPParams[2];
+    int i = 0;
+
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+      demandSet.getLongId(), 0F, null, null);
+
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
+      0, 0F, null, null);
+
+    int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.DEL", params);
     
-    try {
-      dbw.psClearParams(query);
-      dbw.psSetBigInt(query, 1, demandSetID);
-      
-      long rows = dbw.psUpdate(query);
-      
-      if (rows != 1) {
-        throw new DatabaseException(null, "DemandSet not unique: there exist " + rows + " with id=" + demandSetID, dbw, query);
-      }
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
-    }
+    return result == 0 ? params[1].intParam : null;
   }
 
   /**
@@ -318,7 +290,7 @@ public class DemandSetWriter extends WriterBase {
    * @param demandSetID  the demandSet ID
    */
   private void deleteDependents(long demandSetID) throws DatabaseException {
-    DemandProfileWriter dpWriter = new DemandProfileWriter(dbParams, dbw);
+    DemandProfileWriter dpWriter = new DemandProfileWriter();
     
     dpWriter.deleteAllProfiles(demandSetID);
   }

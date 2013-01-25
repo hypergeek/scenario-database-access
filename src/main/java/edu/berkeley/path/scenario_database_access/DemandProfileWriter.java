@@ -47,20 +47,7 @@ import core.*;
  * @see DBParams
  * @author vjoel
  */
-public class DemandProfileWriter extends WriterBase {
-  public DemandProfileWriter(
-          DBParams dbParams
-          ) throws DatabaseException {
-    super(dbParams);
-  }
-  
-  public DemandProfileWriter(
-          DBParams dbParams,
-          DatabaseWriter dbWriter
-          ) throws DatabaseException {
-    super(dbParams, dbWriter);
-  }
-
+public class DemandProfileWriter {
   /**
    * Insert a map as the map of all profiles belonging to a demand set.
    * This is intended to be called from @see DemandSetWriter, so it does
@@ -70,48 +57,46 @@ public class DemandProfileWriter extends WriterBase {
    * @param demandSetID ID of the set
    */
   public void insertProfiles(Map<String,DemandProfile> profileMap, long demandSetID) throws DatabaseException {
-    String query = "insert_profiles_in_demandSet_" + demandSetID;
+    for (Map.Entry<String,DemandProfile> entry : profileMap.entrySet()) {
+      Long linkID = Long.parseLong(entry.getKey());
+      DemandProfile profile = entry.getValue();
+
+      oraSPParams[] params = new oraSPParams[10];
+      int i = 0;
+
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+        demandSetId, 0F, null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+        profile.getStdDevMult(), null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+        profile.getStartTime(), null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+        profile.getKnob(), null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+        linkID, 0F, null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN_OUT,
+        0L, 0F, null, null); // why is ID an IN_OUT param?
+
+      params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+        profile.getStdDevAdd(), null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+        profile.getSampleRate(), null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+        profile.getDestinationNetworkLongId(), 0F, null, null);
+
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
+
+      int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_PROFS.INS", params);
+      //what to do with result?
     
-    dbw.psCreate(query,
-      "INSERT INTO VIA.DEMAND_PROFS " +
-        "(ID, ORG_LINK_ID, DEST_NETWORK_ID, DEMAND_SET_ID, START_TIME, SAMPLE_RATE, KNOB, STD_DEV_ADD, STD_DEV_MULT) " +
-        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-
-    try {
-      DemandProfileReader dpReader = new DemandProfileReader(dbParams);
-      
-      dbw.psClearParams(query);
-      
-      for (Map.Entry<String,DemandProfile> entry : profileMap.entrySet()) {
-        Long linkID = Long.parseLong(entry.getKey());
-        DemandProfile profile = entry.getValue();
-        Long profileID = dpReader.getNextID();
-        int i = 0;
-
-        dbw.psSetBigInt(query, ++i, profileID);
-        dbw.psSetBigInt(query, ++i, linkID);
-        dbw.psSetBigInt(query, ++i, profile.getDestinationNetworkLongId());
-        dbw.psSetBigInt(query, ++i, demandSetID);
-        dbw.psSetDouble(query, ++i, profile.getStartTime());
-        dbw.psSetDouble(query, ++i, profile.getSampleRate());
-        dbw.psSetDouble(query, ++i, profile.getKnob());
-        dbw.psSetDouble(query, ++i, profile.getStdDevAdd());
-        dbw.psSetDouble(query, ++i, profile.getStdDevMult());
-        
-        //Monitor.debug("inserting profile " + profileID + " into set " + demandSetID + " at link " + linkID + " with data " + profile);
-        
-        dbw.psUpdate(query);
-        
-        //Monitor.debug("inserted profile " + profileID + " with data " + profile);
-
-        insertFlows(profile.getFlow(), profileID);
-      }
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
+      insertFlows(profile.getFlow(), params[5].intParam);
     }
   }
   
@@ -119,46 +104,43 @@ public class DemandProfileWriter extends WriterBase {
       Map<CharSequence,List<Double>> flows,
       Long profileID) throws DatabaseException {
     
-    String query = "insert_demands_in_profile_" + profileID;
-    
-    dbw.psCreate(query,
-      "INSERT INTO VIA.DEMANDS " +
-        "(ID, DEMAND_PROF_ID, VEH_TYPE_ID, DEMAND_ORDER, FLOW) " +
-        "VALUES(VIA.SEQ_DEMANDS_ID.nextVal, ?, ?, ?, ?)"
-    );
+    for (Map.Entry<CharSequence,List<Double>>
+         vehTypeEntry : flows.entrySet()) {
 
-    try {
-
-      for (Map.Entry<CharSequence,List<Double>>
-           vehTypeEntry : flows.entrySet()) {
+      Long vehTypeId = Long.parseLong(vehTypeEntry.getKey().toString());
+      List<Double> flowList = vehTypeEntry.getValue();
       
-        Long vehTypeId = Long.parseLong(vehTypeEntry.getKey().toString());
-        List<Double> flowList = vehTypeEntry.getValue();
+      for (int ord = 0; ord < flowList.size(); ord++) {
+        Double flow = flowList.get(ord);
         
-        for (int ord = 0; ord < flowList.size(); ord++) {
-          Double flow = flowList.get(ord);
-          
-          int i = 0;
-          
-          dbw.psSetBigInt(query, ++i, profileID);
-          dbw.psSetBigInt(query, ++i, vehTypeId);
-          
-          dbw.psSetInteger(query, ++i, ord);
-          
-          dbw.psSetDouble(query, ++i, flow);
-          
-          //Monitor.debug("inserting flow " + flow +
-          //  " at (" +
-          //    vehTypeId + ", " +
-          //    ord + ")");
+        oraSPParams[] params = new oraSPParams[6];
+        int i = 0;
 
-          dbw.psUpdate(query);
-        }
-      }
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
+        //p_DEMAND_PROF_ID IN DEMANDS.DEMAND_PROF_ID%type DEFAULT NULL ,
+        params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+          profileID, 0F, null, null);
+
+        //P_FLOW           IN DEMANDS.FLOW%TYPE DEFAULT NULL ,
+        params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
+          flow, null, null);
+
+        //p_ID             out DEMANDS.ID%type ,
+        params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
+          0L, 0F, null, null);
+
+        //P_DEMAND_ORDER   IN DEMANDS.DEMAND_ORDER%TYPE DEFAULT NULL ,
+        params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+          ord, 0F, null, null);
+
+        //P_VEH_TYPE_ID    IN DEMANDS.VEH_TYPE_ID%TYPE DEFAULT NULL,
+        params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+          vehTypeId, 0F, null, null);
+        
+        //V_RESULT OUT NUMBER
+        params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
+        
+        int result = SingleOracleConnector.executeSP("VIA.SP_DEMANDS.INS", params);
+        //what to do with result?
       }
     }
   }
