@@ -1,0 +1,3 @@
+These sql scripts are for setting up the test fixture.
+
+If the tests are failing because something happened to the original test fixtures, or bad data was left behind by a previous test run, then try running first the delete.sql and then the insert.sql.
