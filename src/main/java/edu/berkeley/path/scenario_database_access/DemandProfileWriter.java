@@ -79,8 +79,8 @@ public class DemandProfileWriter {
       params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
         linkID, 0F, null, null);
 
-      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN_OUT,
-        0L, 0F, null, null); // why is ID an IN_OUT param?
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
+        0L, 0F, null, null);
 
       params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
         profile.getStdDevAdd(), null, null);
@@ -91,7 +91,8 @@ public class DemandProfileWriter {
       params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
         profile.getDestinationNetworkLongId(), 0F, null, null);
 
-      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
+      params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
+        0, 0F, null, null);
 
       int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_PROFS.INS", params);
       //what to do with result?
