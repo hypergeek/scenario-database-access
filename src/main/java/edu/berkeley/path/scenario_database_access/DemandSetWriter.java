@@ -209,8 +209,9 @@ public class DemandSetWriter {
     params[i++] = null; //modstamp
     
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
-      demandSet.getProjectId() == null ? 1L : demandSet.getLongProjectId(), 0F, null, null);
-      // This should not be updated in this method!
+      0L, 0F, null, null);
+      // Project ID is currently ignored by the SP, because it should not
+      // be updated except by an API for moving DS among projects.
     
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
       demandSet.getLongId(), 0F, null, null);
