@@ -145,49 +145,4 @@ public class DemandProfileWriter {
       }
     }
   }
-
-  /**
-   * Delete all profiles of the specified set from the database.
-   * 
-   * @param demandSetID ID of the set
-   * @return number of profiles deleted
-   */
-  public long deleteAllProfiles(long demandSetID) throws DatabaseException {
-    String dpQuery = "delete_demands_in_profiles_of_demandSet_" + demandSetID;
-
-    dbw.psCreate(dpQuery,
-      "DELETE FROM VIA.DEMANDS " +
-        "WHERE DEMAND_PROF_ID IN " +
-          "(SELECT ID FROM VIA.DEMAND_PROFS WHERE DEMAND_SET_ID = ?)"
-    );
-
-    try {
-      dbw.psClearParams(dpQuery);
-      dbw.psSetBigInt(dpQuery, 1, demandSetID);
-      dbw.psUpdate(dpQuery);
-    }
-    finally {
-      if (dpQuery != null) {
-        dbw.psDestroy(dpQuery);
-      }
-    }
-    
-    String query = "delete_profiles_in_demandSet_" + demandSetID;
-
-    dbw.psCreate(query,
-      "DELETE FROM VIA.DEMAND_PROFS WHERE (DEMAND_SET_ID = ?)"
-    );
-
-    try {
-      dbw.psClearParams(query);
-      dbw.psSetBigInt(query, 1, demandSetID);
-      long rows = dbw.psUpdate(query);
-      return rows;
-    }
-    finally {
-      if (query != null) {
-        dbw.psDestroy(query);
-      }
-    }
-  }
 }
