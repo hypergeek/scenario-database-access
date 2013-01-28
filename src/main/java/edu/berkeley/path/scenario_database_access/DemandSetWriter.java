@@ -198,8 +198,6 @@ public class DemandSetWriter {
     oraSPParams[] params = new oraSPParams[8];
     int i = 0;
 
-    params[i++] = null; //modified
-
     params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
       demandSet.getName() == null ? null : demandSet.getName().toString(),
       null);
@@ -217,10 +215,6 @@ public class DemandSetWriter {
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
       demandSet.getLongId(), 0F, null, null);
     
-    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
-      SingleOracleConnector.getUser(),
-      null);
-
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
     
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.UPD", params);
