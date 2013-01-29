@@ -56,14 +56,14 @@ public class DemandSetWriter {
     Long id = null;
     
     try {
-//      dbw.transactionBegin();
-//      Monitor.debug("DemandSet insert transaction beginning");
+      SingleOracleConnector.transactionBegin();
+      Monitor.debug("DemandSet insert transaction beginning");
       
       id = insertWithDependents(demandSet);
 
-//      Monitor.debug("DemandSet insert transaction committing on demandSet.id=" + demandSet.getId());
-//      dbw.transactionCommit();
-//      Monitor.debug("DemandSet insert transaction committed on demandSet.id=" + demandSet.getId());
+      Monitor.debug("DemandSet insert transaction committing on demandSet.id=" + demandSet.getId());
+      SingleOracleConnector.transactionCommit();
+      Monitor.debug("DemandSet insert transaction committed on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -71,8 +71,8 @@ public class DemandSetWriter {
     }
     finally {
       try {
-//        dbw.transactionRollback();
-//        Monitor.debug("DemandSet insert transaction rollback on demandSet.id=" + demandSet.getId());
+        SingleOracleConnector.transactionRollback();
+        Monitor.debug("DemandSet insert transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -146,13 +146,13 @@ public class DemandSetWriter {
     long timeBegin = System.nanoTime();
     
     try {
-//      dbw.transactionBegin();
-//      Monitor.debug("DemandSet update transaction beginning on demandSet.id=" + demandSet.getId());
+      SingleOracleConnector.transactionBegin();
+      Monitor.debug("DemandSet update transaction beginning on demandSet.id=" + demandSet.getId());
       
       updateWithDependents(demandSet);
 
-//      dbw.transactionCommit();
-//      Monitor.debug("DemandSet update transaction committing on demandSet.id=" + demandSet.getId());
+      SingleOracleConnector.transactionCommit();
+      Monitor.debug("DemandSet update transaction committing on demandSet.id=" + demandSet.getId());
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -160,8 +160,8 @@ public class DemandSetWriter {
     }
     finally {
       try {
-//        dbw.transactionRollback();
-//        Monitor.debug("DemandSet update transaction rollback on demandSet.id=" + demandSet.getId());
+        SingleOracleConnector.transactionRollback();
+        Monitor.debug("DemandSet update transaction rollback on demandSet.id=" + demandSet.getId());
       }
       catch(Exception Exc) {
         // Do nothing.
@@ -246,13 +246,13 @@ public class DemandSetWriter {
     long timeBegin = System.nanoTime();
     
     try {
-//      dbw.transactionBegin();
-//      Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
+      SingleOracleConnector.transactionBegin();
+      Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
       
       deleteWithDependents(demandSetID);
 
-//      dbw.transactionCommit();
-//      Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
+      SingleOracleConnector.transactionCommit();
+      Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
     }
     catch (DatabaseException dbExc) {
       Monitor.err(dbExc);
@@ -260,8 +260,8 @@ public class DemandSetWriter {
     }
     finally {
       try {
-//        dbw.transactionRollback();
-//        Monitor.debug("DemandSet delete transaction rollback on demandSet.id=" + demandSetID);
+        SingleOracleConnector.transactionRollback();
+        Monitor.debug("DemandSet delete transaction rollback on demandSet.id=" + demandSetID);
       }
       catch(Exception Exc) {
         // Do nothing.
