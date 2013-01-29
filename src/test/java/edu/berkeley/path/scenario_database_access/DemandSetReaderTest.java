@@ -57,8 +57,8 @@ public class DemandSetReaderTest {
         
     ds = dsReader.read(demandSetID);
 
-    System.out.println("Test Demand: " + ds);
-    // {"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": "1", "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "knob": 0.5, "stdDevAdd": 0.1, "stdDevMult": 0.2, "flow": {"1": [0.1, 0.2, 0.3]}}}, "modstamp": 1351719091904917}
+    //System.out.println("Test Demand: " + ds);
+    // {"id": "99999", "name": "scenario-database-access-test", "description": null, "projectId": "1", "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "knob": 0.5, "stdDevAdd": 0.1, "stdDevMult": 0.2, "flow": {"1": [0.1, 0.2, 0.3]}}}, "modstamp": "29-JAN-2013 13-25-50.772107"}
 
     assertEquals(demandSetID.toString(), ds.getId());
     

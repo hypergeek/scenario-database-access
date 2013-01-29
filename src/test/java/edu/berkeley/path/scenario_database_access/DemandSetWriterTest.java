@@ -133,7 +133,7 @@ public class DemandSetWriterTest {
   @Test
   public void testUpdateRightModstamp() throws core.DatabaseException {
     Long demandSetID = 99999L;
-    DemandSet ds =  dsReader.read(demandSetID);
+    DemandSet ds = dsReader.read(demandSetID);
     assertTrue(null != ds);
     
     try {

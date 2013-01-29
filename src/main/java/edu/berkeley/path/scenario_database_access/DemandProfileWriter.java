@@ -96,7 +96,9 @@ public class DemandProfileWriter {
         0, 0F, null, null);
 
       int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_PROFS.INS", params);
-      //what to do with result?
+      if (result != 0 || params[9].intParam != 0) {
+        throw new DatabaseException(null, "insert failed -- check logs for details", null, null);
+      }
     
       insertFlows(profile.getFlow(), params[5].intParam);
     }
@@ -142,7 +144,9 @@ public class DemandProfileWriter {
         params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT, 0, 0F, null, null);
         
         int result = SingleOracleConnector.executeSP("VIA.SP_DEMANDS.INS", params);
-        //what to do with result?
+        if (result != 0 || params[5].intParam != 0) {
+          throw new DatabaseException(null, "insert failed -- check logs for details", null, null);
+        }
       }
     }
   }

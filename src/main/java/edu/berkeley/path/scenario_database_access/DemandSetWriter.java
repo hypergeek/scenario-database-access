@@ -233,7 +233,7 @@ public class DemandSetWriter {
       }
     }
     else {
-      throw new DatabaseException(null, "update failed -- see logs", null, null);
+      throw new DatabaseException(null, "update failed -- see logs for details", null, null);
     }
   }
 
@@ -288,8 +288,9 @@ public class DemandSetWriter {
       0, 0F, null, null);
 
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.DEL", params);
-    
-    //return result == 0 ? params[1].intParam : null;
+    if (result != 0 || params[1].intParam != 0) {
+      throw new DatabaseException(null, "delete (DEL) failed -- check logs for details " + result + " " + params[1].intParam, null, null);
+    }
   }
 
   /**
@@ -308,7 +309,8 @@ public class DemandSetWriter {
       0, 0F, null, null);
 
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.CLEAR", params);
-    
-    //return result == 0 ? params[1].intParam : null;
+    if (result != 0 || params[1].intParam != 0) {
+      throw new DatabaseException(null, "delete (CLEAR) failed -- check logs for details " + result + " " + params[1].intParam, null, null);
+    }
   }
 }
