@@ -164,7 +164,13 @@ public class DemandSetReader extends ReaderBase {
     String query = "read_demandSet_" + demandSetID;
     
     dbr.psCreate(query,
-      "SELECT * FROM VIA.DEMAND_SETS WHERE (ID = ?)"
+      "SELECT " +
+        "ID, " +
+        "NAME, " +
+        "DESCRIPTION, " +
+        "PROJECT_ID, " +
+        "to_char(MODSTAMP, 'DD-MON-YYYY HH24-MI-SS.FF6') AS MODSTAMPSTR " +
+      "FROM VIA.DEMAND_SETS WHERE (ID = ?)"
     );
     
     dbr.psClearParams(query);
@@ -199,16 +205,13 @@ public class DemandSetReader extends ReaderBase {
       String name = dbr.psRSGetVarChar(query, "NAME");
       String desc = dbr.psRSGetVarChar(query, "DESCRIPTION");
       Long prjId = dbr.psRSGetBigInt(query, "PROJECT_ID");
-      Long modstampMicros = dbr.psRSGetTimestampMicroseconds(query, "MODSTAMP");
-      if (modstampMicros == null) {
-        modstampMicros = 0L;
-      }
+      String modstampstr = dbr.psRSGetVarChar(query, "MODSTAMPSTR");
       
       demandSet.setId(id);
       demandSet.setName(name);
       demandSet.setDescription(desc);
       demandSet.setProjectId(prjId == null ? null : prjId.toString());
-      demandSet.setModstamp(modstampMicros);
+      demandSet.setModstamp(modstampstr);
 
       //System.out.println("DemandSet: " + demandSet);
     }

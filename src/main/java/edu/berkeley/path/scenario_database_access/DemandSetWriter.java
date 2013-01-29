@@ -184,7 +184,7 @@ public class DemandSetWriter {
   public void updateWithDependents(DemandSet demandSet) throws DatabaseException {
     long demandSetID = demandSet.getLongId();
 
-    deleteDependents(demandSetID);
+    deleteOnlyDependents(demandSetID);
     updateRow(demandSet);
     insertDependents(demandSet);
   }
@@ -195,7 +195,7 @@ public class DemandSetWriter {
    * @param demandSet  the demandSet
    */
   public void updateRow(DemandSet demandSet) throws DatabaseException {
-    oraSPParams[] params = new oraSPParams[8];
+    oraSPParams[] params = new oraSPParams[6];
     int i = 0;
 
     params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
@@ -206,7 +206,9 @@ public class DemandSetWriter {
       demandSet.getDescription() == null ? null : demandSet.getDescription().toString(),
       null);
     
-    params[i++] = null; //modstamp
+    params[i++] = new oraSPParams(i, spParamType.STR_VAR, spParamDir.IN, 0, 0F,
+      demandSet.getModstamp().toString(),
+      null);
     
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
       0L, 0F, null, null);
@@ -220,7 +222,7 @@ public class DemandSetWriter {
     
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.UPD", params);
     
-    return result == 0 ? params[7].intParam : null;
+    //return result == 0 ? params[5].intParam : null;
   }
 
   /**
@@ -235,8 +237,7 @@ public class DemandSetWriter {
 //      dbw.transactionBegin();
 //      Monitor.debug("DemandSet delete transaction beginning on demandSet.id=" + demandSetID);
       
-      deleteDependents(demandSetID);
-      deleteRow(demandSetID);
+      deleteWithDependents(demandSetID);
 
 //      dbw.transactionCommit();
 //      Monitor.debug("DemandSet delete transaction committing on demandSet.id=" + demandSetID);
@@ -260,33 +261,42 @@ public class DemandSetWriter {
   }
 
   /**
-   * Delete just the demandSet row from the database. Ignores dependent objects.
+   * Delete the demandSet row from the database, along with dependent objects.
    * 
-   * @param demandSet  the demandSet
+   * @param demandSetID  the ID of this demandSet
    */
-  public void deleteRow(long demandSetID) throws DatabaseException {
+  public void deleteWithDependents(long demandSetID) throws DatabaseException {
     oraSPParams[] params = new oraSPParams[2];
     int i = 0;
 
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
-      demandSet.getLongId(), 0F, null, null);
+      demandSetID, 0F, null, null);
 
     params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
       0, 0F, null, null);
 
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.DEL", params);
     
-    return result == 0 ? params[1].intParam : null;
+    //return result == 0 ? params[1].intParam : null;
   }
 
   /**
-   * Delete just the dependent objects.
+   * Delete only the dependent objects.
    * 
-   * @param demandSetID  the demandSet ID
+   * @param demandSetID  the ID of this demandSet
    */
-  private void deleteDependents(long demandSetID) throws DatabaseException {
-    DemandProfileWriter dpWriter = new DemandProfileWriter();
+  public void deleteOnlyDependents(long demandSetID) throws DatabaseException {
+    oraSPParams[] params = new oraSPParams[2];
+    int i = 0;
+
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
+      demandSetID, 0F, null, null);
+
+    params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.OUT,
+      0, 0F, null, null);
+
+    int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.CLEAR", params);
     
-    dpWriter.deleteAllProfiles(demandSetID);
+    //return result == 0 ? params[1].intParam : null;
   }
 }

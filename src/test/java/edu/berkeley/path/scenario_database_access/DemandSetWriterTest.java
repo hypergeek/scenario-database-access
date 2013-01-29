@@ -51,40 +51,35 @@ public class DemandSetWriterTest {
 
   @Before
   public void setup() {
-    // we assume demand set 99998 does not exist, but we could delete it here
     // we assume demand set 99999 exists, but we could insert it here
   }
   
   @Test
   public void testInsertRow() throws core.DatabaseException {
-//    Long demandSetID = 99998L;
     DemandSet ds = new DemandSet();
-//    ds.setId(demandSetID);
     ds.setName("writer-test");
     ds.setDescription("for test");
 
-    System.out.println("Test Demand -- input: " + ds);
+    //System.out.println("Test Demand -- input: " + ds);
 
     Long demandSetID = dsWriter.insert(ds);
     
     DemandSet ds2 = dsReader.read(demandSetID);
     assertTrue(null != ds2);
 
-    System.out.println("Test Demand -- output: " + ds2);
+    //System.out.println("Test Demand -- output: " + ds2);
     
     assertEquals(demandSetID.toString(), ds2.getId());
     
-//    dsWriter.delete(demandSetID);
+    dsWriter.delete(demandSetID);
     
-//    DemandSet ds3 = dsReader.read(demandSetID);
-//    assertEquals(null, ds3);
+    DemandSet ds3 = dsReader.read(demandSetID);
+    assertEquals(null, ds3);
   }
   
-  @Test @Ignore
+  @Test
   public void testInsertDeleteDemandSet() throws core.DatabaseException {
-    Long demandSetID = 99998L;
     DemandSet ds = new DemandSet();
-    ds.setId(demandSetID);
     ds.setName("writer-test");
     ds.setDescription("for test");
     Map<String,DemandProfile> profMap = ds.getProfileMap();
@@ -96,8 +91,7 @@ public class DemandSetWriterTest {
     prof.setKnob(1.5);
     prof.setStdDevAdd(100.0);
     prof.setStdDevMult(2.0);
-    //prof.setDestinationNetworkLongId(99999L);
-    // leave this null for now
+    prof.setDestinationNetworkLongId(99999L);
     
     prof.addFlowAt(1L, 0.5);
     prof.addFlowAt(1L, 0.2);
@@ -108,7 +102,7 @@ public class DemandSetWriterTest {
     //System.out.println("Test Demand -- input: " + ds);
     // {"id": "99998", "name": "writer-test", "description": "for test", "profile": {"2": {"destinationNetworkId": null, "startTime": 25200.0, "sampleRate": 600.0, "knob": 1.5, "stdDevAdd": 100.0, "stdDevMult": 2.0, "flow": {"1": [0.5, 0.2, 0.6]}}}}
 
-    dsWriter.insert(ds);
+    Long demandSetID = dsWriter.insert(ds);
     
     DemandSet ds2 = dsReader.read(demandSetID);
     assertTrue(null != ds2);
@@ -136,7 +130,7 @@ public class DemandSetWriterTest {
     assertEquals(null, ds3);
   }
 
-  @Test @Ignore
+  @Test
   public void testUpdateRightModstamp() throws core.DatabaseException {
     Long demandSetID = 99999L;
     DemandSet ds =  dsReader.read(demandSetID);
@@ -145,19 +139,21 @@ public class DemandSetWriterTest {
     dsWriter.update(ds); // should not throw
   }
 
-  @Test @Ignore
+  @Test
   public void testUpdateWrongModstamp() throws core.DatabaseException {
     Long demandSetID = 99999L;
     DemandSet ds =  dsReader.read(demandSetID);
     assertTrue(null != ds);
     
-    ds.setModstamp(ds.getModstamp() - 1);
+    //System.out.println("ds = " + ds);
+    ds.setModstamp("29-JAN-2000 09-48-12.465014");
     
     try {
       dsWriter.update(ds); // should throw
       fail("exception was expected but not thrown");
     }
     catch(core.DatabaseException exc) {
+      // as expected
     }
   }
 }
