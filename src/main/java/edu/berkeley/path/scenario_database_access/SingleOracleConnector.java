@@ -54,11 +54,11 @@ public class SingleOracleConnector {
    **/
   public static synchronized java.sql.Connection getConnection() {
     if (oraDB == null) {
-      connInfo.uname = dbparams.user;
-      connInfo.upass = dbparams.pass;
-      connInfo.host = dbparams.host;
-      connInfo.SID = dbparams.name;
-      connInfo.port = dbparams.port;
+      connInfo.uname = dbParams.user;
+      connInfo.upass = dbParams.pass;
+      connInfo.host = dbParams.host;
+      connInfo.SID = dbParams.name;
+      connInfo.port = dbParams.port;
       
       oraDB = oraDatabase.doConnect(connInfo);
     }
