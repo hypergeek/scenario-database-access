@@ -57,7 +57,7 @@ public class DemandSetWriter {
     
     try {
 //      dbw.transactionBegin();
-//      Monitor.debug("DemandSet insert transaction beginning on demandSet.id=" + demandSet.getId());
+//      Monitor.debug("DemandSet insert transaction beginning");
       
       id = insertWithDependents(demandSet);
 
@@ -142,7 +142,7 @@ public class DemandSetWriter {
    * 
    * @param demandSet  the demandSet
    */
-  public void update(DemandSet demandSet) throws DatabaseException {
+  public void update(DemandSet demandSet) throws DatabaseException, ConcurrencyException {
     long timeBegin = System.nanoTime();
     
     try {
@@ -181,7 +181,7 @@ public class DemandSetWriter {
    * 
    * @param demandSet  the demandSet
    */
-  public void updateWithDependents(DemandSet demandSet) throws DatabaseException {
+  public void updateWithDependents(DemandSet demandSet) throws DatabaseException, ConcurrencyException {
     long demandSetID = demandSet.getLongId();
 
     deleteOnlyDependents(demandSetID);
@@ -191,10 +191,11 @@ public class DemandSetWriter {
 
   /**
    * Update just the demandSet row into the database. Ignores dependent objects.
+   * Throws DatabaseException
    * 
    * @param demandSet  the demandSet
    */
-  public void updateRow(DemandSet demandSet) throws DatabaseException {
+  public void updateRow(DemandSet demandSet) throws DatabaseException, ConcurrencyException {
     oraSPParams[] params = new oraSPParams[6];
     int i = 0;
 
@@ -222,7 +223,18 @@ public class DemandSetWriter {
     
     int result = SingleOracleConnector.executeSP("VIA.SP_DEMAND_SETS.UPD", params);
     
-    //return result == 0 ? params[5].intParam : null;
+    if (result == 0) {
+      if (params[5].intParam == 1) {
+        throw new ConcurrencyException(
+          "record was updated by another process or user");
+      }
+      else {
+        // all ok
+      }
+    }
+    else {
+      throw new DatabaseException(null, "update failed -- see logs", null, null);
+    }
   }
 
   /**

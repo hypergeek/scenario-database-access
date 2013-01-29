@@ -136,7 +136,12 @@ public class DemandSetWriterTest {
     DemandSet ds =  dsReader.read(demandSetID);
     assertTrue(null != ds);
     
-    dsWriter.update(ds); // should not throw
+    try {
+      dsWriter.update(ds); // should not throw
+    }
+    catch (ConcurrencyException exc) {
+      fail("unexpected ConcurrencyException");
+    }    
   }
 
   @Test
@@ -152,7 +157,7 @@ public class DemandSetWriterTest {
       dsWriter.update(ds); // should throw
       fail("exception was expected but not thrown");
     }
-    catch(core.DatabaseException exc) {
+    catch(ConcurrencyException exc) {
       // as expected
     }
   }
