@@ -39,6 +39,7 @@ import java.util.HashSet;
 import edu.berkeley.path.model_elements.*;
 
 import core.*;
+import core.oraSPEnums.*;
 
 /**
  * Implements methods for writing DemandProfiles to a database.
@@ -65,7 +66,7 @@ public class DemandProfileWriter {
       int i = 0;
 
       params[i++] = new oraSPParams(i, spParamType.INT_VAR, spParamDir.IN,
-        demandSetId, 0F, null, null);
+        demandSetID, 0F, null, null);
 
       params[i++] = new oraSPParams(i, spParamType.FLT_VAR, spParamDir.IN, 0,
         profile.getStdDevMult(), null, null);
